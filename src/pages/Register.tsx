@@ -30,7 +30,6 @@ const Register: React.FC = () => {
     handleSubmit,
     formState: { errors },
     setValue,
-    watch,
   } = useForm<RegisterFormData>({
     resolver: yupResolver(registerSchema),
     defaultValues: {

@@ -21,7 +21,7 @@ export class SecurityMonitor {
     
     // Keep only recent activities (last 10 minutes)
     const tenMinutesAgo = Date.now() - 10 * 60 * 1000;
-    const recentActivities = activities.filter(a => a.timestamp > tenMinutesAgo);
+    const recentActivities = activities.filter((a: { timestamp: number }) => a.timestamp > tenMinutesAgo);
     
     this.setSuspiciousActivities(recentActivities);
     

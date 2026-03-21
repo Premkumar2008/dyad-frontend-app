@@ -11,33 +11,12 @@ import {
   X,
   Activity,
   CreditCard,
-  TrendingUp,
-  Users,
-  Clock,
-  CheckCircle,
-  AlertCircle,
-  DollarSign,
   Bell,
   Search,
-  Filter,
-  Download,
-  Eye,
-  Edit,
-  Trash2,
-  Plus,
-  ChevronRight,
-  ChevronLeft,
-  ChevronDown,
-  BarChart3,
-  PieChart,
-  Target,
-  Zap,
-  Shield,
   Heart,
   Stethoscope,
   Building,
   Check,
-  Circle,
   ArrowRight,
   ArrowLeft
 } from 'lucide-react';
@@ -116,7 +95,7 @@ const ClientDashboard: React.FC = () => {
   // Initialize step validation
   React.useEffect(() => {
     const initialValidation: Record<number, boolean> = {};
-    workflowSteps.forEach((step, index) => {
+    workflowSteps.forEach((_, index) => {
       initialValidation[index] = false;
     });
     setIsStepValid(initialValidation);

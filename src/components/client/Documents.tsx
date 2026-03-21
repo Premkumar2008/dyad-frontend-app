@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FileText, Search, Filter, Plus, Download, Eye, Upload, Calendar, FileCheck, AlertCircle } from 'lucide-react';
+import { FileText, Search, Download, Eye, Upload, Calendar, FileCheck, AlertCircle, Clock, XCircle } from 'lucide-react';
 
 interface Document {
   id: string;
@@ -132,17 +132,6 @@ const Documents: React.FC = () => {
       case 'prescription': return <FileText className="w-4 h-4" />;
       case 'imaging': return <FileText className="w-4 h-4" />;
       default: return <FileText className="w-4 h-4" />;
-    }
-  };
-
-  const getTypeBadgeColor = (type: string) => {
-    switch (type) {
-      case 'medical-report': return 'bg-blue-100 text-blue-800';
-      case 'lab-result': return 'bg-green-100 text-green-800';
-      case 'insurance': return 'bg-purple-100 text-purple-800';
-      case 'prescription': return 'bg-orange-100 text-orange-800';
-      case 'imaging': return 'bg-pink-100 text-pink-800';
-      default: return 'bg-gray-100 text-gray-800';
     }
   };
 
