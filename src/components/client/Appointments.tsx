@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Calendar, Search, Plus, Filter, Clock, MapPin, User, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
+import { Calendar, Search, Plus, Clock, MapPin, User, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 
 interface Appointment {
   id: string;

@@ -6,6 +6,7 @@ import * as yup from 'yup';
 import { Eye, EyeOff, Mail, Lock, User, Phone, Briefcase } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { RegisterFormData } from '../types/auth';
+import AuthHeader from '../components/AuthHeader';
 
 const registerSchema = yup.object().shape({
   npi: yup.string().required('NPI is required'),
@@ -99,9 +100,14 @@ const Register: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      {/* Left side - Registration Form */}
-      <div className="flex-1 flex items-center justify-center p-8">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      {/* Header */}
+      <AuthHeader />
+      
+      {/* Main Content */}
+      <div className="flex-1 flex">
+        {/* Left side - Registration Form */}
+        <div className="flex-1 flex items-center justify-center p-8">
         <div className="max-w-md w-full">
           {/* Logo */}
           <div className="text-center mb-8">
@@ -350,6 +356,7 @@ const Register: React.FC = () => {
           <div className="w-2 h-2 bg-primary-300 rounded-full"></div>
           <div className="w-2 h-2 bg-primary-300 rounded-full"></div>
         </div>
+      </div>
       </div>
     </div>
   );

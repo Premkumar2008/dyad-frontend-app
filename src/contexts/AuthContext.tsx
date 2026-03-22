@@ -21,16 +21,16 @@ import ToastManager from '../utils/toastHelpers';
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string) => Promise<{ success: boolean; error?: string; needsVerification?: { email: string }; needsRegistration?: { email: string; prefillData: any } }>;
-  register: (userData: any) => Promise<{ success: boolean; error?: string; needsVerification?: { email: string } }>;
-  verifyOTP: (email: string, otp: string) => Promise<{ success: boolean; error?: string }>;
+  login: (email: string, password: string) => Promise<{ success: boolean; error?: string; needsVerification?: { email: string }; needsRegistration?: { email: string; prefillData: any }; errorMessage?: string }>;
+  register: (userData: any) => Promise<{ success: boolean; error?: string; needsVerification?: { email: string }; errorMessage?: string }>;
+  verifyOTP: (email: string, otp: string) => Promise<{ success: boolean; error?: string; errorMessage?: string }>;
   logout: (options?: { 
     showNotification?: boolean; 
     reason?: 'user_initiated' | 'session_expired' | 'token_expired' | 'security_breach';
     redirectPath?: string;
   }) => Promise<void>;
-  sendPasswordResetOTP: (email: string) => Promise<{ success: boolean; error?: string }>;
-  resetPasswordWithOTP: (email: string, otp: string, newPassword: string) => Promise<{ success: boolean; error?: string }>;
+  sendPasswordResetOTP: (email: string) => Promise<{ success: boolean; error?: string; errorMessage?: string }>;
+  resetPasswordWithOTP: (email: string, otp: string, newPassword: string) => Promise<{ success: boolean; error?: string; errorMessage?: string }>;
   isLoading: boolean;
   registrationSuccess: boolean;
   clearRegistrationSuccess: () => void;
@@ -372,7 +372,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           return { success: false, error: 'Registration successful but failed to send verification code.' };
         }
       } else {
-        const errorMessage = response.data?.message || 'Registration failed. Please try again.';
+        // Handle API error messages properly
+        const errorMessage = (response.data as any)?.message || 'Registration failed. Please try again.';
         ToastManager.error(errorMessage);
         return { success: false, error: errorMessage };
       }

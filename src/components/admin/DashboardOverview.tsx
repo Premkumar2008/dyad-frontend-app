@@ -1,6 +1,6 @@
 import React from 'react';
 import { LayoutDashboard, TrendingUp, Users, Activity } from 'lucide-react';
-import { PieChart, Pie, Cell, ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Area, AreaChart } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, XAxis, YAxis, CartesianGrid, Tooltip, Area, AreaChart } from 'recharts';
 
 const DashboardOverview: React.FC = () => {
   // Mock data for charts

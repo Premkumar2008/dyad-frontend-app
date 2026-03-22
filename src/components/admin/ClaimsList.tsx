@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FileText, Search, Filter, Plus, Eye, Download, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { FileText, Search, Plus, Eye, Download, CheckCircle, XCircle, Clock } from 'lucide-react';
 
 interface Claim {
   id: string;

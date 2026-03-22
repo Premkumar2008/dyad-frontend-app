@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { CreditCard, Search, Filter, Plus, Download, Eye, DollarSign, TrendingUp, Calendar, CheckCircle, Clock, XCircle } from 'lucide-react';
+import { CreditCard, Search, Plus, Download, Eye, DollarSign, TrendingUp, Calendar, CheckCircle, Clock, XCircle } from 'lucide-react';
 
 interface Bill {
   id: string;

@@ -1,5 +1,5 @@
 import React from 'react';
-import { LogOut, AlertTriangle } from 'lucide-react';
+import { LogOut } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 interface LogoutButtonProps {

@@ -7,6 +7,7 @@ import { Eye, EyeOff, Mail, Lock, User } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { LoginFormData } from '../types/auth';
 import toast from 'react-hot-toast';
+import AuthHeader from '../components/AuthHeader';
 
 const loginSchema = yup.object().shape({
   email: yup.string().email('Invalid email address').required('Email is required'),
@@ -96,9 +97,14 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      {/* Left side - Login Form */}
-      <div className="flex-1 flex items-center justify-center p-8">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      {/* Header */}
+      <AuthHeader />
+      
+      {/* Main Content */}
+      <div className="flex-1 flex">
+        {/* Left side - Login Form */}
+        <div className="flex-1 flex items-center justify-center p-8">
         <div className="max-w-md w-full">
           {/* Logo */}
           <div className="text-center mb-8">
@@ -245,6 +251,7 @@ const Login: React.FC = () => {
           <div className="w-2 h-2 bg-primary-300 rounded-full"></div>
           <div className="w-2 h-2 bg-primary-300 rounded-full"></div>
         </div>
+      </div>
       </div>
     </div>
   );
