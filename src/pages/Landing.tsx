@@ -460,20 +460,20 @@ const Landing: React.FC = () => {
         </div>
 
         {/* Content Overlay */}
-        <div className="relative z-20 h-full flex items-center justify-center px-0 sm:px-6 lg:px-8 pb-0 sm:pb-6 md:pb-8 lg:pb-12 sm:pt-0 sm:pt-4 sm:pt-16 md:pt-24 bg-gradient-to-t from-black/80 to-transparent sm:from-transparent sm:to-transparent">
+        <div className="absolute inset-0 z-20 flex items-center justify-center bg-gradient-to-t from-black/80 to-transparent sm:from-transparent sm:to-transparent">
           {/* Glossy Overlay Effect */}
           <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent pointer-events-none"></div>
           <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-white/10 pointer-events-none"></div>
-          <div className="w-[95%] sm:w-[80%] md:w-[80%] lg:w-[70%] xl:w-[70%] 2xl:w-[70%] max-w-[95%] sm:max-w-[80%] md:max-w-[80%] lg:max-w-[70%] xl:max-w-[70%] 2xl:max-w-[70%] mx-auto text-left sm:bg-black sm:bg-opacity-60 rounded-none sm:rounded-2xl p-6 sm:p-6 md:p-8 lg:p-12 bottom-4 sm:bottom-32">
+          <div className="w-full h-full flex items-center justify-center px-0 sm:px-6 lg:px-8 pb-0 sm:pb-6 md:pb-8 lg:pb-12 sm:pt-0 sm:pt-4 sm:pt-16 md:pt-24 text-left">
             {/* Main Title */}
-            <h1 className="text-[23px] sm:text-[20px] md:text-[24px] lg:text-[28px] xl:text-[32px] 2xl:text-[36px] font-bold text-white mb-6 sm:mb-6 leading-tight text-left sm:hidden" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.8), -1px -1px 2px rgba(255,255,255,0.1)' }}>
+            <h1 className="text-[23px] sm:text-[20px] md:text-[24px] lg:text-[28px] xl:text-[32px] 2xl:text-[36px] font-bold text-white mb-6 sm:mb-6 leading-tight text-left sm:hidden">
               <span className="block sm:inline">A Bold Partnership</span>
               <span className="block sm:inline sm:ml-2">Model for</span>
               <br className="hidden sm:block" />
               <span className="text-[#B0DA23] block sm:inline sm:ml-2">Fiduciary-Grade</span>
               <span className="text-[#B0DA23] block sm:inline">Practice Operations</span>
             </h1>
-            <h3 className="hidden sm:block text-[26px] md:text-[26px] lg:text-[28px] xl:text-[32px] 2xl:text-[36px] font-bold text-white mb-6 sm:mb-6 leading-tight text-left" style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.8), -1px -1px 2px rgba(255,255,255,0.1)', fontSize: '26px' }}>
+            <h3 className="hidden sm:block text-[26px] md:text-[26px] lg:text-[28px] xl:text-[32px] 2xl:text-[36px] font-bold text-white mb-6 sm:mb-6 leading-tight text-left">
               <span className="block sm:inline">A Bold Partnership</span>
               <span className="block sm:inline sm:ml-2">Model for</span>
               <br className="hidden sm:block" />
@@ -482,7 +482,7 @@ const Landing: React.FC = () => {
             </h3>
 
             {/* Description */}
-            <p className="text-[15px] sm:text-[17px] md:text-[17px] lg:text-[17px] xl:text-[18px] 2xl:text-[19px] text-blue-50 mb-8 sm:mb-8 leading-relaxed text-left max-w-none" style={{ textShadow: '1px 1px 3px rgba(0,0,0,0.8), -1px -1px 1px rgba(255,255,255,0.1)', fontSize: '17px' }}>
+            <p className="text-[15px] sm:text-[17px] md:text-[17px] lg:text-[17px] xl:text-[18px] 2xl:text-[19px] text-blue-50 mb-8 sm:mb-8 leading-relaxed text-left max-w-none">
               <span className="hidden sm:inline">
                 Dyad is the integrated revenue cycle and practice operations platform for anesthesia, ambulatory surgery centers, and the surgical specialties that operate within them, built on banking-class infrastructure. We replace fragmented vendors with a single operating layer powered by deep industry expertise, advanced technology, and institutional-grade risk controls, delivering end-to-end precision from to case to cash, same day. One platform for independent practices, physician groups, private equity-backed portfolios, and managed services organizations. Truly integrated. Exponentially scalable.
               </span>
@@ -495,8 +495,7 @@ const Landing: React.FC = () => {
             <div className="flex flex-col sm:flex-row gap-4 sm:gap-4 justify-start sm:justify-start items-center">
               <Link
                 to="/register"
-                className="w-full sm:w-auto bg-[#1D6DD8] text-white px-6 sm:px-6 py-4 sm:py-3 rounded-lg font-medium hover:bg-opacity-90 transition-all duration-300 flex items-center justify-center gap-3 sm:gap-3 text-base sm:text-base shadow-lg sm:shadow-xl hover:shadow-xl sm:hover:shadow-2xl transform hover:-translate-y-1" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.5)' }}
-              >
+                className="w-full sm:w-auto bg-[#1D6DD8] text-white px-6 sm:px-6 py-4 sm:py-3 rounded-lg font-medium hover:bg-opacity-90 transition-all duration-300 flex items-center justify-center gap-3 sm:gap-3 text-base sm:text-base shadow-lg sm:shadow-xl hover:shadow-xl sm:hover:shadow-2xl transform hover:-translate-y-1"              >
                 <span className="flex items-center gap-3">
                   Request a Demo
                   <ArrowRight className="w-5 h-5 sm:w-4 sm:h-4 flex-shrink-0" />
@@ -504,8 +503,7 @@ const Landing: React.FC = () => {
               </Link>
               <a
                 href="#contact"
-                className="w-full sm:w-auto bg-white text-[#1D6DD8] px-6 sm:px-6 py-4 sm:py-3 rounded-lg font-medium hover:bg-gray-50 transition-all duration-300 flex items-center justify-center gap-3 sm:gap-3 text-base sm:text-base shadow-lg sm:shadow-xl hover:shadow-xl sm:hover:shadow-2xl transform hover:-translate-y-1" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.2)' }}
-                onClick={(e) => {
+                className="w-full sm:w-auto bg-white text-[#1D6DD8] px-6 sm:px-6 py-4 sm:py-3 rounded-lg font-medium hover:bg-gray-50 transition-all duration-300 flex items-center justify-center gap-3 sm:gap-3 text-base sm:text-base shadow-lg sm:shadow-xl hover:shadow-xl sm:hover:shadow-2xl transform hover:-translate-y-1"                onClick={(e) => {
                   e.preventDefault();
                   handleScrollToSection('contact');
                 }}
@@ -523,8 +521,9 @@ const Landing: React.FC = () => {
       <section id="logo_section4" className="relative mt-0 sm:-mt-8">
         <div className="w-full sm:w-4/5 mx-auto">
           <div className="bg-gray-50 rounded-none sm:rounded-2xl shadow-lg py-[1%] px-[2%] py-4 sm:py-[1%] px-4 sm:px-[2%]">
-            {/* Desktop Layout - Single Row */}
-            <div className="hidden sm:flex justify-around items-center w-full">
+            {/* Desktop Layout - Auto Scroll */}
+            <div className="hidden sm:flex justify-around items-center w-full overflow-hidden">
+              <div className="flex gap-6 animate-scroll-left" style={{ width: 'fit-content' }}>
               <div className="flex-shrink-0 transition-all duration-300 hover:scale-105 w-[16%] flex items-center justify-center">
                 <img 
                   src="/assets/images/logo_section.svg" 
@@ -545,14 +544,6 @@ const Landing: React.FC = () => {
                 <img 
                   src="/assets/images/logo_section2.svg" 
                   alt="Partner Logo 3" 
-                  className="w-full object-contain filter grayscale hover:grayscale-0 transition-all duration-300"
-                />
-              </div>
-              
-              <div className="flex-shrink-0 transition-all duration-300 hover:scale-105 w-[10%] flex items-center justify-center">
-                <img 
-                  src="/assets/images/logo_section3.svg" 
-                  alt="Partner Logo 4" 
                   className="w-full object-contain filter grayscale hover:grayscale-0 transition-all duration-300"
                 />
               </div>
@@ -644,6 +635,7 @@ const Landing: React.FC = () => {
                 </div>
               </div>
             </div>
+            </div>
 
             {/* CSS for infinite scrolling */}
             <style>{`
@@ -692,8 +684,8 @@ const Landing: React.FC = () => {
       <section id="about" className="py-20 bg-white">
         <div className="max-w-7xl lg:max-w-[80%] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="font-bold text-blue-600 mb-6 text-[32px]" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.3), -1px -1px 1px rgba(255,255,255,0.2)' }}>About Us</h2>
-            <p className="text-base leading-relaxed" style={{ color: '#222222', maxWidth: '1152px', margin: '0 auto', textShadow: '1px 1px 1px rgba(0,0,0,0.1), -1px -1px 1px rgba(255,255,255,0.3)' }}>
+            <h2 className="font-bold text-blue-600 mb-6 text-[32px]">About Us</h2>
+            <p className="text-base leading-relaxed" style={{ color: '#222222', maxWidth: '1152px', margin: '0 auto',  }}>
               We operate at the intersection of expertise, technology, and trust, bringing deep industry knowledge and strategic insight to every engagement. Grounded in transparency and integrity, we align with those who prioritize operational excellence and long-term sustainability. Our approach is straightforward: no shortcuts, just a commitment to delivering measurable results.
             </p>
           </div>
@@ -709,8 +701,8 @@ const Landing: React.FC = () => {
                 />
                 <div className='absolute bottom-0 left-0 right-0 h-3/4 sm:h-1/2 bg-gradient-to-t from-black/90 via-black/70 to-transparent p-2 sm:p-6 flex flex-col justify-end transition-all duration-700 ease-in-out sm:group-hover:h-full sm:group-hover:from-black/95 sm:group-hover:via-black/80'>
                   <div className='overlay-content opacity-100 transition-all duration-700 ease-in-out sm:group-hover:transform sm:group-hover:-translate-y-0 sm:group-hover:-translate-y-2 p-2 sm:p-6'>
-                    <div className='overlay-title text-white font-bold mb-2 sm:mb-3 text-[18px] lg:text-xl' style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.8), -1px -1px 2px rgba(255,255,255,0.2)' }}>Our Story & Inspiration</div>
-                    <div className='overlay-subtitle text-gray-200 mb-4 sm:mb-6 text-[15px] sm:text-[18px] font-normal' style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.6), -1px -1px 1px rgba(255,255,255,0.1)' }}>The origins and purpose</div>
+                    <div className='overlay-title text-white font-bold mb-2 sm:mb-3 text-[18px] lg:text-xl'>Our Story & Inspiration</div>
+                    <div className='overlay-subtitle text-gray-200 mb-4 sm:mb-6 text-[15px] sm:text-[18px] font-normal'>The origins and purpose</div>
                     <button 
                       onClick={() => setSelectedCard({
                         title: 'Our Story & Inspiration',
@@ -750,8 +742,8 @@ const Landing: React.FC = () => {
                 />
                 <div className='absolute bottom-0 left-0 right-0 h-3/4 sm:h-1/2 bg-gradient-to-t from-black/90 via-black/70 to-transparent p-2 sm:p-6 flex flex-col justify-end transition-all duration-700 ease-in-out sm:group-hover:h-full sm:group-hover:from-black/95 sm:group-hover:via-black/80'>
                   <div className='overlay-content opacity-100 transition-all duration-700 ease-in-out sm:group-hover:transform sm:group-hover:-translate-y-0 sm:group-hover:-translate-y-2 p-2 sm:p-6'>
-                    <div className='overlay-title text-white font-bold mb-2 sm:mb-3 text-[18px] lg:text-xl' style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.8), -1px -1px 2px rgba(255,255,255,0.2)' }}>Clarity & Accountability</div>
-                    <div className='overlay-subtitle text-gray-200 mb-4 sm:mb-6 text-[15px] sm:text-[18px] font-normal' style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.6), -1px -1px 1px rgba(255,255,255,0.1)' }}>Partnership through integrity and transparency</div>
+                    <div className='overlay-title text-white font-bold mb-2 sm:mb-3 text-[18px] lg:text-xl'>Clarity & Accountability</div>
+                    <div className='overlay-subtitle text-gray-200 mb-4 sm:mb-6 text-[15px] sm:text-[18px] font-normal'>Partnership through integrity and transparency</div>
                     <button 
                       onClick={() => setSelectedCard({
                         title: 'Clarity & Accountability',
@@ -791,8 +783,8 @@ const Landing: React.FC = () => {
                 />
                 <div className='absolute bottom-0 left-0 right-0 h-3/4 sm:h-1/2 bg-gradient-to-t from-black/90 via-black/70 to-transparent p-2 sm:p-6 flex flex-col justify-end transition-all duration-700 ease-in-out sm:group-hover:h-full sm:group-hover:from-black/95 sm:group-hover:via-black/80'>
                   <div className='overlay-content opacity-100 transition-all duration-700 ease-in-out sm:group-hover:transform sm:group-hover:-translate-y-0 sm:group-hover:-translate-y-2 p-2 sm:p-6'>
-                    <div className='overlay-title text-white font-bold mb-2 sm:mb-3 text-[18px] lg:text-xl' style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.8), -1px -1px 2px rgba(255,255,255,0.2)' }}>Technology Guided by Expertise</div>
-                    <div className='overlay-subtitle text-gray-200 mb-4 sm:mb-6 text-[15px] sm:text-[18px] font-normal' style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.6), -1px -1px 1px rgba(255,255,255,0.1)' }}>Integrated risk controls & optimized workflows</div>
+                    <div className='overlay-title text-white font-bold mb-2 sm:mb-3 text-[18px] lg:text-xl'>Technology Guided by Expertise</div>
+                    <div className='overlay-subtitle text-gray-200 mb-4 sm:mb-6 text-[15px] sm:text-[18px] font-normal'>Integrated risk controls & optimized workflows</div>
                     <button 
                       onClick={() => setSelectedCard({
                         title: 'Technology Guided by Expertise',
@@ -834,8 +826,8 @@ const Landing: React.FC = () => {
                 />
                 <div className='absolute bottom-0 left-0 right-0 h-3/4 sm:h-1/2 bg-gradient-to-t from-black/90 via-black/70 to-transparent p-2 sm:p-6 flex flex-col justify-end transition-all duration-700 ease-in-out sm:group-hover:h-full sm:group-hover:from-black/95 sm:group-hover:via-black/80'>
                   <div className='overlay-content opacity-100 transition-all duration-700 ease-in-out sm:group-hover:transform sm:group-hover:-translate-y-0 sm:group-hover:-translate-y-2 p-2 sm:p-6'>
-                    <div className='overlay-title text-white font-bold mb-2 sm:mb-3 text-[18px] lg:text-xl' style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.8), -1px -1px 2px rgba(255,255,255,0.2)' }}>Scalable by Design</div>
-                    <div className='overlay-subtitle text-gray-200 mb-4 sm:mb-6 text-[15px] sm:text-[18px] font-normal' style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.6), -1px -1px 1px rgba(255,255,255,0.1)' }}>Empowering independent practices with scalable solutions</div>
+                    <div className='overlay-title text-white font-bold mb-2 sm:mb-3 text-[18px] lg:text-xl'>Scalable by Design</div>
+                    <div className='overlay-subtitle text-gray-200 mb-4 sm:mb-6 text-[15px] sm:text-[18px] font-normal'>Empowering independent practices with scalable solutions</div>
                     <button 
                       onClick={() => setSelectedCard({
                         title: 'Scalable by Design',
@@ -874,8 +866,8 @@ const Landing: React.FC = () => {
                 />
                 <div className='absolute bottom-0 left-0 right-0 h-3/4 sm:h-1/2 bg-gradient-to-t from-black/90 via-black/70 to-transparent p-2 sm:p-6 flex flex-col justify-end transition-all duration-700 ease-in-out sm:group-hover:h-full sm:group-hover:from-black/95 sm:group-hover:via-black/80'>
                   <div className='overlay-content opacity-100 transition-all duration-700 ease-in-out sm:group-hover:transform sm:group-hover:-translate-y-0 sm:group-hover:-translate-y-2 p-2 sm:p-6'>
-                    <div className='overlay-title text-white font-bold mb-2 sm:mb-3 text-[18px] lg:text-xl' style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.8), -1px -1px 2px rgba(255,255,255,0.2)' }}>Why DYAD?</div>
-                    <div className='overlay-subtitle text-gray-200 mb-4 sm:mb-6 text-[15px] sm:text-[18px] font-normal' style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.6), -1px -1px 1px rgba(255,255,255,0.1)' }}>Expertise, execution and strategic support</div>
+                    <div className='overlay-title text-white font-bold mb-2 sm:mb-3 text-[18px] lg:text-xl'>Why DYAD?</div>
+                    <div className='overlay-subtitle text-gray-200 mb-4 sm:mb-6 text-[15px] sm:text-[18px] font-normal'>Expertise, execution and strategic support</div>
                     <button 
                       onClick={() => setSelectedCard({
                         title: 'Why DYAD?',
@@ -914,8 +906,8 @@ const Landing: React.FC = () => {
                 />
                 <div className='absolute bottom-0 left-0 right-0 h-3/4 sm:h-1/2 bg-gradient-to-t from-black/90 via-black/70 to-transparent p-2 sm:p-6 flex flex-col justify-end transition-all duration-700 ease-in-out sm:group-hover:h-full sm:group-hover:from-black/95 sm:group-hover:via-black/80'>
                   <div className='overlay-content opacity-100 transition-all duration-700 ease-in-out sm:group-hover:transform sm:group-hover:-translate-y-0 sm:group-hover:-translate-y-2 p-2 sm:p-6'>
-                    <div className='overlay-title text-white font-bold mb-2 sm:mb-3 text-[18px] lg:text-xl' style={{ textShadow: '2px 2px 4px rgba(0,0,0,0.8), -1px -1px 2px rgba(255,255,255,0.2)' }}>Our Process</div>
-                    <div className='overlay-subtitle text-gray-200 mb-4 sm:mb-6 text-[18px] font-normal' style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.6), -1px -1px 1px rgba(255,255,255,0.1)' }}>Streamlined for efficiency from day one</div>
+                    <div className='overlay-title text-white font-bold mb-2 sm:mb-3 text-[18px] lg:text-xl'>Our Process</div>
+                    <div className='overlay-subtitle text-gray-200 mb-4 sm:mb-6 text-[18px] font-normal'>Streamlined for efficiency from day one</div>
                     <button 
                       onClick={() => setSelectedCard({
                         title: 'Our Process',
@@ -976,8 +968,8 @@ const Landing: React.FC = () => {
       <section id="leadership" className="py-20" style={{ backgroundColor: '#F1F6FC' }}>
         <div className="max-w-7xl lg:max-w-[80%] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="font-bold text-blue-600 mb-6 text-[32px]" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.3), -1px -1px 1px rgba(255,255,255,0.2)' }}>Leadership</h2>
-            <p className="text-base leading-relaxed" style={{ color: '#222222', maxWidth: '1152px', margin: '0 auto', textShadow: '1px 1px 1px rgba(0,0,0,0.1), -1px -1px 1px rgba(255,255,255,0.3)' }}>
+            <h2 className="font-bold text-blue-600 mb-6 text-[32px]">Leadership</h2>
+            <p className="text-base leading-relaxed" style={{ color: '#222222', maxWidth: '1152px', margin: '0 auto',  }}>
               Decades of proven expertise at the intersection of healthcare, finance and technology
             </p>
           </div>
@@ -1067,8 +1059,8 @@ const Landing: React.FC = () => {
       <section id="services" className="py-20 bg-white">
         <div className="max-w-7xl lg:max-w-[80%] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="font-bold text-blue-600 mb-6 text-[32px]" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.3), -1px -1px 1px rgba(255,255,255,0.2)' }}>Our Services</h2>
-            <p className="text-base leading-relaxed" style={{ color: '#222222', maxWidth: '1152px', margin: '0 auto', textShadow: '1px 1px 1px rgba(0,0,0,0.1), -1px -1px 1px rgba(255,255,255,0.3)' }}>
+            <h2 className="font-bold text-blue-600 mb-6 text-[32px]">Our Services</h2>
+            <p className="text-base leading-relaxed" style={{ color: '#222222', maxWidth: '1152px', margin: '0 auto',  }}>
           We set the standard for accuracy, efficiency, and value - delivering faster turnarounds, unmatched precision, and measurable impact. Backed by rigorous risk controls and uncompromising quality, our integrated solutions go beyond excellence to redefine what’s possible. No fragmentation - just a unified approach. Most services operate within our full-service model, where seamless integration drives real value.  </p>
           </div>
           
@@ -1086,11 +1078,11 @@ const Landing: React.FC = () => {
               
               {/* Bottom Content */}
               <div className="p-6 flex-1 flex flex-col">
-                <h3 className="text-[18px] lg:text-xl font-bold text-gray-900 mb-4" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.2), -1px -1px 1px rgba(255,255,255,0.2)' }}>Practice Foundations</h3>
-                <p className="text-gray-600 mb-4 text-[15px] sm:text-[16px] leading-relaxed" style={{ textShadow: '1px 1px 1px rgba(0,0,0,0.1), -1px -1px 1px rgba(255,255,255,0.1)' }}>
+                <h3 className="text-[18px] lg:text-xl font-bold text-gray-900 mb-4">Practice Foundations</h3>
+                <p className="text-gray-600 mb-4 text-[15px] sm:text-[16px] leading-relaxed">
                   Startup support, compliance and credentialing services to establish and optimize your practice operations from day one.
                 </p>
-                <a href="#" className="text-blue-600 hover:text-blue-700 font-medium transition-colors duration-300 inline-flex items-center text-[15px] sm:text-[16px]" style={{ textShadow: '1px 1px 1px rgba(0,0,0,0.1), -1px -1px 1px rgba(255,255,255,0.1)' }}>
+                <a href="#" className="text-blue-600 hover:text-blue-700 font-medium transition-colors duration-300 inline-flex items-center text-[15px] sm:text-[16px]">
                   Learn More
                   <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -1147,11 +1139,11 @@ const Landing: React.FC = () => {
               
               {/* Bottom Content */}
               <div className="p-6 flex-1 flex flex-col">
-                <h3 className="text-[18px] lg:text-xl font-bold text-gray-900 mb-4" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.2), -1px -1px 1px rgba(255,255,255,0.2)' }}>Technology Driven Capabilities</h3>
-                <p className="text-gray-600 mb-4 text-[15px] sm:text-[16px] leading-relaxed" style={{ textShadow: '1px 1px 1px rgba(0,0,0,0.1), -1px -1px 1px rgba(255,255,255,0.1)' }}>
+                <h3 className="text-[18px] lg:text-xl font-bold text-gray-900 mb-4">Technology Driven Capabilities</h3>
+                <p className="text-gray-600 mb-4 text-[15px] sm:text-[16px] leading-relaxed">
                   Mobile supported workflows, ONC Integration FHIR, governance and compliance solutions for modern healthcare operations.
                 </p>
-                <a href="#" className="text-blue-600 hover:text-blue-700 font-medium transition-colors duration-300 inline-flex items-center text-[15px] sm:text-[16px]" style={{ textShadow: '1px 1px 1px rgba(0,0,0,0.1), -1px -1px 1px rgba(255,255,255,0.1)' }}>
+                <a href="#" className="text-blue-600 hover:text-blue-700 font-medium transition-colors duration-300 inline-flex items-center text-[15px] sm:text-[16px]">
                   Learn More
                   <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -1204,7 +1196,7 @@ const Landing: React.FC = () => {
               
               {/* Bottom Content */}
               <div className="p-6 flex-1 flex flex-col">
-                <h3 className="text-[18px] lg:text-xl font-bold text-gray-900 mb-4" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.2), -1px -1px 1px rgba(255,255,255,0.2)' }}>Pre & Post Encounter</h3>
+                <h3 className="text-[18px] lg:text-xl font-bold text-gray-900 mb-4">Pre & Post Encounter</h3>
                 <p className="text-gray-600 mb-3 text-[15px] sm:text-[16px] leading-relaxed opacity-100 group-hover:opacity-0 transition-opacity duration-300">
                   Eligibility verifications, prior-authorizations, patient estimates, Precision driven charge capture, Specialty Coding.
                 </p>
@@ -1219,7 +1211,7 @@ const Landing: React.FC = () => {
               {/* Full Card Overlay */}
               <div className="absolute inset-0 bg-[#F1F6FC] opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex flex-col justify-center px-6 py-8">
                 <div className="mb-4">
-                  <h3 className="text-[18px] lg:text-xl font-bold text-gray-900 mb-4" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.2), -1px -1px 1px rgba(255,255,255,0.2)' }}>Patient Services</h3>
+                  <h3 className="text-[18px] lg:text-xl font-bold text-gray-900 mb-4">Patient Services</h3>
                 </div>
                 <div className="space-y-3 mb-4">
                   <div className="flex items-start space-x-3">
@@ -1268,7 +1260,7 @@ const Landing: React.FC = () => {
               
               {/* Bottom Content */}
               <div className="p-6 flex-1 flex flex-col">
-                <h3 className="text-[18px] lg:text-xl font-bold text-gray-900 mb-4" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.2), -1px -1px 1px rgba(255,255,255,0.2)' }}>Claims Management</h3>
+                <h3 className="text-[18px] lg:text-xl font-bold text-gray-900 mb-4">Claims Management</h3>
                 <p className="text-gray-600 mb-3 text-[15px] sm:text-[16px] leading-relaxed opacity-100 group-hover:opacity-0 transition-opacity duration-300">
                   Expedited submissions, resolutions & real-time tracking for optimized claims processing and faster reimbursements.
                 </p>
@@ -1329,7 +1321,7 @@ const Landing: React.FC = () => {
               
               {/* Bottom Content */}
               <div className="p-6 flex-1 flex flex-col">
-                <h3 className="text-[18px] lg:text-xl font-bold text-gray-900 mb-4" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.2), -1px -1px 1px rgba(255,255,255,0.2)' }}>Specialty Billing</h3>
+                <h3 className="text-[18px] lg:text-xl font-bold text-gray-900 mb-4">Specialty Billing</h3>
                 <p className="text-gray-600 mb-3 text-[15px] sm:text-[16px] leading-relaxed opacity-100 group-hover:opacity-0 transition-opacity duration-300">
                   Expert lien management for complex cases, ensuring accurate billing and optimal reimbursement for specialty services.
                 </p>
@@ -1378,7 +1370,7 @@ const Landing: React.FC = () => {
               
               {/* Bottom Content */}
               <div className="p-6 flex-1 flex flex-col">
-                <h3 className="text-[18px] lg:text-xl font-bold text-gray-900 mb-4" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.2), -1px -1px 1px rgba(255,255,255,0.2)' }}>Real Time Insights</h3>
+                <h3 className="text-[18px] lg:text-xl font-bold text-gray-900 mb-4">Real Time Insights</h3>
                 <p className="text-gray-600 mb-3 text-[15px] sm:text-[16px] leading-relaxed opacity-100 group-hover:opacity-0 transition-opacity duration-300">
                   Credentials alert, reporting & strategic insights to drive data-informed decisions and optimize practice performance.
                 </p>
