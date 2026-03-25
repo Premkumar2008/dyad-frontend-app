@@ -114,10 +114,8 @@ const Login: React.FC = () => {
             />
           </div>
 
-          {/* Right - Navigation and Buttons */}
-         
-          {/* Mobile Menu Toggle */}
-         
+          {/* Right - Empty */}
+          <div></div>
         </div>
 
         {/* Mobile Menu */}

@@ -38,8 +38,8 @@ footer {
   align-items: center;
   justify-content: space-between;
   padding: 1rem 2rem;
-  width: 80%;
-  max-width: 1440px;
+  width: 90%;
+  max-width: 1880px;
   margin: 0 auto;
   font-family: 'Poppins', sans-serif;
 }
@@ -356,9 +356,10 @@ header.dyad-header .dyad-nav-actions .dyad-nav .nav-list .dyad-nav .nav-link.act
 
 .title-container {
   position: relative;
-  margin-bottom: 1rem;
+  
   border-radius: 1rem;
   max-width: 1440px;
+  width: 90%;
 }
 
 .video-title {
@@ -410,13 +411,13 @@ header.dyad-header .dyad-nav-actions .dyad-nav .nav-list .dyad-nav .nav-link.act
 .video-subtitle {
   font-size: clamp(0.75rem, 2vw, 1.2rem);
   background-clip: text;
-  margin-bottom: 2rem;
+ 
   font-family: 'Poppins', sans-serif;
   font-weight: 400;
   line-height: 1.7;
   max-width: fit-content;
   text-align: left;
-  width: 80%;
+  width: 85%;
 }
 
 /* Video Banner - Medium Screens */
@@ -450,7 +451,7 @@ header.dyad-header .dyad-nav-actions .dyad-nav .nav-list .dyad-nav .nav-link.act
   }
   
   .video-subtitle {
-    font-size: 0.85rem !important;
+    font-size: 0.95rem !important;
     width:100% !important
   }
   .about-container{
@@ -825,7 +826,7 @@ header.dyad-header .dyad-nav-actions .dyad-nav .nav-list .dyad-nav .nav-link.act
     color:white;
     font-size: clamp(0.75rem, 2.5vw, 1rem);
     line-height: 1.5;
-    margin-bottom: 1.5rem;
+   
   }
 
   .button-group {
@@ -911,7 +912,7 @@ header.dyad-header .dyad-nav-actions .dyad-nav .nav-list .dyad-nav .nav-link.act
   .video-subtitle {
     font-size: clamp(0.675rem, 5.5vw, 1.2rem);
     line-height: 1.7;
-    margin-bottom: 2.25rem;
+   
   }
 
   .button-group {
@@ -1605,7 +1606,7 @@ header.dyad-header .dyad-nav-actions .dyad-nav .nav-list .dyad-nav .nav-link.act
 
 .about-container {
   width: 80%;
-  max-width: 1440px;
+  max-width: 1680px;
   margin: 0 auto;
   padding: 0 2rem;
   position: relative;
@@ -2075,7 +2076,7 @@ header.dyad-header .dyad-nav-actions .dyad-nav .nav-list .dyad-nav .nav-link.act
 
 .services-container {
   width: 80%;
-  max-width: 1440px;
+  max-width: 1640px;
   margin: 0 auto;
   padding: 0 2rem;
   position: relative;
@@ -3810,7 +3811,7 @@ header.dyad-header .dyad-nav-actions .dyad-nav .nav-list .dyad-nav .nav-link.act
 
 .leadership-container {
   width: 80%;
-  max-width: 1440px;
+  max-width: 1640px;
   margin: 0 auto;
   padding: 0 2rem;
   position: relative;

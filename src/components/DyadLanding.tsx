@@ -247,9 +247,9 @@ const DyadLanding: React.FC = () => {
               <button className="btn btn-primary">
                 <span>Request an Introduction</span>
               </button>
-              <button className="btn btn-secondary" onClick={handleLogin}>
+              {/* <button className="btn btn-secondary" onClick={handleLogin}>
                 <span>Login</span>
-              </button>
+              </button> */}
             </div>
           </div>
 
@@ -319,7 +319,7 @@ const DyadLanding: React.FC = () => {
           {/* Video Overlay */}
           <div className="video-overlay">
             <div className="video-content">
-              <div className="title-container" style={{ marginBottom: '2.5rem' }}>
+              <div className="title-container">
                 <h1 className="video-title">
                   <span className="title-line">A Bold Partnership Model for</span>
                   <span className="title-line">Smarter Healthcare Operations</span>
