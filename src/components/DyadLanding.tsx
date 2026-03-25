@@ -1,14 +1,31 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './DyadLanding.css';
 
 const DyadLanding: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeAboutCard, setActiveAboutCard] = useState<number | null>(null);
+  const [activeMenu, setActiveMenu] = useState('Home');
+  const navigate = useNavigate();
+  
+  const handleLogin = () => {
+    // Navigate to login page
+    navigate('/login');
+  };
+  
+  const handleNavClick = (menuName: string, href: string) => {
+    setActiveMenu(menuName);
+    
+    // Smooth scroll to section
+    const sectionId = href.replace('#', '');
+    const element = document.getElementById(sectionId);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
   
   const handleAboutCardClick = (cardId: number) => {
-    console.log('About card clicked:', cardId);
     setActiveAboutCard(activeAboutCard === cardId ? null : cardId);
-    console.log('Active card set to:', activeAboutCard === cardId ? null : cardId);
   };
   
   const leadershipData = [
@@ -195,17 +212,33 @@ const DyadLanding: React.FC = () => {
           <div className="dyad-nav-actions">
             {/* Navigation */}
             <nav className="dyad-nav">
-              <ul className="nav-list">
-                {navigationItems.map((item) => (
-                  <li key={item.name}>
-                    <a 
-                      href={item.href} 
-                      className={`nav-link ${item.href === '#top' ? 'active' : ''}`}
-                    >
-                      {item.name}
-                    </a>
-                  </li>
-                ))}
+              <ul className="nav-list" style={{ gap: '0rem' }}>
+                {navigationItems.map((item) => {
+                  const isActive = activeMenu === item.name;
+                  return (
+                    <li key={item.name}>
+                      <a 
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleNavClick(item.name, item.href);
+                        }}
+                        style={{ 
+                          color: isActive ? '#1D6DD8' : '#374151',
+                          cursor: 'pointer',
+                          textDecoration: 'none',
+                          fontWeight: 500,
+                          fontSize: '1rem',
+                          fontFamily: 'Poppins, sans-serif',
+                          padding: '0.5rem 1rem',
+                          borderRadius: '6px',
+                          transition: 'all 0.3s ease'
+                        }}
+                      >
+                        {item.name}
+                      </a>
+                    </li>
+                  );
+                })}
               </ul>
             </nav>
 
@@ -214,7 +247,7 @@ const DyadLanding: React.FC = () => {
               <button className="btn btn-primary">
                 <span>Request an Introduction</span>
               </button>
-              <button className="btn btn-secondary">
+              <button className="btn btn-secondary" onClick={handleLogin}>
                 <span>Login</span>
               </button>
             </div>
@@ -235,24 +268,34 @@ const DyadLanding: React.FC = () => {
         <div className={`mobile-menu ${isMobileMenuOpen ? 'open' : ''}`}>
           <nav className="mobile-nav">
             <ul className="mobile-nav-list">
-              {navigationItems.map((item) => (
-                <li key={item.name}>
-                  <a 
-                    href={item.href} 
-                    className={`mobile-nav-link ${item.href === '#top' ? 'active' : ''}`}
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    {item.name}
-                  </a>
-                </li>
-              ))}
+              {navigationItems.map((item) => {
+                  const isActive = activeMenu === item.name;
+                  return (
+                    <li key={item.name}>
+                      <a 
+                        onClick={(e) => {
+                          e.preventDefault();
+                          handleNavClick(item.name, item.href);
+                          setIsMobileMenuOpen(false);
+                        }}
+                        className={`mobile-nav-link ${isActive ? 'active' : ''}`}
+                        style={{ 
+                          color: isActive ? '#1D6DD8' : '#374151',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        {item.name}
+                      </a>
+                    </li>
+                  );
+                })}
             </ul>
           </nav>
           <div className="mobile-actions">
             <button className="btn btn-primary btn-full">
               <span>Request an Introduction</span>
             </button>
-            <button className="btn btn-secondary btn-full">
+            <button className="btn btn-secondary btn-full" onClick={handleLogin}>
               <span>Login</span>
             </button>
           </div>

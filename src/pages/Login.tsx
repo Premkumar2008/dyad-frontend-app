@@ -16,10 +16,14 @@ const loginSchema = yup.object().shape({
 });
 
 const Login: React.FC = () => {
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string>('');
-  const navigate = useNavigate();
   const { login, isLoading, user } = useAuth();
+
+  const handleLogoClick = () => {
+    navigate('/');
+  };
 
   // const from = location.state?.from?.pathname || '/'; // Reserved for future redirect functionality
 
@@ -99,7 +103,26 @@ const Login: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Header */}
-      <AuthHeader />
+    <header className="dyad-header">
+        <div className="dyad-header-content">
+          {/* Left - Logo */}
+          <div className="dyad-logo" onClick={handleLogoClick} style={{ cursor: 'pointer' }}>
+            <img 
+              src="/assets/images/dyadmain-ogo.svg" 
+              alt="Dyad Logo" 
+              className="logo-image"
+            />
+          </div>
+
+          {/* Right - Navigation and Buttons */}
+         
+          {/* Mobile Menu Toggle */}
+         
+        </div>
+
+        {/* Mobile Menu */}
+      
+      </header>
       
       {/* Main Content */}
       <div className="flex-1 flex">
