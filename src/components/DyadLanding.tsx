@@ -1,17 +1,21 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import './DyadLanding.css';
 
 const DyadLanding: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [activeService, setActiveService] = useState<number>(0);
-  const [activeAbout, setActiveAbout] = useState<number>(0);
+  const [activeAboutCard, setActiveAboutCard] = useState<number | null>(null);
+  
+  const handleAboutCardClick = (cardId: number) => {
+    console.log('About card clicked:', cardId);
+    setActiveAboutCard(activeAboutCard === cardId ? null : cardId);
+    console.log('Active card set to:', activeAboutCard === cardId ? null : cardId);
+  };
   
   const leadershipData = [
     {
       id: 1,
       name: 'S. Jaikumar',
       title: 'Founder',
-   
       description: '27+ years building institutional-grade financial, payments, and risk infrastructure. A Treasurer at global enterprises with deep expertise in collections optimization, cash acceleration, and controls for over 2.5 trillion in assets under management. Designed real-time receivables, merchant processing, and fraud mitigation platforms — applied directly to healthcare revenue cycle. Brings fiduciary discipline and payer-level rigor to physician reimbursement.',
       image: 'https://ui-avatars.com/api/?name=S.+Jaikumar&background=1D6DD8&color=fff&size=400'
     },
@@ -19,7 +23,6 @@ const DyadLanding: React.FC = () => {
       id: 2,
       name: 'A. Subramaniam',
       title: 'Chief Technology & AI Officer',
-    
       description: '27+ years architecting enterprise data, AI, and automation platforms across healthcare and financial services at major insurers and global banks. Chief AI Officer who has scaled 50+ production AI and GenAI accelerators including data ingestion, rules engines, and document intelligence. Expert in paper-elimination, workflow automation, and real-time analytics. Adjunct professor at Johns Hopkins AI graduate studies.',
       image: 'https://ui-avatars.com/api/?name=A.+Subramaniam&background=00A7D8&color=fff&size=400'
     },
@@ -27,7 +30,6 @@ const DyadLanding: React.FC = () => {
       id: 3,
       name: 'K. S. Rajan',
       title: 'Chief Operating Officer, India',
-     
       description: '28+ years running large-scale U.S. healthcare RCM operations across onshore and offshore teams. Former global P&L leader for multi-billion-dollar RCM platforms serving thousands of providers. Deep expertise in specialty billing, AR recovery, denials, IDR workflows, SLA governance, and compliance. Scales Dyad\'s operations with a quality-first, audit-defensible model.',
       image: 'https://ui-avatars.com/api/?name=K.+S.+Rajan&background=B0DA23&color=fff&size=400'
     }
@@ -43,37 +45,37 @@ const DyadLanding: React.FC = () => {
     },
     {
       id: 1,
-      title: 'Clarity & Accountability',
-      subtitle: 'Partnership through integrity and transparency',
-      paragraph: 'The DYAD partnership-driven model is built on a fiduciary commitment, providing integrity and transparency in every engagement. We deliver measurable outcomes that support practices in optimizing operations while ensuring they maintain control. Our approach ensures every solution aligns with the best interests of the organization, creating stability, efficiency, and accountability in practice operations.',
+      title: 'Our Mission & Vision',
+      subtitle: 'What drives us forward',
+      paragraph: 'Our mission is to empower healthcare providers with technology and expertise that transform their practice operations. We envision a future where every medical practice operates with the efficiency and precision of world-class healthcare institutions, enabling providers to focus on what matters most: patient care. Through our integrated solutions and partnership approach, we bridge the gap between clinical excellence and operational excellence.',
       image: '/assets/images/aboutus2.jpg'
     },
     {
       id: 2,
-      title: 'Technology Guided by Expertise',
-      subtitle: 'Integrated risk controls & optimized workflows',
-      paragraph: 'Technology alone isn\'t enough — it\'s how it\'s applied that makes the difference. Dyad integrates AI, automation, and data-driven insights with industry expertise to improve workflows, reduce costs, and strengthen practice operations — all with expert oversight to ensure accuracy and reliability. Our integrated approach delivers a seamless, structured framework that enhances efficiency and ensures consistency.',
+      title: 'Our Values & Principles',
+      subtitle: 'The foundation of our work',
+      paragraph: 'Excellence, integrity, partnership, and innovation guide everything we do. We believe in building long-term relationships with our clients, understanding their unique challenges, and delivering solutions that exceed expectations. Our commitment to quality, compliance, and continuous improvement ensures that our clients receive the highest standard of service and support.',
       image: '/assets/images/aboutus3.jpeg'
     },
     {
       id: 3,
-      title: 'Scalable by Design',
-      subtitle: 'Empowering independent practices with scalable solutions',
-      paragraph: 'Whether you operate a single practice, a regional group, or a PE-backed portfolio of acquisitions, Dyad deploys the same institutional-grade platform with consistent controls, consolidated reporting, and real-time visibility. Our modular architecture means onboarding a new entity does not require custom integration or months of implementation. Dyad delivers value, exceptional service, and measurable results from day one.',
+      title: 'Our Approach & Methodology',
+      subtitle: 'How we deliver results',
+      paragraph: 'We combine cutting-edge technology with deep healthcare expertise to deliver comprehensive solutions. Our methodology involves thorough assessment, strategic planning, seamless implementation, and ongoing optimization. We work collaboratively with our clients to understand their workflows, identify opportunities for improvement, and implement changes that drive measurable results.',
       image: '/assets/images/aboutus4.jpg'
     },
     {
       id: 4,
-      title: 'Why DYAD?',
-      subtitle: 'Expertise, execution and strategic support',
-      paragraph: 'DYAD integrates industry expertise, technology, and structured risk controls to create stability, efficiency, and accountability in practice operations. Rather than offering fragmented, à la carte services, we take an integrated approach — delivering a seamless, structured framework that enhances efficiency, ensures consistency, and drives measurable outcomes. Our approach ensures every solution aligns with the best interests of the organization.',
+      title: 'Our Technology & Innovation',
+      subtitle: 'Advanced solutions for modern healthcare',
+      paragraph: 'Our technology platform leverages artificial intelligence, machine learning, and advanced analytics to automate and optimize healthcare operations. From intelligent coding and claims processing to predictive analytics and real-time reporting, our solutions provide the insights and automation needed to thrive in today\'s complex healthcare landscape.',
       image: '/assets/images/aboutus5.jpeg'
     },
     {
       id: 5,
-      title: 'Our Process',
-      subtitle: 'Streamlined for efficiency from day one',
-      paragraph: 'Designed with intention, built for impact. From onboarding to execution, our streamlined approach eliminates complexity, accelerates results, and ensures seamless integration. We deliver a seamless, structured framework that enhances efficiency, ensures consistency, and drives measurable outcomes — all with expert oversight to ensure accuracy and reliability.',
+      title: 'Our Team & Expertise',
+      subtitle: 'The people behind our success',
+      paragraph: 'Our team brings together decades of experience in healthcare, technology, and business operations. With backgrounds in leading healthcare institutions, technology companies, and financial services, our experts understand the unique challenges facing modern medical practices and are committed to delivering solutions that drive success.',
       image: '/assets/images/aboutus6.webp'
     }
   ];
@@ -175,36 +177,6 @@ const DyadLanding: React.FC = () => {
     { name: 'Our services', href: '#services' }
   ];
 
-  const [activeSection, setActiveSection] = useState('top');
-
-  useEffect(() => {
-    const handleScroll = () => {
-      const sections = ['about', 'leadership', 'services', 'contact'];
-      const scrollPosition = window.scrollY + 100;
-
-      // Check if at top of page
-      if (scrollPosition < 200) {
-        setActiveSection('top');
-        return;
-      }
-
-      for (const section of sections) {
-        const element = document.getElementById(section);
-        if (element) {
-          const { offsetTop, offsetHeight } = element;
-          if (scrollPosition >= offsetTop && scrollPosition < offsetTop + offsetHeight) {
-            setActiveSection(section);
-            break;
-          }
-        }
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    handleScroll();
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
   return (
     <div className="dyad-landing-container" id="top">
       {/* Header */}
@@ -228,7 +200,7 @@ const DyadLanding: React.FC = () => {
                   <li key={item.name}>
                     <a 
                       href={item.href} 
-                      className={`nav-link ${activeSection === item.href.slice(1) ? 'active' : ''}`}
+                      className={`nav-link ${item.href === '#top' ? 'active' : ''}`}
                     >
                       {item.name}
                     </a>
@@ -267,7 +239,7 @@ const DyadLanding: React.FC = () => {
                 <li key={item.name}>
                   <a 
                     href={item.href} 
-                    className={`mobile-nav-link ${activeSection === item.href.slice(1) ? 'active' : ''}`}
+                    className={`mobile-nav-link ${item.href === '#top' ? 'active' : ''}`}
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     {item.name}
@@ -304,29 +276,21 @@ const DyadLanding: React.FC = () => {
           {/* Video Overlay */}
           <div className="video-overlay">
             <div className="video-content">
-              <div className="title-container">
+              <div className="title-container" style={{ marginBottom: '2.5rem' }}>
                 <h1 className="video-title">
                   <span className="title-line">A Bold Partnership Model for</span>
-                  <span className="title-line">Fiduciary-Grade Practice Operations</span>
+                  <span className="title-line">Smarter Healthcare Operations</span>
                 </h1>
-              </div>
-              
-              <p className="video-subtitle">
-              One platform. Fully integrated. Highly scalable
-               
-              </p>
-              
-              <div className="button-group">
-                <button className="request-demo-button">
-                  <span>Request an Introduction</span>
-                </button>
+                <p className="video-subtitle" style={{ marginTop: '2rem' }}>
+                  Dyad is the integrated revenue cycle and practice operations platform for anesthesia, ambulatory surgery centers, and the surgical specialties that operate within them, built on banking-class infrastructure. We replace fragmented vendors with a single operating layer powered by deep industry expertise, advanced technology, and institutional-grade risk controls, delivering end-to-end precision from to case to cash, same day. One platform for independent practices, physician groups, private equity-backed portfolios, and managed services organizations. Truly integrated. Exponentially scalable.
+                </p>
               </div>
             </div>
           </div>
         </div>
       </main>
 
-      {/* Trust Logos Section */}
+       {/* Trust Logos Section */}
       <section className="trust-logos-section">
         <div className="trust-container">
           <div className="logos-scroll">
@@ -361,35 +325,25 @@ const DyadLanding: React.FC = () => {
           <div className="about-header">
             <h2 className="about-title">About Us</h2>
             <p className="about-subtitle">
-         Dyad is the integrated revenue cycle and practice operations platform for anesthesia, ambulatory surgery centers, and the surgical specialties that operate within them, built on banking-class infrastructure. We replace fragmented vendors with a single operating layer powered by deep industry expertise, advanced technology, and institutional-grade risk controls, delivering end-to-end precision from to case to cash, same day. One platform for independent practices, physician groups, private equity-backed portfolios, and managed services organizations. Truly integrated. Exponentially scalable.    </p>
+              Dyad is the integrated revenue cycle and practice operations platform for anesthesia, ambulatory surgery centers, and the surgical specialties that operate within them, built on banking-class infrastructure. We replace fragmented vendors with a single operating layer powered by deep industry expertise, advanced technology, and institutional-grade risk controls, delivering end-to-end precision from to case to cash, same day. One platform for independent practices, physician groups, private equity-backed portfolios, and managed services organizations. Truly integrated. Exponentially scalable.
+            </p>
           </div>
-
-          {/* About Tabs */}
-          <div className="about-tabs">
+          <div className="about-grid">
             {aboutContent.map((item) => (
-              <button 
+              <div
                 key={item.id}
-                className={`about-tab ${activeAbout === item.id ? 'active' : ''}`}
-                onClick={() => setActiveAbout(item.id)}
-              >
-                {item.title}
-              </button>
-            ))}
-          </div>
-
-          {/* About Content - Show only active card */}
-          <div className="about-content-area">
-            {aboutContent.map((item) => (
-              <div 
-                key={item.id} 
-                className={`about-card ${activeAbout === item.id ? 'active' : ''}`}
+                className={`about-card ${activeAboutCard === item.id ? 'active' : ''}`}
+                onClick={() => handleAboutCardClick(item.id)}
               >
                 <div className="about-card-image">
                   <img src={item.image} alt={item.title} />
                 </div>
-                <div className="about-card-content">
+                <div className="about-card-overlay">
                   <h3 className="about-card-title">{item.title}</h3>
-                  <h4 className="about-card-subtitle">{item.subtitle}</h4>
+                  <p className="about-card-subtitle">{item.subtitle}</p>
+                  <div className="about-card-learn-more">
+                    <span>Learn More →</span>
+                  </div>
                   <p className="about-card-paragraph">{item.paragraph}</p>
                 </div>
               </div>
@@ -407,21 +361,18 @@ const DyadLanding: React.FC = () => {
               Decades of proven expertise at the intersection of healthcare, finance and technology
             </p>
           </div>
-
           <div className="leadership-grid">
             {leadershipData.map((leader, index) => (
-              <div key={leader.id} className={`leadership-card ${index === 1 ? 'reversed' : ''}`}>
+              <div
+                key={leader.id}
+                className={`leadership-card ${index % 2 === 1 ? 'reversed' : ''}`}
+              >
                 <div className="leadership-image">
                   <img src={leader.image} alt={leader.name} />
                 </div>
                 <div className="leadership-content">
-                  <div className="content-arrow" style={{width: '15px'}}>
-                    <svg width="15" height="20" viewBox="0 0 20 20" fill="#B0DA23">
-                      <path d="M10 2L18 18H2L10 2Z"/>
-                    </svg>
-                  </div>
                   <h3 className="leader-name">{leader.name}</h3>
-                  <h4 className="leader-title">{leader.title}</h4>
+                  <p className="leader-title">{leader.title}</p>
                   <p className="leader-description">{leader.description}</p>
                 </div>
               </div>
@@ -429,6 +380,8 @@ const DyadLanding: React.FC = () => {
           </div>
         </div>
       </section>
+
+    
 
       {/* Our Services Section */}
       <section className="services-section" id="services">
@@ -439,47 +392,28 @@ const DyadLanding: React.FC = () => {
               We set the standard for accuracy, efficiency, and value - delivering faster turnarounds, unmatched precision, and measurable impact. Backed by rigorous risk controls and uncompromising quality, our integrated solutions go beyond excellence to redefine what's possible. No fragmentation - just a unified approach. Most services operate within our full-service model, where seamless integration drives real value.
             </p>
           </div>
-
-          <div className="services-content">
-            {/* Left Side - Service List */}
-            <div className="services-list">
-              {servicesData.map((service) => (
-                <div 
-                  key={service.id} 
-                  className={`service-item ${activeService === service.id ? 'active' : ''}`}
-                  onClick={() => setActiveService(service.id)}
-                >
-                  {/* Mobile Card Image - Top */}
-                  <div className="service-card-image">
-                    <img src={service.image} alt={service.title} />
+          <div className="services-grid">
+            {servicesData.map((service) => (
+              <div key={service.id} className="service-card">
+                <div className="service-card-image">
+                  <img src={service.image} alt={service.title} />
+                </div>
+                <div className="service-card-content">
+                  <h3 className="service-card-title">{service.title}</h3>
+                  <p className="service-card-subtitle">{service.subtitle}</p>
+                  <div className="service-card-learn-more" style={{ position: 'absolute', bottom: '1rem', left: '1rem' }}>
+                    <span>Learn More</span>
                   </div>
-                  
-                  <div className="service-item-content">
-                    {/* Title - Below Image */}
-                    <h3 className="service-item-title">{service.title}</h3>
+                </div>
+                <div className="service-card-description-overlay">
+                  <div className="description-content">
+                    <h3>{service.title}</h3>
                     
-                    {/* Subtitle - Below Title */}
-                    <p className="service-item-subtitle">{service.subtitle}</p>
-                    
-                    {/* Expand Text - Below Subtitle */}
-                    <span 
-                      className="service-expand-text"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setActiveService(activeService === service.id ? -1 : service.id);
-                      }}
-                    >
-                      {activeService === service.id ? 'Show Less' : 'Learn More'}
-                    </span>
-                  </div>
-                  
-                  {/* Expandable Content - Mobile Only */}
-                  <div className="service-expand-content">
-                    <div className="service-expand-details">
-                      <ul className="service-features-list">
+                    <div className="description-features">
+                      <ul>
                         {service.features.map((feature, index) => (
-                          <li key={index} className="service-feature-item">
-                            <img src="/assets/images/vector-tick.png" alt="✓" className="feature-bullet" />
+                          <li key={index}>
+                            <img src="/assets/images/vector-tick.png" alt="✓" className="tick-icon" />
                             {feature}
                           </li>
                         ))}
@@ -487,124 +421,89 @@ const DyadLanding: React.FC = () => {
                     </div>
                   </div>
                 </div>
-              ))}
-            </div>
-
-            {/* Right Side - Service Details */}
-            <div className="service-details">
-              {servicesData.map((service) => (
-                <div 
-                  key={service.id} 
-                  className={`service-detail-card ${activeService === service.id ? 'active' : ''}`}
-                >
-                  <div className="service-detail-image">
-                    <img src={service.image} alt={service.title} />
-                  </div>
-                  <div className="service-detail-content">
-                    <h3 className="service-detail-title">{service.title}</h3>
-                    <h4 className="service-detail-subtitle">{service.subtitle}</h4>
-                    <ul className="service-features-list">
-                      {service.features.map((feature, index) => (
-                        <li key={index} className="service-feature-item">
-                          <img src="/assets/images/vector-tick.png" alt="✓" className="feature-bullet" />
-                          {feature}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Footer Section */}
-      <footer className="footer-section" id="contact">
+      {/* Footer */}
+       <footer className="footer-section" id="contact">
         <div className="footer-container">
-          {/* Company Info Section */}
-          <div className="footer-column">
-            <div className="footer-logo">
-              <img src="/assets/images/dyadmain-ogo.svg" alt="Dyad Logo" />
+          <div className="footer-content">
+            {/* Column 1: Logo and Description */}
+            <div className="footer-column">
+              <div className="footer-logo">
+                <img src="/assets/images/dyadmain-ogo.svg" alt="Dyad Logo" />
+              </div>
+              <p className="footer-description">
+                Dyad is an integrated revenue cycle and practice operations platform for anesthesia, ambulatory surgery centers, and surgical specialties. Built on banking-grade infrastructure, it replaces fragmented vendors with a single, scalable operating layer—combining deep industry expertise, advanced technology, and institutional-grade controls to deliver precise, end-to-end case-to-cash outcomes, same day.
+              </p>
             </div>
-            <p className="footer-description">
-              Dyad is an integrated revenue cycle and practice operations platform for anesthesia, ambulatory surgery centers, and surgical specialties. Built on banking-grade infrastructure, it replaces fragmented vendors with a single, scalable operating layer—combining deep industry expertise, advanced technology, and institutional-grade controls to deliver precise, end-to-end case-to-cash outcomes, same day.
-            </p>
-          </div>
 
-          {/* Company Section */}
-          <div className="footer-column">
-            <h3 className="footer-title">Company</h3>
-            <ul className="footer-links">
-              <li><a href="#top">Home</a></li>
-              <li><a href="#about">About Us</a></li>
-              <li><a href="#leadership">Leadership</a></li>
-              <li><a href="#services">Our Services</a></li>
-            </ul>
-          </div>
+            {/* Column 2: Company */}
+            <div className="footer-column">
+              <h3 className="footer-column-title">Company</h3>
+              <ul className="footer-menu">
+                <li><a href="#top">Home</a></li>
+                <li><a href="#about">About Us</a></li>
+                <li><a href="#leadership">Leadership</a></li>
+                <li><a href="#services">Our Services</a></li>
+              </ul>
+            </div>
 
-          {/* Services Section */}
-          <div className="footer-column">
-            <h3 className="footer-title">Services</h3>
-            <ul className="footer-links">
-              <li><a href="#services">Practice Foundations</a></li>
-              <li><a href="#services">Technology driven capabilities</a></li>
-              <li><a href="#services">Pre & Post Encounter</a></li>
-              <li><a href="#services">Claims Management</a></li>
-              <li><a href="#services">Specialty Billing</a></li>
-              <li><a href="#services">Real Time Insights</a></li>
-            </ul>
-          </div>
+            {/* Column 3: Services */}
+            <div className="footer-column">
+              <h3 className="footer-column-title">Services</h3>
+              <ul className="footer-menu">
+                <li><a href="#services">Practice Foundations</a></li>
+                <li><a href="#services">Technology driven capabilities</a></li>
+                <li><a href="#services">Pre & Post Encounter</a></li>
+                <li><a href="#services">Claims Management</a></li>
+                <li><a href="#services">Specialty Billing</a></li>
+                <li><a href="#services">Real Time Insights</a></li>
+              </ul>
+            </div>
 
-          {/* Contact Section */}
-          <div className="footer-column">
-            <h3 className="footer-title">Contact</h3>
-            <div className="footer-contact">
-              <p className="footer-email">
-                <span className="contact-icon">📧</span>
-                <a href="mailto:info@dyadmd.com" className="contact-link">info@dyadmd.com</a>
-              </p>
-              <p className="footer-address">
-                <span className="contact-icon">📍</span>
-                2573 Pacific Coast Hwy,<br />
-                Ste A277 Torrance, CA 90505
-              </p>
-              <div className="social-icons">
-                <a href="#" className="social-icon facebook">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                  </svg>
-                </a>
-                <a href="#" className="social-icon twitter">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
-                  </svg>
-                </a>
-                <a href="#" className="social-icon linkedin">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-                  </svg>
-                </a>
+            {/* Column 4: Contact */}
+            <div className="footer-column">
+              <h3 className="footer-column-title">Contact</h3>
+              <div className="footer-contact-info">
+                <div className="contact-item">
+                  <span className="contact-symbol">✉</span>
+                  <span>info@dyadmd.com</span>
+                </div>
+                <div className="contact-item">
+                  <span className="contact-symbol">📍</span>
+                  <span>2573 Pacific Coast Hwy, Ste A277 Torrance, CA 90505</span>
+                </div>
+                <div className="footer-social-icons">
+                  <a href="#" className="social-icon">
+                    <span className="social-symbol">in</span>
+                  </a>
+                  <a href="#" className="social-icon">
+                    <span className="social-symbol">f</span>
+                  </a>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-        
-        {/* Footer Bottom Row */}
-        <div className="footer-bottom">
-          <div className="footer-bottom-container">
-            <div className="footer-copyright">
-              © 2026 DYAD Practice Solutions. All rights reserved.
+
+          {/* Second Row: Copyright and Legal */}
+          <div className="footer-bottom">
+            <div className="footer-bottom-left">
+              <p>&copy; 2026 DYAD Practice Solutions. All rights reserved.</p>
             </div>
-            <div className="footer-policies">
-              <a href="#" className="policy-link">Privacy policy</a>
-              <a href="#" className="policy-link">Terms of service</a>
-              <a href="#" className="policy-link">Cookie policy</a>
+            <div className="footer-bottom-right">
+              <ul className="footer-legal-menu">
+                <li><a href="#">Privacy policy</a></li>
+                <li><a href="#">Terms of service</a></li>
+                <li><a href="#">Cookie policy</a></li>
+              </ul>
             </div>
           </div>
         </div>
       </footer>
-
     </div>
   );
 };

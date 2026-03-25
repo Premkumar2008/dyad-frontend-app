@@ -2,7 +2,6 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
-import Landing from './pages/Landing';
 import DyadLanding from './components/DyadLanding';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -25,7 +24,7 @@ function App() {
       <AuthProvider>
         <div className="min-h-screen bg-gray-50">
           <Routes>
-            <Route path="/" element={<Landing />} />
+            <Route path="/" element={<DyadLanding />} />
             <Route path="/dyadlanding-new" element={<DyadLanding />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
