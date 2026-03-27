@@ -11,6 +11,7 @@ import ClientDashboard from './pages/ClientDashboard';
 import TestDashboard from './pages/TestDashboard';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
+import ContactUs from './pages/ContactUs';
 import { initializeSecurity } from './utils/security';
 import SecurityMonitor from './utils/securityMonitor';
 
@@ -26,6 +27,7 @@ function App() {
           <Routes>
             <Route path="/" element={<DyadLanding />} />
             <Route path="/dyadlanding-new" element={<DyadLanding />} />
+            <Route path="/contact" element={<ContactUs />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/verify-otp" element={<OTPVerification />} />

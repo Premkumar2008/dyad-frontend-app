@@ -1,28 +1,138 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import './DyadLanding.css';
 
 const DyadLanding: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeAboutCard, setActiveAboutCard] = useState<number | null>(null);
   const [activeMenu, setActiveMenu] = useState('Home');
+  const [isAboutDropdownOpen, setIsAboutDropdownOpen] = useState(false);
+  const [isWhoWeServeDropdownOpen, setIsWhoWeServeDropdownOpen] = useState(false);
+  const [hoveredMenu, setHoveredMenu] = useState<string | null>(null);
   const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Handle scroll from Contact Us page navigation
+  useEffect(() => {
+    if (location.state?.scrollTo) {
+      const scrollTo = location.state.scrollTo;
+      const sectionId = scrollTo.replace('#', '');
+      const element = document.getElementById(sectionId);
+      if (element) {
+        setTimeout(() => {
+          element.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
+      }
+      // Clear the state to prevent re-scrolling
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
   
   const handleLogin = () => {
     // Navigate to login page
     navigate('/login');
   };
   
+  const handleContactRequest = () => {
+    // Navigate to contact page
+    navigate('/contact');
+  };
+  
+  const handleLogoClick = () => {
+    // Navigate to landing page (top)
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+  
   const handleNavClick = (menuName: string, href: string) => {
     setActiveMenu(menuName);
     
-    // Smooth scroll to section
+    // Close all dropdowns when clicking on other menu items
+    setIsAboutDropdownOpen(false);
+    setIsWhoWeServeDropdownOpen(false);
+    
+    // Don't navigate for Who We Serve - just close dropdowns
+    if (menuName === 'Who We Serve') {
+      return;
+    }
+    
+    // Smooth scroll to section with header offset
     const sectionId = href.replace('#', '');
     const element = document.getElementById(sectionId);
     if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
+      const headerHeight = 80; // Approximate header height
+      const elementPosition = element.getBoundingClientRect().top + window.pageYOffset;
+      const offsetPosition = elementPosition - headerHeight;
+      
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+      });
     }
   };
+
+  const handleAboutDropdownHover = (isOpen: boolean) => {
+    setIsAboutDropdownOpen(isOpen);
+    if (isOpen) {
+      setIsWhoWeServeDropdownOpen(false);
+      setHoveredMenu('About Us');
+    } else {
+      setHoveredMenu(null);
+    }
+  };
+
+  const handleWhoWeServeDropdownHover = (isOpen: boolean) => {
+    setIsWhoWeServeDropdownOpen(isOpen);
+    if (isOpen) {
+      setIsAboutDropdownOpen(false);
+      setHoveredMenu('Who We Serve');
+    } else {
+      setHoveredMenu(null);
+    }
+  };
+
+  const handleAboutDropdownItemClick = (href: string) => {
+    setActiveMenu('About Us');
+    setIsAboutDropdownOpen(false);
+    setHoveredMenu(null);
+    
+    // Always redirect to main About Us section with header offset
+    const aboutElement = document.getElementById('about');
+    if (aboutElement) {
+      const headerHeight = 80; // Approximate header height
+      const elementPosition = aboutElement.getBoundingClientRect().top + window.pageYOffset;
+      const offsetPosition = elementPosition - headerHeight;
+      
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  const handleWhoWeServeDropdownItemClick = (href: string) => {
+    // Don't set active menu for Who We Serve
+    setIsWhoWeServeDropdownOpen(false);
+    setHoveredMenu(null);
+    // No navigation - just close dropdown
+  };
+
+  const handleMenuHover = (menuName: string | null) => {
+    setHoveredMenu(menuName);
+  };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (!target.closest('.dropdown-container') && !target.closest('.mobile-dropdown-container')) {
+        setIsAboutDropdownOpen(false);
+        setIsWhoWeServeDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
   
   const handleAboutCardClick = (cardId: number) => {
     setActiveAboutCard(activeAboutCard === cardId ? null : cardId);
@@ -34,21 +144,24 @@ const DyadLanding: React.FC = () => {
       name: 'S. Jaikumar',
       title: 'Founder',
       description: '27+ years building institutional-grade financial, payments, and risk infrastructure. A Treasurer at global enterprises with deep expertise in collections optimization, cash acceleration, and controls for over 2.5 trillion in assets under management. Designed real-time receivables, merchant processing, and fraud mitigation platforms — applied directly to healthcare revenue cycle. Brings fiduciary discipline and payer-level rigor to physician reimbursement.',
-      image: 'https://ui-avatars.com/api/?name=S.+Jaikumar&background=1D6DD8&color=fff&size=400'
+      image: '/assets/images/leadershipnew1.jpeg',
+      mobileImage: '/assets/images/leadershipmb1.jpeg'
     },
     {
       id: 2,
       name: 'A. Subramaniam',
       title: 'Chief Technology & AI Officer',
       description: '27+ years architecting enterprise data, AI, and automation platforms across healthcare and financial services at major insurers and global banks. Chief AI Officer who has scaled 50+ production AI and GenAI accelerators including data ingestion, rules engines, and document intelligence. Expert in paper-elimination, workflow automation, and real-time analytics. Adjunct professor at Johns Hopkins AI graduate studies.',
-      image: 'https://ui-avatars.com/api/?name=A.+Subramaniam&background=00A7D8&color=fff&size=400'
+      image: '/assets/images/leadershipnew2.jpeg',
+      mobileImage: '/assets/images/leadershipmb2.jpeg'
     },
     {
       id: 3,
-      name: 'K. S. Rajan',
+      name: 'S. Rajan',
       title: 'Chief Operating Officer, India',
       description: '28+ years running large-scale U.S. healthcare RCM operations across onshore and offshore teams. Former global P&L leader for multi-billion-dollar RCM platforms serving thousands of providers. Deep expertise in specialty billing, AR recovery, denials, IDR workflows, SLA governance, and compliance. Scales Dyad\'s operations with a quality-first, audit-defensible model.',
-      image: 'https://ui-avatars.com/api/?name=K.+S.+Rajan&background=B0DA23&color=fff&size=400'
+      image: '/assets/images/leadershipnew3.jpeg',
+      mobileImage: '/assets/images/leadershipmb3.jpeg'
     }
   ];
 
@@ -57,14 +170,14 @@ const DyadLanding: React.FC = () => {
       id: 0,
       title: 'Our Story & Inspiration',
       subtitle: 'The origins and purpose',
-      paragraph: 'In 1908, William J. Mayo hired Harry Harwick to manage the business and operations of the Mayo Clinic, pioneering a new leadership model in healthcare: the Dyad. At its core, a Dyad is a partnership — a seamless collaboration between a clinical leader and a business operations expert to elevate care delivery and practice performance. Inspired by this model, Dyad Practice Solutions was founded to bring the same partnership-driven approach to modern healthcare operations, combining institutional-grade technology, deep domain expertise and a commitment to transforming practice operations.',
+      paragraph: 'In 1908, William J. Mayo hired Harry Harwick to manage the business and operations of the Mayo Clinic, pioneering a new leadership model in healthcare: the Dyad. At its core, a Dyad is a partnership - a seamless collaboration between a clinical leader and a business operations expert to elevate care delivery and practice performance. Inspired by this model, Dyad Practice Solutions was founded to bring the same partnership-driven approach to modern healthcare finance operations, combining institutional-grade technology, domain expertise, and a commitment to transforming practice operations.',
       image: '/assets/images/aboutus1.png'
     },
     {
       id: 1,
       title: 'Our Mission & Vision',
       subtitle: 'What drives us forward',
-      paragraph: 'Our mission is to empower healthcare providers with technology and expertise that transform their practice operations. We envision a future where every medical practice operates with the efficiency and precision of world-class healthcare institutions, enabling providers to focus on what matters most: patient care. Through our integrated solutions and partnership approach, we bridge the gap between clinical excellence and operational excellence.',
+      paragraph: 'Healthcare finance operations deserves the same qualitative and quantitative discipline that financial and banking enterprises apply to capital. Dyad was built on that premise. We bring a fiduciary lens to healthcare financial operations - removing the inefficiencies, redundancies, and gaps that erode revenue. Through integrated technology, data-driven analytics, and a partnership model grounded in accountability, we give healthcare organizations the infrastructure to operate with institutional-grade precision.',
       image: '/assets/images/aboutus2.jpg'
     },
     {
@@ -78,14 +191,14 @@ const DyadLanding: React.FC = () => {
       id: 3,
       title: 'Our Approach & Methodology',
       subtitle: 'How we deliver results',
-      paragraph: 'We combine cutting-edge technology with deep healthcare expertise to deliver comprehensive solutions. Our methodology involves thorough assessment, strategic planning, seamless implementation, and ongoing optimization. We work collaboratively with our clients to understand their workflows, identify opportunities for improvement, and implement changes that drive measurable results.',
+      paragraph: 'We combine innovative technologies with healthcare finance expertise to deliver comprehensive solutions. Our methodology involves thorough a assessment, strategic planning, seamless implementation, and ongoing optimization. We work collaboratively with our clients to understand their workflows, identify opportunities for improvement, and implement changes that drive measurable results.',
       image: '/assets/images/aboutus4.jpg'
     },
     {
       id: 4,
-      title: 'Our Technology & Innovation',
+      title: 'Our Innovative Technologies',
       subtitle: 'Advanced solutions for modern healthcare',
-      paragraph: 'Our technology platform leverages artificial intelligence, machine learning, and advanced analytics to automate and optimize healthcare operations. From intelligent coding and claims processing to predictive analytics and real-time reporting, our solutions provide the insights and automation needed to thrive in today\'s complex healthcare landscape.',
+      paragraph: "Grounded in industry expertise, rigorous risk controls, and governance, our platform leverages artificial intelligence, machine learning, and advanced analytics to optimize healthcare operations. From intelligent coding and claims processing to predictive analytics and real-time reporting, our solutions deliver the financial intelligence and operational discipline to thrive in today's complex healthcare landscape.",
       image: '/assets/images/aboutus5.jpeg'
     },
     {
@@ -108,14 +221,14 @@ const DyadLanding: React.FC = () => {
       features: [
         'Practice assessment',
         'Payer enrollment',
+        'Physician credentialing',
         'Facility credentialing',
-        'Physician licensing',
-        'Physician credentialing'
+        'Physician licensing'
       ]
     },
     {
       id: 1,
-      title: 'Technology driven capabilities',
+      title: 'Technology Driven Capabilities',
       subtitle: 'Mobile supported work flows, ONC Integration FHIR, governance and compliance',
       image: '/assets/images/ourservices2.jpg',
       icon: 'icon-laptop',
@@ -187,11 +300,27 @@ const DyadLanding: React.FC = () => {
     }
   ];
 
+  const aboutDropdownItems = [
+    { name: 'Our Story & Inspiration', href: '#about-story' },
+    { name: 'Our Mission & Vision', href: '#about-mission' },
+    { name: 'Our Values & Principles', href: '#about-values' },
+    { name: 'Our Approach & Methodology', href: '#about-approach' },
+    { name: 'Our Innovative Technologies', href: '#about-technology' },
+    { name: 'Our Team & Expertise', href: '#about-team' }
+  ];
+
+  const whoWeServeDropdownItems = [
+    { name: 'Surgical & Procedural Specialties', href: '#surgical-specialties' },
+    { name: 'Interventional & Diagnostic Care', href: '#interventional-care' },
+    { name: 'Perioperative & Supportive Services', href: '#perioperative-services' },
+    { name: 'Outpatient & Specialty Facilities', href: '#outpatient-facilities' }
+  ];
+
   const navigationItems = [
-    { name: 'Home', href: '#top' },
-    { name: 'About us', href: '#about' },
+    { name: 'About Us', href: '#about', hasDropdown: true },
     { name: 'Leadership', href: '#leadership' },
-    { name: 'Our services', href: '#services' }
+    { name: 'What We Do', href: '#services' },
+    { name: 'Who We Serve', href: '#who-we-serve', hasDropdown: true }
   ];
 
   return (
@@ -200,7 +329,7 @@ const DyadLanding: React.FC = () => {
       <header className="dyad-header">
         <div className="dyad-header-content">
           {/* Left - Logo */}
-          <div className="dyad-logo">
+          <div className="dyad-logo" onClick={handleLogoClick} style={{ cursor: 'pointer' }}>
             <img 
               src="/assets/images/dyadmain-ogo.svg" 
               alt="Dyad Logo" 
@@ -216,26 +345,141 @@ const DyadLanding: React.FC = () => {
                 {navigationItems.map((item) => {
                   const isActive = activeMenu === item.name;
                   return (
-                    <li key={item.name}>
-                      <a 
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handleNavClick(item.name, item.href);
-                        }}
-                        style={{ 
-                          color: isActive ? '#1D6DD8' : '#374151',
-                          cursor: 'pointer',
-                          textDecoration: 'none',
-                          fontWeight: 500,
-                          fontSize: '1rem',
-                          fontFamily: 'Poppins, sans-serif',
-                          padding: '0.5rem 1rem',
-                          borderRadius: '6px',
-                          transition: 'all 0.3s ease'
-                        }}
-                      >
-                        {item.name}
-                      </a>
+                    <li key={item.name} className="nav-item-container">
+                      {item.hasDropdown ? (
+                        <div 
+                          className="dropdown-container"
+                          onMouseEnter={() => {
+                            handleMenuHover(item.name);
+                            if (item.name === 'About Us') {
+                              handleAboutDropdownHover(true);
+                            } else if (item.name === 'Who We Serve') {
+                              handleWhoWeServeDropdownHover(true);
+                            }
+                          }}
+                          onMouseLeave={() => {
+                            handleMenuHover(null);
+                            if (item.name === 'About Us') {
+                              handleAboutDropdownHover(false);
+                            } else if (item.name === 'Who We Serve') {
+                              handleWhoWeServeDropdownHover(false);
+                            }
+                          }}
+                        >
+                          <a 
+                            style={{ 
+                              color: hoveredMenu === item.name ? '#1D6DD8' : '#374151',
+                              cursor: 'pointer',
+                              textDecoration: 'none',
+                              fontWeight: 400,
+                              fontSize: '1.1rem',
+                              fontFamily: 'Prompt, sans-serif',
+                              padding: '0.5rem 1rem',
+                              borderRadius: '6px',
+                              transition: 'all 0.3s ease',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '0.5rem'
+                            }}
+                          >
+                            {item.name}
+                            <svg 
+                              className={`dropdown-arrow ${
+                                (item.name === 'About Us' && isAboutDropdownOpen) || 
+                                (item.name === 'Who We Serve' && isWhoWeServeDropdownOpen) 
+                                  ? 'open' : ''
+                              }`}
+                              width="16" 
+                              height="16" 
+                              viewBox="0 0 16 16" 
+                              fill="none" 
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path 
+                                d="M4 6L8 10L12 6" 
+                                stroke="currentColor" 
+                                strokeWidth="2" 
+                                strokeLinecap="round" 
+                                strokeLinejoin="round"
+                              />
+                            </svg>
+                          </a>
+                          <div className={`dropdown-menu ${
+                            (item.name === 'About Us' && isAboutDropdownOpen) || 
+                            (item.name === 'Who We Serve' && isWhoWeServeDropdownOpen) 
+                              ? 'open' : ''
+                          }`}>
+                            {item.name === 'About Us' && aboutDropdownItems.map((dropdownItem) => (
+                              <a
+                                key={dropdownItem.name}
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  handleAboutDropdownItemClick(dropdownItem.href);
+                                }}
+                                className="dropdown-item"
+                                style={{
+                                  display: 'block',
+                                  padding: '0.75rem 1rem',
+                                  color: '#374151',
+                                  textDecoration: 'none',
+                                  fontSize: '0.95rem',
+                                  fontFamily: 'Prompt, sans-serif',
+                                  transition: 'all 0.3s ease',
+                                  cursor: 'pointer'
+                                }}
+                              >
+                                {dropdownItem.name}
+                              </a>
+                            ))}
+                            {item.name === 'Who We Serve' && whoWeServeDropdownItems.map((dropdownItem) => (
+                              <a
+                                key={dropdownItem.name}
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  handleWhoWeServeDropdownItemClick(dropdownItem.href);
+                                }}
+                                className="dropdown-item"
+                                style={{
+                                  display: 'block',
+                                  padding: '0.75rem 1rem',
+                                  color: '#374151',
+                                  textDecoration: 'none',
+                                  fontSize: '0.95rem',
+                                  fontFamily: 'Prompt, sans-serif',
+                                  transition: 'all 0.3s ease',
+                                  cursor: 'pointer'
+                                }}
+                              >
+                                {dropdownItem.name}
+                              </a>
+                            ))}
+                          </div>
+                        </div>
+                      ) : (
+                        <a 
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handleNavClick(item.name, item.href);
+                          }}
+                          onMouseEnter={() => handleMenuHover(item.name)}
+                          onMouseLeave={() => handleMenuHover(null)}
+                          style={{ 
+                            color: hoveredMenu === item.name ? '#1D6DD8' : '#374151',
+                            cursor: 'pointer',
+                            textDecoration: 'none',
+                            fontWeight: 400,
+                            fontSize: '1.1rem',
+                            fontFamily: 'Prompt, sans-serif',
+                            padding: '0.5rem 1rem',
+                            borderRadius: '6px',
+                            transition: 'all 0.3s ease',
+                            display: 'flex',
+                            alignItems: 'center'
+                          }}
+                        >
+                          {item.name}
+                        </a>
+                      )}
                     </li>
                   );
                 })}
@@ -244,18 +488,18 @@ const DyadLanding: React.FC = () => {
 
             {/* Action Buttons */}
             <div className="dyad-actions">
-              <button className="btn btn-primary">
-                <span>Request an Introduction</span>
-              </button>
-              {/* <button className="btn btn-secondary" onClick={handleLogin}>
+              <button className="btn btn-secondary" onClick={handleLogin}>
                 <span>Login</span>
-              </button> */}
+              </button>
+              <button className="btn btn-primary" onClick={handleContactRequest}>
+                <span>Contact Us</span>
+              </button>
             </div>
           </div>
 
           {/* Mobile Menu Toggle */}
           <button 
-            className="mobile-menu-toggle"
+            className={`mobile-menu-toggle ${isMobileMenuOpen ? 'open' : ''}`}
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           >
             <span></span>
@@ -272,28 +516,105 @@ const DyadLanding: React.FC = () => {
                   const isActive = activeMenu === item.name;
                   return (
                     <li key={item.name}>
-                      <a 
-                        onClick={(e) => {
-                          e.preventDefault();
-                          handleNavClick(item.name, item.href);
-                          setIsMobileMenuOpen(false);
-                        }}
-                        className={`mobile-nav-link ${isActive ? 'active' : ''}`}
-                        style={{ 
-                          color: isActive ? '#1D6DD8' : '#374151',
-                          cursor: 'pointer'
-                        }}
-                      >
-                        {item.name}
-                      </a>
+                      {item.hasDropdown ? (
+                        <div className="mobile-dropdown-container">
+                          <a 
+                            onClick={(e) => {
+                              e.preventDefault();
+                              if (item.name === 'About Us') {
+                                handleAboutDropdownHover(!isAboutDropdownOpen);
+                              } else if (item.name === 'Who We Serve') {
+                                handleWhoWeServeDropdownHover(!isWhoWeServeDropdownOpen);
+                              }
+                            }}
+                            className={`mobile-nav-link ${isActive ? 'active' : ''}`}
+                            style={{ 
+                              color: isActive ? '#1D6DD8' : '#374151',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'space-between'
+                            }}
+                          >
+                            {item.name}
+                            <svg 
+                              className={`mobile-dropdown-arrow ${
+                                (item.name === 'About Us' && isAboutDropdownOpen) || 
+                                (item.name === 'Who We Serve' && isWhoWeServeDropdownOpen) 
+                                  ? 'open' : ''
+                              }`}
+                              width="16" 
+                              height="16" 
+                              viewBox="0 0 16 16" 
+                              fill="none" 
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path 
+                                d="M4 6L8 10L12 6" 
+                                stroke="currentColor" 
+                                strokeWidth="2" 
+                                strokeLinecap="round" 
+                                strokeLinejoin="round"
+                              />
+                            </svg>
+                          </a>
+                          <div className={`mobile-dropdown-menu ${
+                            (item.name === 'About Us' && isAboutDropdownOpen) || 
+                            (item.name === 'Who We Serve' && isWhoWeServeDropdownOpen) 
+                              ? 'open' : ''
+                          }`}>
+                            {item.name === 'About Us' && aboutDropdownItems.map((dropdownItem) => (
+                              <a
+                                key={dropdownItem.name}
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  handleAboutDropdownItemClick(dropdownItem.href);
+                                  setIsMobileMenuOpen(false);
+                                }}
+                                className="mobile-dropdown-item"
+                              >
+                                {dropdownItem.name}
+                              </a>
+                            ))}
+                            {item.name === 'Who We Serve' && whoWeServeDropdownItems.map((dropdownItem) => (
+                              <a
+                                key={dropdownItem.name}
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  handleWhoWeServeDropdownItemClick(dropdownItem.href);
+                                  setIsMobileMenuOpen(false);
+                                }}
+                                className="mobile-dropdown-item"
+                              >
+                                {dropdownItem.name}
+                              </a>
+                            ))}
+                          </div>
+                        </div>
+                      ) : (
+                        <a 
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handleNavClick(item.name, item.href);
+                            setIsMobileMenuOpen(false);
+                          }}
+                          className={`mobile-nav-link ${isActive ? 'active' : ''}`}
+                          style={{ 
+                            color: isActive ? '#1D6DD8' : '#374151',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          {item.name}
+                        </a>
+                      )}
                     </li>
                   );
                 })}
             </ul>
           </nav>
           <div className="mobile-actions">
-            <button className="btn btn-primary btn-full">
-              <span>Request an Introduction</span>
+            <button className="btn btn-primary btn-full" onClick={handleContactRequest}>
+              <span>Contact Us</span>
             </button>
             <button className="btn btn-secondary btn-full" onClick={handleLogin}>
               <span>Login</span>
@@ -321,12 +642,11 @@ const DyadLanding: React.FC = () => {
             <div className="video-content">
               <div className="title-container">
                 <h1 className="video-title">
-                  <span className="title-line">A Bold Partnership Model for</span>
-                  <span className="title-line">Smarter Healthcare Operations</span>
+                  <span className="title-line">A Bold Partnership Model for Smarter Healthcare Operations</span>
+                
                 </h1>
                 <p className="video-subtitle" style={{ marginTop: '2rem' }}>
-                  Dyad is the integrated revenue cycle and practice operations platform for anesthesia, ambulatory surgery centers, and the surgical specialties that operate within them, built on banking-class infrastructure. We replace fragmented vendors with a single operating layer powered by deep industry expertise, advanced technology, and institutional-grade risk controls, delivering end-to-end precision from to case to cash, same day. One platform for independent practices, physician groups, private equity-backed portfolios, and managed services organizations. Truly integrated. Exponentially scalable.
-                </p>
+           We're rewriting the rules. By uniting industry expertise, innovative technologies, and operational risk controls, we're introducing a scalable new model of integration that is built to measurably improve practice economics.      </p>
               </div>
             </div>
           </div>
@@ -368,8 +688,7 @@ const DyadLanding: React.FC = () => {
           <div className="about-header">
             <h2 className="about-title">About Us</h2>
             <p className="about-subtitle">
-              Dyad is the integrated revenue cycle and practice operations platform for anesthesia, ambulatory surgery centers, and the surgical specialties that operate within them, built on banking-class infrastructure. We replace fragmented vendors with a single operating layer powered by deep industry expertise, advanced technology, and institutional-grade risk controls, delivering end-to-end precision from to case to cash, same day. One platform for independent practices, physician groups, private equity-backed portfolios, and managed services organizations. Truly integrated. Exponentially scalable.
-            </p>
+          Dyad is a fully integrated healthcare finance operations platform for anesthesia, ambulatory surgery centers, and the surgical specialties that operate within them, built on bank-grade infrastructure. We replace fragmented vendors with a single operating layer powered by deep industry expertise, advanced technologies, and institutional-grade risk controls, delivering end-to-end precision. One platform for independent practices, physician groups, private equity-backed portfolios, and managed services organizations. Truly integrated. Exponentially scalable.    </p>
           </div>
           <div className="about-grid">
             {aboutContent.map((item) => (
@@ -411,7 +730,8 @@ const DyadLanding: React.FC = () => {
                 className={`leadership-card ${index % 2 === 1 ? 'reversed' : ''}`}
               >
                 <div className="leadership-image">
-                  <img src={leader.image} alt={leader.name} />
+                  <div className="leadership-image-bg" data-mobile-bg={leader.mobileImage}></div>
+                  <img src={leader.image} alt={leader.name} data-mobile-src={leader.mobileImage} />
                 </div>
                 <div className="leadership-content">
                   <h3 className="leader-name">{leader.name}</h3>
@@ -456,7 +776,7 @@ const DyadLanding: React.FC = () => {
                       <ul>
                         {service.features.map((feature, index) => (
                           <li key={index}>
-                            <img src="/assets/images/vector-tick.png" alt="✓" className="tick-icon" />
+                            <img src="/assets/images/Vector.svg" alt="✓" className="tick-icon" />
                             {feature}
                           </li>
                         ))}
@@ -477,34 +797,33 @@ const DyadLanding: React.FC = () => {
             {/* Column 1: Logo and Description */}
             <div className="footer-column">
               <div className="footer-logo">
-                <img src="/assets/images/dyadmain-ogo.svg" alt="Dyad Logo" />
+                <img src="/assets/images/dyadmain-logofooter.svg" alt="Dyad Logo" />
               </div>
-              <p className="footer-description">
-                Dyad is an integrated revenue cycle and practice operations platform for anesthesia, ambulatory surgery centers, and surgical specialties. Built on banking-grade infrastructure, it replaces fragmented vendors with a single, scalable operating layer—combining deep industry expertise, advanced technology, and institutional-grade controls to deliver precise, end-to-end case-to-cash outcomes, same day.
+              <p className="footer-description" style={{textAlign: 'justify'}}>
+                Dyad is a fully integrated healthcare finance operations platform for anesthesia, ambulatory surgery centers, and the surgical specialties that operate within them, built on bank-grade infrastructure. We replace fragmented vendors with a single operating layer powered by deep industry expertise, advanced technologies, and institutional-grade risk controls, delivering end-to-end precision. One platform for independent practices, physician groups, private equity-backed portfolios, and managed services organizations. Truly integrated. Exponentially scalable.
               </p>
             </div>
 
-            {/* Column 2: Company */}
-            <div className="footer-column">
-              <h3 className="footer-column-title">Company</h3>
-              <ul className="footer-menu">
-                <li><a href="#top">Home</a></li>
-                <li><a href="#about">About Us</a></li>
-                <li><a href="#leadership">Leadership</a></li>
-                <li><a href="#services">Our Services</a></li>
-              </ul>
-            </div>
-
-            {/* Column 3: Services */}
+            {/* Column 2: Services */}
             <div className="footer-column">
               <h3 className="footer-column-title">Services</h3>
               <ul className="footer-menu">
                 <li><a href="#services">Practice Foundations</a></li>
-                <li><a href="#services">Technology driven capabilities</a></li>
+                <li><a href="#services">Technology Driven Capabilities</a></li>
                 <li><a href="#services">Pre & Post Encounter</a></li>
                 <li><a href="#services">Claims Management</a></li>
                 <li><a href="#services">Specialty Billing</a></li>
                 <li><a href="#services">Real Time Insights</a></li>
+              </ul>
+            </div>
+
+            {/* Column 3: Specialties */}
+            <div className="footer-column">
+              <h3 className="footer-column-title">Specialties</h3>
+              <ul className="footer-menu">
+                <li><a href="#surgical-specialties">Surgical & Procedural Specialties</a></li>
+                <li><a href="#interventional-care">Interventional & Diagnostic Care</a></li>
+                <li><a href="#perioperative-services">Perioperative & Supportive Services</a></li>
               </ul>
             </div>
 
@@ -519,14 +838,6 @@ const DyadLanding: React.FC = () => {
                 <div className="contact-item">
                   <span className="contact-symbol">📍</span>
                   <span>2573 Pacific Coast Hwy, Ste A277 Torrance, CA 90505</span>
-                </div>
-                <div className="footer-social-icons">
-                  <a href="#" className="social-icon">
-                    <span className="social-symbol">in</span>
-                  </a>
-                  <a href="#" className="social-icon">
-                    <span className="social-symbol">f</span>
-                  </a>
                 </div>
               </div>
             </div>
