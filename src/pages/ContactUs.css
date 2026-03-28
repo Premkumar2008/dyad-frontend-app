@@ -601,9 +601,8 @@
   }
 
   .contact-banner {
-    min-height: 150px;
-    height: 25vh;
-    max-height: 250px;
+   
+   
     padding: 2rem 1rem;
     margin-top: 0;
   }
@@ -698,15 +697,13 @@
   }
 
   .contact-banner {
-    min-height: 120px;
-    height: 20vh;
-    max-height: 200px;
-    padding: 1.5rem 1rem;
+  
+    padding: 1rem 1rem;
     margin-top: 0;
   }
 
   .banner-title {
-    font-size: 2rem;
+    font-size: 21px !important;
     margin-bottom: 0.5rem;
   }
 
@@ -738,7 +735,7 @@
   }
 
   .form-title {
-    font-size: 1.3rem;
+    font-size: 18px;
   }
 
   .form-subtitle {
@@ -761,7 +758,7 @@
 
   .contact-form {
     gap: 1.25rem;
-    padding: 1.5rem 1rem;
+    padding: 1.5rem 1rem 2rem 1rem;
   }
 
   .form-label {

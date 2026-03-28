@@ -1,5 +1,6 @@
 .register-subtitle{
-    font-size: 15px;
+    font-size: 16px;
+    text-align: justify;
     margin-top:8px;
     color: #6b7280;
     line-height: 1.5;
@@ -21,6 +22,7 @@
     max-width: 600px !important;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
     overflow: hidden;
+    margin-top:4rem;
 }
 
 /* Input field styling from Contact Us */
@@ -93,4 +95,20 @@
     opacity: 0.6;
     cursor: not-allowed;
     transform: none;
+}
+
+@media (max-width: 480px) {
+.register-form-box{
+    margin-top: 2rem !important;
+    padding: 0.2rem !important;
+    box-shadow: none !important;
+    border: none !important;
+    min-width: 100% !important;
+}
+.register-container{
+    background: white !important;
+}
+.register-subtitle{
+    font-size: 15px;
+}
 }

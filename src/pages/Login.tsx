@@ -231,6 +231,17 @@ const Login: React.FC = () => {
                 </Link>
               </span>
             </div>
+            <br />
+            
+            {/* Back to Home Link */}
+            <div className="text-center">
+              <Link
+                to="/"
+                className="text-sm text-gray-500 hover:text-gray-700 font-medium"
+              >
+                ← Back to Home
+              </Link>
+            </div>
           </form>
         </div>
       </div>

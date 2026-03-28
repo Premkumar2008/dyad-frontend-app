@@ -85,3 +85,16 @@
     transform: none;
     background-color: #f9f9f9;
 }
+
+
+@media (max-width: 480px) {
+    .login-form-container {
+        background: white !important;
+    }
+    .login-form-box{
+        min-width: 100% !important;
+        padding: 0.2rem !important;
+        box-shadow: none !important;
+        border:0px solid !important;
+    }
+}

@@ -38,11 +38,29 @@ const ContactUs: React.FC = () => {
   const [recaptchaVerified, setRecaptchaVerified] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeMenu, setActiveMenu] = useState('Contact');
+  const [hoveredMenu, setHoveredMenu] = useState<string | null>(null);
+  const [isAboutDropdownOpen, setIsAboutDropdownOpen] = useState(false);
+  const [isWhoWeServeDropdownOpen, setIsWhoWeServeDropdownOpen] = useState(false);
 
-  const navigationItems = [
-    { name: 'About us', href: '#about' },
+  const contactNavigationItems = [
+    { name: 'About Us', href: '#about', hasDropdown: true },
     { name: 'Leadership', href: '#leadership' },
-    { name: 'Our services', href: '#services' }
+    { name: 'What We Do', href: '#services' },
+    { name: 'Who We Serve', href: '#who-we-serve', hasDropdown: true }
+  ];
+
+  const aboutDropdownItems = [
+    { name: 'Our Story & Inspiration', href: '#about-story' },
+    { name: 'Our Mission & Vision', href: '#about-mission' },
+    { name: 'Our Values & Principles', href: '#about-values' },
+    { name: 'Our Team & Expertise', href: '#about-team' }
+  ];
+
+  const whoWeServeDropdownItems = [
+    { name: 'Surgical & Procedural Specialties', href: '#surgical-specialties' },
+    { name: 'Interventional & Diagnostic Care', href: '#interventional-care' },
+    { name: 'Perioperative & Supportive Services', href: '#perioperative-services' },
+    { name: 'Outpatient & Specialty Facilities', href: '#outpatient-facilities' }
   ];
 
   const handleNavClick = (item: { name: string; href: string }) => {
@@ -52,12 +70,48 @@ const ContactUs: React.FC = () => {
     setIsMobileMenuOpen(false);
   };
 
+  const handleMenuHover = (menuName: string | null) => {
+    setHoveredMenu(menuName);
+  };
+
+  const handleAboutDropdownHover = (isOpen: boolean) => {
+    setIsAboutDropdownOpen(isOpen);
+  };
+
+  const handleWhoWeServeDropdownHover = (isOpen: boolean) => {
+    setIsWhoWeServeDropdownOpen(isOpen);
+  };
+
+  const handleAboutDropdownItemClick = (href: string) => {
+    navigate('/', { state: { scrollTo: href } });
+    setIsAboutDropdownOpen(false);
+    setIsMobileMenuOpen(false);
+  };
+
+  const handleWhoWeServeDropdownItemClick = (href: string) => {
+    navigate('/', { state: { scrollTo: href } });
+    setIsWhoWeServeDropdownOpen(false);
+    setIsMobileMenuOpen(false);
+  };
+
   const handleMobileMenuToggle = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
   };
 
   const handleLogoClick = () => {
     navigate('/');
+  };
+
+  const handleLogin = () => {
+    navigate('/login');
+  };
+
+  const handleContactRequest = () => {
+    // Scroll to form or stay on current page since we're already on contact page
+    const formElement = document.querySelector('.contact-form-section');
+    if (formElement) {
+      formElement.scrollIntoView({ behavior: 'smooth' });
+    }
   };
 
   const {
@@ -133,82 +187,312 @@ const ContactUs: React.FC = () => {
   return (
     <div className="contact-us-container">
       {/* Header */}
-      <header className="contact-header">
-        <div className="contact-header-content">
-          <div className="contact-logo" onClick={handleLogoClick} style={{ cursor: 'pointer' }}>
+      <header className="dyad-header">
+        <div className="dyad-header-content">
+          {/* Left - Logo */}
+          <div className="dyad-logo" onClick={handleLogoClick} style={{ cursor: 'pointer' }}>
             <img 
               src="/assets/images/dyadmain-ogo.svg" 
               alt="Dyad Logo" 
               className="logo-image"
             />
           </div>
-          
-          {/* Navigation */}
-          <nav className="dyad-nav">
-            <ul className="nav-list" style={{ gap: '0rem' }}>
-              {navigationItems.map((item) => {
-                const isActive = activeMenu === item.name;
-                return (
-                  <li key={item.name}>
-                    <a 
-                      href={item.href}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        handleNavClick(item);
-                      }}
-                      style={{ 
-                        color: isActive ? '#1D6DD8' : '#374151',
-                        cursor: 'pointer',
-                        textDecoration: 'none',
-                        fontWeight: 500,
-                        fontSize: '1.1rem',
-                        fontFamily: 'Prompt, sans-serif',
-                        padding: '0.5rem 1rem',
-                        borderRadius: '6px',
-                        transition: 'all 0.3s ease'
-                      }}
-                    >
-                      {item.name}
-                    </a>
-                  </li>
-                );
-              })}
-            </ul>
-          </nav>
+
+          {/* Right - Navigation and Buttons */}
+          <div className="dyad-nav-actions">
+            {/* Navigation */}
+            <nav className="dyad-nav">
+              <ul className="nav-list" style={{ gap: '0rem' }}>
+                {contactNavigationItems.map((item) => {
+                  const isActive = activeMenu === item.name;
+                  return (
+                    <li key={item.name} className="nav-item-container">
+                      {item.hasDropdown ? (
+                        <div 
+                          className="dropdown-container"
+                          onMouseEnter={() => {
+                            handleMenuHover(item.name);
+                            if (item.name === 'About Us') {
+                              handleAboutDropdownHover(true);
+                            } else if (item.name === 'Who We Serve') {
+                              handleWhoWeServeDropdownHover(true);
+                            }
+                          }}
+                          onMouseLeave={() => {
+                            handleMenuHover(null);
+                            if (item.name === 'About Us') {
+                              handleAboutDropdownHover(false);
+                            } else if (item.name === 'Who We Serve') {
+                              handleWhoWeServeDropdownHover(false);
+                            }
+                          }}
+                        >
+                          <a 
+                            style={{ 
+                              color: hoveredMenu === item.name ? '#1D6DD8' : '#374151',
+                              cursor: 'pointer',
+                              textDecoration: 'none',
+                              fontWeight: 400,
+                              fontSize: '1.1rem',
+                              fontFamily: 'Prompt, sans-serif',
+                              padding: '0.5rem 1rem',
+                              borderRadius: '6px',
+                              transition: 'all 0.3s ease',
+                              display: 'flex',
+                              alignItems: 'center'
+                            }}
+                          >
+                            {item.name}
+                            <svg 
+                              width="16" 
+                              height="16" 
+                              viewBox="0 0 16 16" 
+                              fill="none" 
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path 
+                                d="M4 6L8 10L12 6" 
+                                stroke="currentColor" 
+                                strokeWidth="2" 
+                                strokeLinecap="round" 
+                                strokeLinejoin="round"
+                              />
+                            </svg>
+                          </a>
+                          <div className={`dropdown-menu ${
+                            (item.name === 'About Us' && isAboutDropdownOpen) || 
+                            (item.name === 'Who We Serve' && isWhoWeServeDropdownOpen) 
+                              ? 'open' : ''
+                          }`}>
+                            {item.name === 'About Us' && aboutDropdownItems.map((dropdownItem) => (
+                              <a
+                                key={dropdownItem.name}
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  handleAboutDropdownItemClick(dropdownItem.href);
+                                }}
+                                className="dropdown-item"
+                                style={{
+                                  display: 'block',
+                                  padding: '0.75rem 1rem',
+                                  color: '#374151',
+                                  textDecoration: 'none',
+                                  fontSize: '0.95rem',
+                                  fontFamily: 'Prompt, sans-serif',
+                                  transition: 'all 0.3s ease',
+                                  cursor: 'pointer'
+                                }}
+                              >
+                                {dropdownItem.name}
+                              </a>
+                            ))}
+                            {item.name === 'Who We Serve' && whoWeServeDropdownItems.map((dropdownItem) => (
+                              <a
+                                key={dropdownItem.name}
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  handleWhoWeServeDropdownItemClick(dropdownItem.href);
+                                }}
+                                className="dropdown-item"
+                                style={{
+                                  display: 'block',
+                                  padding: '0.75rem 1rem',
+                                  color: '#374151',
+                                  textDecoration: 'none',
+                                  fontSize: '0.95rem',
+                                  fontFamily: 'Prompt, sans-serif',
+                                  transition: 'all 0.3s ease',
+                                  cursor: 'pointer'
+                                }}
+                              >
+                                {dropdownItem.name}
+                              </a>
+                            ))}
+                          </div>
+                        </div>
+                      ) : (
+                        <a 
+                          href={item.href}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handleNavClick(item);
+                          }}
+                          style={{ 
+                            color: isActive ? '#1D6DD8' : '#374151',
+                            cursor: 'pointer',
+                            textDecoration: 'none',
+                            fontWeight: 500,
+                            fontSize: '1.1rem',
+                            fontFamily: 'Prompt, sans-serif',
+                            padding: '0.5rem 1rem',
+                            borderRadius: '6px',
+                            transition: 'all 0.3s ease'
+                          }}
+                        >
+                          {item.name}
+                        </a>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            </nav>
+
+            {/* Action Buttons */}
+            <div className="dyad-actions">
+              <button className="btn btn-secondary" onClick={handleLogin}>
+                <span>Login</span>
+              </button>
+              <button className="btn btn-primary" onClick={handleContactRequest}>
+                <span>Contact Us</span>
+              </button>
+            </div>
+          </div>
 
           {/* Mobile Menu Toggle */}
           <button 
-            className="mobile-menu-toggle"
-            onClick={handleMobileMenuToggle}
+            className={`mobile-menu-toggle ${isMobileMenuOpen ? 'open' : ''}`}
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           >
             <span></span>
             <span></span>
             <span></span>
           </button>
         </div>
-      </header>
 
-      {/* Mobile Menu */}
-      <div className={`mobile-menu ${isMobileMenuOpen ? 'open' : ''}`}>
-        <nav className="mobile-nav">
-          <ul className="mobile-nav-list">
-            {navigationItems.map((item) => (
-              <li key={item.name}>
-                <a 
-                  href={item.href}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    handleNavClick(item);
-                  }}
-                  className="mobile-nav-link"
-                >
-                  {item.name}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </nav>
-      </div>
+        {/* Mobile Menu */}
+        <div className={`mobile-menu ${isMobileMenuOpen ? 'open' : ''}`}>
+          <nav className="mobile-nav">
+            <ul className="mobile-nav-list">
+              {contactNavigationItems.map((item) => {
+                  const isActive = activeMenu === item.name;
+                  return (
+                    <li key={item.name}>
+                      {item.hasDropdown ? (
+                        <div className="mobile-dropdown-container">
+                          <a 
+                            onClick={(e) => {
+                              e.preventDefault();
+                              if (item.name === 'About Us') {
+                                handleAboutDropdownHover(!isAboutDropdownOpen);
+                              } else if (item.name === 'Who We Serve') {
+                                handleWhoWeServeDropdownHover(!isWhoWeServeDropdownOpen);
+                              }
+                            }}
+                            className={`mobile-nav-link ${isActive ? 'active' : ''}`}
+                            style={{ 
+                              color: isActive ? '#1D6DD8' : '#374151',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'space-between'
+                            }}
+                          >
+                            {item.name}
+                            <svg 
+                              className={`mobile-dropdown-arrow ${
+                                (item.name === 'About Us' && isAboutDropdownOpen) || 
+                                (item.name === 'Who We Serve' && isWhoWeServeDropdownOpen) 
+                                  ? 'open' : ''
+                              }`}
+                              width="16" 
+                              height="16" 
+                              viewBox="0 0 16 16" 
+                              fill="none" 
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path 
+                                d="M4 6L8 10L12 6" 
+                                stroke="currentColor" 
+                                strokeWidth="2" 
+                                strokeLinecap="round" 
+                                strokeLinejoin="round"
+                              />
+                            </svg>
+                          </a>
+                          <div className={`mobile-dropdown-menu ${
+                            (item.name === 'About Us' && isAboutDropdownOpen) || 
+                            (item.name === 'Who We Serve' && isWhoWeServeDropdownOpen) 
+                              ? 'open' : ''
+                          }`}>
+                            {item.name === 'About Us' && aboutDropdownItems.map((dropdownItem) => (
+                              <a
+                                key={dropdownItem.name}
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  handleAboutDropdownItemClick(dropdownItem.href);
+                                }}
+                                className="mobile-dropdown-item"
+                                style={{
+                                  display: 'block',
+                                  padding: '0.75rem 1rem 0.75rem 2rem',
+                                  color: '#374151',
+                                  textDecoration: 'none',
+                                  fontSize: '0.9rem',
+                                  fontFamily: 'Prompt, sans-serif',
+                                  transition: 'all 0.3s ease',
+                                  cursor: 'pointer'
+                                }}
+                              >
+                                {dropdownItem.name}
+                              </a>
+                            ))}
+                            {item.name === 'Who We Serve' && whoWeServeDropdownItems.map((dropdownItem) => (
+                              <a
+                                key={dropdownItem.name}
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  handleWhoWeServeDropdownItemClick(dropdownItem.href);
+                                }}
+                                className="mobile-dropdown-item"
+                                style={{
+                                  display: 'block',
+                                  padding: '0.75rem 1rem 0.75rem 2rem',
+                                  color: '#374151',
+                                  textDecoration: 'none',
+                                  fontSize: '0.9rem',
+                                  fontFamily: 'Prompt, sans-serif',
+                                  transition: 'all 0.3s ease',
+                                  cursor: 'pointer'
+                                }}
+                              >
+                                {dropdownItem.name}
+                              </a>
+                            ))}
+                          </div>
+                        </div>
+                      ) : (
+                        <a 
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handleNavClick(item);
+                            setIsMobileMenuOpen(false);
+                          }}
+                          className={`mobile-nav-link ${isActive ? 'active' : ''}`}
+                          style={{ 
+                            color: isActive ? '#1D6DD8' : '#374151',
+                            cursor: 'pointer'
+                          }}
+                          href={item.href}
+                        >
+                          {item.name}
+                        </a>
+                      )}
+                    </li>
+                  );
+                })}
+            </ul>
+          </nav>
+          <div className="mobile-actions">
+            <button className="btn btn-primary btn-full" onClick={handleContactRequest}>
+              <span>Contact Us</span>
+            </button>
+            <button className="btn btn-secondary btn-full" onClick={handleLogin}>
+              <span>Login</span>
+            </button>
+          </div>
+        </div>
+      </header>
 
       {/* Main Content */}
       <main className="contact-main">
@@ -223,7 +507,7 @@ const ContactUs: React.FC = () => {
         </section>
 
         {/* Form Section */}
-        <section className="contact-form-section">
+        <section className="contact-form-section mb-8">
           <div className="form-container">
             <div className="form-header">
               <div className="form-header-content">
@@ -376,40 +660,39 @@ const ContactUs: React.FC = () => {
       </main>
 
       {/* Footer */}
-      <footer className="footer-section">
+    <footer className="footer-section" id="contact">
         <div className="footer-container">
           <div className="footer-content">
             {/* Column 1: Logo and Description */}
             <div className="footer-column">
               <div className="footer-logo">
-                <img src="/assets/images/dyadmain-ogo.svg" alt="Dyad Logo" />
+                <img src="/assets/images/dyadmain-logofooter.svg" alt="Dyad Logo" />
               </div>
-              <p className="footer-description">
-                Dyad is an integrated revenue cycle and practice operations platform for anesthesia, ambulatory surgery centers, and surgical specialties. Built on banking-grade infrastructure, it replaces fragmented vendors with a single, scalable operating layer—combining deep industry expertise, advanced technology, and institutional-grade controls to deliver precise, end-to-end case-to-cash outcomes, same day.
+              <p className="footer-description" style={{textAlign: 'justify'}}>
+                Dyad is a fully integrated healthcare finance operations platform for anesthesia, ambulatory surgery centers, and the surgical specialties that operate within them, built on bank-grade infrastructure. We replace fragmented vendors with a single operating layer powered by deep industry expertise, advanced technologies, and institutional-grade risk controls, delivering end-to-end precision. One platform for independent practices, physician groups, private equity-backed portfolios, and managed services organizations. Truly integrated. Exponentially scalable.
               </p>
             </div>
 
-            {/* Column 2: Company */}
-            <div className="footer-column">
-              <h3 className="footer-column-title">Company</h3>
-              <ul className="footer-menu">
-                <li><a href="/">Home</a></li>
-                <li><a href="/#about">About Us</a></li>
-                <li><a href="/#leadership">Leadership</a></li>
-                <li><a href="/#services">Our Services</a></li>
-              </ul>
-            </div>
-
-            {/* Column 3: Services */}
+            {/* Column 2: Services */}
             <div className="footer-column">
               <h3 className="footer-column-title">Services</h3>
               <ul className="footer-menu">
-                <li><a href="/#services">Practice Foundations</a></li>
-                <li><a href="/#services">Technology driven capabilities</a></li>
-                <li><a href="/#services">Pre & Post Encounter</a></li>
-                <li><a href="/#services">Claims Management</a></li>
-                <li><a href="/#services">Specialty Billing</a></li>
-                <li><a href="/#services">Real Time Insights</a></li>
+                <li><a href="#services">Practice Foundations</a></li>
+                <li><a href="#services">Technology Driven Capabilities</a></li>
+                <li><a href="#services">Pre & Post Encounter</a></li>
+                <li><a href="#services">Claims Management</a></li>
+                <li><a href="#services">Specialty Billing</a></li>
+                <li><a href="#services">Real Time Insights</a></li>
+              </ul>
+            </div>
+
+            {/* Column 3: Specialties */}
+            <div className="footer-column">
+              <h3 className="footer-column-title">Specialties</h3>
+              <ul className="footer-menu">
+                <li><a href="#surgical-specialties">Surgical & Procedural Specialties</a></li>
+                <li><a href="#interventional-care">Interventional & Diagnostic Care</a></li>
+                <li><a href="#perioperative-services">Perioperative & Supportive Services</a></li>
               </ul>
             </div>
 
@@ -424,14 +707,6 @@ const ContactUs: React.FC = () => {
                 <div className="contact-item">
                   <span className="contact-symbol">📍</span>
                   <span>2573 Pacific Coast Hwy, Ste A277 Torrance, CA 90505</span>
-                </div>
-                <div className="footer-social-icons">
-                  <a href="#" className="social-icon">
-                    <span className="social-symbol">in</span>
-                  </a>
-                  <a href="#" className="social-icon">
-                    <span className="social-symbol">f</span>
-                  </a>
                 </div>
               </div>
             </div>
