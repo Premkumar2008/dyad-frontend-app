@@ -216,7 +216,6 @@ const ContactUs: React.FC = () => {
         <section className="contact-banner">
           <div className="banner-content">
             <h1 className="banner-title">Contact Us</h1>
-            <div className="gradient-underline"></div>
           </div>
           <div className="banner-image">
             <img src="/assets/images/contact-us.png" alt="Contact Us" />
@@ -229,10 +228,10 @@ const ContactUs: React.FC = () => {
             <div className="form-header">
               <div className="form-header-content">
                 <h2 className="form-title">Get in Touch</h2>
-                <p className="form-subtitle">We'd love to hear from you. Fill out the form below and we'll get back to you soon.</p>
+                <p className="form-subtitle">Please Fill Out The Form Below</p>
               </div>
               <div className="form-header-image">
-                <img src="/assets/images/contact-us.png" alt="Contact Us" className="contact-form-image" />
+                <img src="/assets/images/contact-us.jpeg" alt="Contact Us" className="contact-form-image" />
               </div>
             </div>
             
@@ -240,7 +239,7 @@ const ContactUs: React.FC = () => {
               {/* Name Field */}
               <div className="form-group">
                 <label htmlFor="name" className="form-label">
-                  Your Name <span className="required">*</span>
+                  Your Name
                 </label>
                 <input
                   type="text"
@@ -257,7 +256,7 @@ const ContactUs: React.FC = () => {
               {/* Phone Number Field */}
               <div className="form-group">
                 <label htmlFor="phoneNumber" className="form-label">
-                  Phone Number <span className="required">*</span>
+                  Phone Number
                 </label>
                 <input
                   type="tel"
@@ -275,7 +274,7 @@ const ContactUs: React.FC = () => {
               {/* Email Field */}
               <div className="form-group">
                 <label htmlFor="email" className="form-label">
-                  Your Email <span className="required">*</span>
+                  Your Email
                 </label>
                 <input
                   type="email"
@@ -292,7 +291,7 @@ const ContactUs: React.FC = () => {
               {/* Organization Field */}
               <div className="form-group">
                 <label htmlFor="organization" className="form-label">
-                  Organization / Facility Name <span className="required">*</span>
+                  Organization / Facility Name
                 </label>
                 <input
                   type="text"
@@ -309,7 +308,7 @@ const ContactUs: React.FC = () => {
               {/* Message Field */}
               <div className="form-group full-width">
                 <label htmlFor="message" className="form-label">
-                  Enter a brief Message <span className="required">*</span>
+                  Enter a brief Message
                 </label>
                 <textarea
                   id="message"
@@ -326,7 +325,7 @@ const ContactUs: React.FC = () => {
               {/* Schedule Time Field */}
               <div className="form-group">
                 <label htmlFor="scheduledTime" className="form-label">
-                  Schedule a time to connect <span className="required">*</span>
+                  Schedule a time to connect
                 </label>
                 <input
                   type="datetime-local"

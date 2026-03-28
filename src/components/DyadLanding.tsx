@@ -5,6 +5,8 @@ import './DyadLanding.css';
 const DyadLanding: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeAboutCard, setActiveAboutCard] = useState<number | null>(null);
+  const [expandedMobileCard, setExpandedMobileCard] = useState<number | null>(null);
+   const [expandedserviceMobileCard, setExpandedserviceMobileCard] = useState<number | null>(null);
   const [activeMenu, setActiveMenu] = useState('Home');
   const [isAboutDropdownOpen, setIsAboutDropdownOpen] = useState(false);
   const [isWhoWeServeDropdownOpen, setIsWhoWeServeDropdownOpen] = useState(false);
@@ -55,18 +57,51 @@ const DyadLanding: React.FC = () => {
       return;
     }
     
-    // Smooth scroll to section with header offset
+    // Mobile-only scroll solution
     const sectionId = href.replace('#', '');
     const element = document.getElementById(sectionId);
     if (element) {
-      const headerHeight = 80; // Approximate header height
-      const elementPosition = element.getBoundingClientRect().top + window.pageYOffset;
-      const offsetPosition = elementPosition - headerHeight;
+      console.log('=== MOBILE ONLY SCROLL ===');
+      console.log('Section:', sectionId);
+      console.log('Window width:', window.innerWidth);
+      console.log('Element found:', !!element);
       
-      window.scrollTo({
-        top: offsetPosition,
-        behavior: 'smooth'
-      });
+      // Check if we're on mobile
+      const isMobile = window.innerWidth <= 768;
+      
+      if (isMobile) {
+        console.log('Mobile detected - using mobile scroll');
+        
+        // Mobile approach: direct position calculation
+        const headerElement = document.querySelector('.dyad-header') as HTMLElement;
+        const headerHeight = headerElement ? headerElement.offsetHeight : 60;
+        
+        // Get element position
+        const elementPosition = element.getBoundingClientRect().top + window.pageYOffset;
+        
+        // Calculate target position with header clearance
+        const targetPosition = elementPosition - headerHeight - 20;
+        
+        console.log('Header height:', headerHeight);
+        console.log('Element position:', elementPosition);
+        console.log('Target position:', targetPosition);
+        
+        // Direct scroll to calculated position
+        window.scrollTo({
+          top: Math.max(0, targetPosition),
+          behavior: 'smooth'
+        });
+        
+      } else {
+        console.log('Desktop detected - using scrollIntoView');
+        // Desktop: use scrollIntoView (which works)
+        element.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start'
+        });
+      }
+    } else {
+      console.log('Element not found:', sectionId);
     }
   };
 
@@ -136,6 +171,14 @@ const DyadLanding: React.FC = () => {
   
   const handleAboutCardClick = (cardId: number) => {
     setActiveAboutCard(activeAboutCard === cardId ? null : cardId);
+  };
+
+  const toggleMobileCard = (cardId: number) => {
+    setExpandedMobileCard(expandedMobileCard === cardId ? null : cardId);
+  };
+
+  const toggleMobileCardService = (cardId: number) => {
+    setExpandedserviceMobileCard(expandedserviceMobileCard === cardId ? null : cardId);
   };
   
   const leadershipData = [
@@ -603,6 +646,7 @@ const DyadLanding: React.FC = () => {
                             color: isActive ? '#1D6DD8' : '#374151',
                             cursor: 'pointer'
                           }}
+                          href={item.href}
                         >
                           {item.name}
                         </a>
@@ -690,7 +734,9 @@ const DyadLanding: React.FC = () => {
             <p className="about-subtitle">
           Dyad is a fully integrated healthcare finance operations platform for anesthesia, ambulatory surgery centers, and the surgical specialties that operate within them, built on bank-grade infrastructure. We replace fragmented vendors with a single operating layer powered by deep industry expertise, advanced technologies, and institutional-grade risk controls, delivering end-to-end precision. One platform for independent practices, physician groups, private equity-backed portfolios, and managed services organizations. Truly integrated. Exponentially scalable.    </p>
           </div>
-          <div className="about-grid">
+        
+
+            <div className="about-grid desktop-about-us">
             {aboutContent.map((item) => (
               <div
                 key={item.id}
@@ -712,7 +758,37 @@ const DyadLanding: React.FC = () => {
             ))}
           </div>
         </div>
+
+         {/* Mobile Cards Section - Mobile Only */}
+      <section className="mobile-cards-section">
+        <div className="container">
+          <div className="mobile-cards-container">
+            {aboutContent.map((card) => (
+              <div key={card.id} className="mobile-card">
+                <div className="mobile-card-image">
+                  <img src={card.image} alt={card.title} />
+                </div>
+                <div className="mobile-card-content">
+                  <h3 className="mobile-card-title">{card.title}</h3>
+                  <p className="mobile-card-subtitle">{card.subtitle}</p>
+                  <div 
+                    className="mobile-card-learn-more"
+                    onClick={() => toggleMobileCard(card.id)}
+                  >
+                    {expandedMobileCard === card.id ? 'Show Less' : 'Learn More'}
+                  </div>
+                  <div className={`mobile-card-description ${expandedMobileCard === card.id ? 'expanded' : ''}`}>
+                    <p>{card.paragraph}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </section>
+      </section>
+
+     
 
       {/* Leadership Section */}
       <section className="leadership-section" id="leadership">
@@ -747,7 +823,7 @@ const DyadLanding: React.FC = () => {
     
 
       {/* Our Services Section */}
-      <section className="services-section" id="services">
+      <section className="services-section " id="services">
         <div className="services-container">
           <div className="services-header">
             <h2 className="services-title">Our Services</h2>
@@ -755,7 +831,7 @@ const DyadLanding: React.FC = () => {
               We set the standard for accuracy, efficiency, and value - delivering faster turnarounds, unmatched precision, and measurable impact. Backed by rigorous risk controls and uncompromising quality, our integrated solutions go beyond excellence to redefine what's possible. No fragmentation - just a unified approach. Most services operate within our full-service model, where seamless integration drives real value.
             </p>
           </div>
-          <div className="services-grid">
+          <div className="services-grid  desktop-about-us">
             {servicesData.map((service) => (
               <div key={service.id} className="service-card">
                 <div className="service-card-image">
@@ -787,8 +863,46 @@ const DyadLanding: React.FC = () => {
               </div>
             ))}
           </div>
+               <section className="mobile-cards-section">
+        <div className="container">
+          <div className="mobile-cards-container services">
+            {servicesData.map((card) => (
+              <div key={card.id} className="mobile-card">
+                <div className="mobile-card-image">
+                  <img src={card.image} alt={card.title} />
+                </div>
+                <div className="mobile-card-content">
+                  <h3 className="mobile-card-title">{card.title}</h3>
+                  <p className="mobile-card-subtitle">{card.subtitle}</p>
+                  <div 
+                    className="mobile-card-learn-more"
+                    onClick={() => toggleMobileCardService(card.id)}
+                  >
+                    {expandedserviceMobileCard === card.id ? 'Show Less' : 'Learn More'}
+                  </div>
+                  <div className={`mobile-card-description ${expandedserviceMobileCard === card.id ? 'expanded' : ''}`}>
+                   <div className="description-features">
+                      <ul>
+                        {card.features.map((feature, index) => (
+                          <li key={index}>
+                            <img src="/assets/images/Vector.svg" alt="✓" className="tick-icon" />
+                            {feature}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
+        </div>
+        
+      </section>
+
+  
 
       {/* Footer */}
        <footer className="footer-section" id="contact">

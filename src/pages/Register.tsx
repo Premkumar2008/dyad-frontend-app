@@ -3,10 +3,10 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
-import { Eye, EyeOff, Mail, Lock, User, Phone, Briefcase } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { RegisterFormData } from '../types/auth';
-import AuthHeader from '../components/AuthHeader';
+import '../pages/register.css';
 
 const registerSchema = yup.object().shape({
   npi: yup.string().required('NPI is required'),
@@ -98,31 +98,36 @@ const Register: React.FC = () => {
       setError('An unexpected error occurred. Please try again.');
     }
   };
+    const handleLogoClick = () => {
+    navigate('/');
+  };
+
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      {/* Header */}
-      <AuthHeader />
+    <div className="register-container">
       
       {/* Main Content */}
-      <div className="flex-1 flex">
-        {/* Left side - Registration Form */}
-        <div className="flex-1 flex items-center justify-center p-8">
-        <div className="max-w-md w-full">
+      <div className="flex-1 flex items-center justify-center p-8">
+        <div className="register-form-box">
           {/* Logo */}
           <div className="text-center mb-8">
             <div className="flex items-center justify-center gap-2 mb-4">
-              <div className="w-10 h-10 bg-primary-600 rounded-lg flex items-center justify-center">
-                <User className="w-6 h-6 text-white" />
-              </div>
-              <span className="text-2xl font-bold text-gray-900">DYAD PRACTICE SOLUTIONS</span>
+              <div className="dyad-logo" onClick={handleLogoClick} style={{ cursor: 'pointer' }}>
+            <img 
+              src="/assets/images/dyadmain-ogo.svg" 
+              alt="Dyad Logo" 
+              className="logo-image"
+            />
+          </div>
             </div>
-            <h1 className="text-3xl font-bold text-gray-900">Register</h1>
-            <p className="mt-2 text-gray-600">
-             
-            </p>
+           
           </div>
 
+ <h3 className="text-2xl font-medium text-gray-900">Register</h3>
+ <div className="register-subtitle">
+  Join our network of surgical specialists, proceduralists, and outpatient facilities. Register today to explore how Dyad can support your practice with integrated services, operational expertise, and technology-driven solutions.
+ </div>
+ <br />
           {/* Registration Form */}
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             {/* Info Message */}
@@ -152,18 +157,13 @@ const Register: React.FC = () => {
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 NPI
               </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Briefcase className="h-5 w-5 text-gray-400" />
-                </div>
-                <input
-                  {...register('npi')}
-                  type="text"
-                  placeholder="Enter NPI"
-                  className="input-field pl-10"
-                  disabled={isLoading}
-                />
-              </div>
+              <input
+                {...register('npi')}
+                type="text"
+                placeholder="Enter NPI"
+                className="input-field"
+                disabled={isLoading}
+              />
               {errors.npi && (
                 <p className="mt-1 text-sm text-red-600">{errors.npi.message}</p>
               )}
@@ -212,7 +212,7 @@ const Register: React.FC = () => {
                 <div className="relative">
                   <select
                     {...register('countryCode')}
-                    className="appearance-none bg-white border border-gray-300 rounded-lg px-3 py-2 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                    className="input-field appearance-none pr-8"
                     disabled={isLoading}
                     defaultValue="+1"
                   >
@@ -226,14 +226,11 @@ const Register: React.FC = () => {
                   </div>
                 </div>
                 <div className="relative flex-1">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Phone className="h-5 w-5 text-gray-400" />
-                  </div>
                   <input
                     {...register('phone')}
                     type="tel"
                     placeholder="Enter phone number"
-                    className="input-field pl-10"
+                    className="input-field"
                     disabled={isLoading}
                   />
                 </div>
@@ -249,14 +246,11 @@ const Register: React.FC = () => {
                 Email
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-gray-400" />
-                </div>
                 <input
                   {...register('email')}
                   type="email"
                   placeholder="Enter email"
-                  className="input-field pl-10"
+                  className="input-field"
                   disabled={isLoading}
                 />
               </div>
@@ -271,14 +265,11 @@ const Register: React.FC = () => {
                 Password
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-400" />
-                </div>
                 <input
                   {...register('password')}
                   type={showPassword ? 'text' : 'password'}
                   placeholder="Enter password"
-                  className="input-field pl-10 pr-10"
+                  className="input-field pr-10"
                   disabled={isLoading}
                 />
                 <button
@@ -305,6 +296,7 @@ const Register: React.FC = () => {
                 {error}
               </div>
             )}
+            <br />
 
             {/* Register Button */}
             <button
@@ -321,10 +313,12 @@ const Register: React.FC = () => {
                 'Register'
               )}
             </button>
+            <br />
 
             {/* Login Link */}
+             <br />
             <div className="text-center">
-              <span className="text-sm text-gray-600">
+              <span className="text-md text-gray-600">
                 Already have an account?{' '}
                 <Link
                   to="/login"
@@ -336,27 +330,6 @@ const Register: React.FC = () => {
             </div>
           </form>
         </div>
-      </div>
-
-      {/* Right side - Image */}
-      <div className="hidden lg:flex lg:flex-1 relative bg-gradient-to-br from-primary-50 to-primary-100">
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="text-center">
-            <img
-              src="https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80"
-              alt="Medical Team"
-              className="w-full h-full object-cover rounded-l-2xl"
-            />
-          </div>
-        </div>
-        
-        {/* Carousel Dots */}
-        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex gap-2">
-          <div className="w-2 h-2 bg-primary-600 rounded-full"></div>
-          <div className="w-2 h-2 bg-primary-300 rounded-full"></div>
-          <div className="w-2 h-2 bg-primary-300 rounded-full"></div>
-        </div>
-      </div>
       </div>
     </div>
   );

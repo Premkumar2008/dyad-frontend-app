@@ -51,6 +51,13 @@ header.dyad-header {
   align-items: center;
 }
 
+ .desktop-about-us{
+    display:block
+  }
+  .mobile-about-us{
+    display:none
+  }
+
 .nav-list {
   display: flex;
   list-style: none;
@@ -69,7 +76,7 @@ header.dyad-header {
 .nav-item-container > a {
   display: flex;
   align-items: center;
-  font-size: 16px !important;
+  font-size: 18px !important;
 }
 
 .dropdown-container {
@@ -356,7 +363,8 @@ header.dyad-header .dyad-nav-actions .dyad-nav .nav-list .dyad-nav .nav-link.act
 }
 
 .mobile-menu-toggle.open span:nth-child(1) {
-  transform: translateY(9px) rotate(45deg);
+     top: -6px;
+    transform: translateY(9px) rotate(44deg);
   width: 25px;
   margin: 0;
 }
@@ -384,11 +392,17 @@ header.dyad-header .dyad-nav-actions .dyad-nav .nav-list .dyad-nav .nav-link.act
   border-bottom: 1px solid rgba(255, 255, 255, 0.2);
   max-height: 0;
   overflow: hidden;
-  transition: all 0.3s ease;
+  transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
+              opacity 0.3s ease,
+              transform 0.3s ease;
+  opacity: 0;
+  transform: translateY(-10px);
 }
 
 .mobile-menu.open {
-  max-height: 700px;
+  max-height: 1000px;
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .mobile-nav-list {
@@ -1169,7 +1183,12 @@ padding : 0.5rem 0.5rem 0.rem 0rem !important
 
   @media (max-width: 1280px) {
 .dropdown-container a {
-    font-size: 13px !important;
+    font-size: 16px !important;
+}
+.nav-item-container > a {
+  display: flex;
+  align-items: center;
+  font-size: 16px !important;
 }
 .dyad-actions .btn-secondary {
    
@@ -1191,6 +1210,11 @@ padding : 0.5rem 0.5rem 0.rem 0rem !important
   .dyad-landing-container {
     min-height: 100vh;
   }
+
+  .mobile-cards-container.services{
+    padding:0rem !important
+  }
+
   .video-title {
    
     line-height: 1.4 !important;
@@ -1213,7 +1237,7 @@ padding : 0.5rem 0.5rem 0.rem 0rem !important
   }
   
   .dyad-logo img {
-    height: 30px !important;
+    height: 40px !important;
   }
   
   .mobile-menu-toggle {
@@ -1972,7 +1996,7 @@ padding : 0.5rem 0.5rem 0.rem 0rem !important
 /* About Us Section */
 .about-us-section {
   padding: 4rem 0;
-  background:white;
+  background: #ffffff;
   position: relative;
   overflow: hidden;
   width: 100%;
@@ -2457,8 +2481,6 @@ padding : 0.5rem 0.5rem 0.rem 0rem !important
   padding: 4rem 0;
   background:white;
   position: relative;
-  overflow: hidden;
-  width: 100%;
   border-bottom: 2px solid #e2e8f0;
 }
 
@@ -3611,7 +3633,105 @@ padding : 0.5rem 0.5rem 0.rem 0rem !important
   }
 }
 
-/* Leadership Section - Responsive */
+/* Mobile Cards Section - Mobile Only */
+.mobile-cards-section {
+  display: none;
+ 
+  background: #f8fafc;
+}
+
+.mobile-cards-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+}
+
+.mobile-card {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.mobile-card-image {
+  width: 100%;
+  height: 200px;
+  overflow: hidden;
+}
+
+.mobile-card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.mobile-card-content {
+  padding: 1.5rem;
+}
+
+.mobile-card-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #222222;
+  margin-bottom: 0.5rem;
+  font-family: 'Prompt', sans-serif;
+}
+
+.mobile-card-subtitle {
+  font-size: 1rem;
+  color: #6b7280;
+  margin-bottom: 1rem;
+  font-family: 'Prompt', sans-serif;
+}
+
+.mobile-card-learn-more {
+  color: #1D6DD8;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: 'Prompt', sans-serif;
+ 
+  display: inline-block;
+  text-decoration: none;
+  font-size: 1rem;
+}
+
+.mobile-card-learn-more:hover {
+  color: #0052a3;
+  transform: translateX(4px);
+}
+
+.mobile-card-description {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.5s ease, padding 0.3s ease;
+  padding: 0 0rem;
+}
+
+.mobile-card-description.expanded {
+  max-height: 500px;
+  padding: 0rem;
+
+  border-radius: 8px;
+  margin-top: 0.5rem;
+}
+
+.mobile-card-description p {
+  color: #374151;
+  line-height: 1.6;
+  font-family: 'Prompt', sans-serif;
+}
+
+@media (max-width: 768px) {
+  .mobile-cards-section {
+    display: block;
+  }
+}
 @media (max-width: 1250px) {
   .leadership-card:nth-child(1) .leadership-image,
   .leadership-card:nth-child(3) .leadership-image {
@@ -3744,6 +3864,13 @@ padding : 0.5rem 0.5rem 0.rem 0rem !important
     align-items: center;
     justify-content: center;
   }
+
+  .desktop-about-us{
+    display:none !important
+  }
+  .mobile-about-us{
+    display:block
+  }
   
   /* Company Overview */
   .overview-feature {
@@ -3832,7 +3959,7 @@ padding : 0.5rem 0.5rem 0.rem 0rem !important
   }
   
   .leader-title {
-    font-size: 0.9rem;
+    font-size: 15px !important;
   }
   
   .leader-description {
@@ -4190,9 +4317,8 @@ padding : 0.5rem 0.5rem 0.rem 0rem !important
   padding: 4rem 0;
   background: #8b8b8b0f;
   position: relative;
-  overflow: hidden;
-  width: 100%;
   border-bottom: 2px solid #e2e8f0;
+  width: 100%;
 }
 
 .leadership-section::before {

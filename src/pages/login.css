@@ -1,0 +1,87 @@
+.login-form-box {
+    box-shadow: 0px 0px 8px #80808029;
+    border: 1px solid #80808021;
+    border-radius: 16px;
+    background-color: white;
+    padding: 2rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    min-width: 500px;
+}
+
+.login-form-container {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    display: flex;
+    flex-direction: column;
+}
+
+.input-field {
+    padding: 0.875rem 1rem;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-family: 'Prompt', sans-serif;
+    transition: all 0.3s ease;
+    background: #f8fafc;
+    width: 100%;
+}
+
+.input-field:focus {
+    outline: none;
+    border-color: #1D6DD8;
+    background: white;
+    box-shadow: 0 0 0 3px rgba(29, 109, 216, 0.1);
+}
+
+.input-field.error {
+    border-color: #e53e3e;
+    background: #fff5f5;
+}
+
+.input-field.login-fields-input {
+    padding: 0.875rem 1rem;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-family: 'Prompt', sans-serif;
+    transition: all 0.3s ease;
+    background: #f8fafc;
+    width: 100%;
+}
+
+.input-field.login-fields-input:focus {
+    outline: none;
+    border-color: #1D6DD8;
+    background: white;
+    box-shadow: 0 0 0 3px rgba(29, 109, 216, 0.1);
+}
+
+.input-field.login-fields-input.error {
+    border-color: #e53e3e;
+    background: #fff5f5;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #1D6DD8 0%, #1557b8 100%);
+    color: white;
+    border: none;
+    padding: 1rem 2rem;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: 'Prompt', sans-serif;
+}
+
+.btn-primary:hover:not(:disabled) {
+    transform: translateY(-2px);
+}
+
+.btn-primary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+    background-color: #f9f9f9;
+}
