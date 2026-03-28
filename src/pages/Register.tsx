@@ -129,7 +129,7 @@ const Register: React.FC = () => {
  </div>
  <br />
           {/* Registration Form */}
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             {/* Info Message */}
             {infoMessage && (
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
@@ -169,38 +169,38 @@ const Register: React.FC = () => {
               )}
             </div>
 
-            {/* Name Fields */}
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  First Name
-                </label>
-                <input
-                  {...register('firstName')}
-                  type="text"
-                  placeholder="First name"
-                  className="input-field"
-                  disabled={isLoading}
-                />
-                {errors.firstName && (
-                  <p className="mt-1 text-sm text-red-600">{errors.firstName.message}</p>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Last Name
-                </label>
-                <input
-                  {...register('lastName')}
-                  type="text"
-                  placeholder="Last name"
-                  className="input-field"
-                  disabled={isLoading}
-                />
-                {errors.lastName && (
-                  <p className="mt-1 text-sm text-red-600">{errors.lastName.message}</p>
-                )}
-              </div>
+            {/* First Name Field */}
+            <div className="w-full">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                First Name
+              </label>
+              <input
+                {...register('firstName')}
+                type="text"
+                placeholder="First name"
+                className="input-field w-full"
+                disabled={isLoading}
+              />
+              {errors.firstName && (
+                <p className="mt-1 text-sm text-red-600">{errors.firstName.message}</p>
+              )}
+            </div>
+
+            {/* Last Name Field */}
+            <div className="w-full">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Last Name
+              </label>
+              <input
+                {...register('lastName')}
+                type="text"
+                placeholder="Last name"
+                className="input-field w-full"
+                disabled={isLoading}
+              />
+              {errors.lastName && (
+                <p className="mt-1 text-sm text-red-600">{errors.lastName.message}</p>
+              )}
             </div>
 
             {/* Phone Field */}
