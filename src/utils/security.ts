@@ -243,25 +243,7 @@ export const initializeSecurity = (): void => {
     CSRFProtection.clearToken();
   });
   
-  // Prevent right-click in production (optional)
-  if (import.meta.env.PROD) {
-    document.addEventListener('contextmenu', (e) => {
-      e.preventDefault();
-    });
-    
-    // Prevent dev tools shortcuts (optional, not foolproof)
-    document.addEventListener('keydown', (e) => {
-      if (
-        e.key === 'F12' ||
-        (e.ctrlKey && e.shiftKey && e.key === 'I') ||
-        (e.ctrlKey && e.shiftKey && e.key === 'J') ||
-        (e.ctrlKey && e.key === 'U')
-      ) {
-        e.preventDefault();
-      }
-    });
-  }
-};
+  };
 
 export default {
   SECURITY_CONFIG,
