@@ -118,7 +118,7 @@ header.dyad-header {
   position: absolute;
   top: 100%;
   left: 0;
-  min-width: 300px;
+  min-width: 400px;
   background: white;
   border: 1px solid #e5e7eb;
   border-radius: 0.5rem;
@@ -1266,9 +1266,9 @@ padding : 0.5rem 0.5rem 0.rem 0rem !important
     padding: 0.4rem 0.8rem;
   }
 
-  .btn {
+  .mobile-actions .btn {
     padding: 0.6rem 1.2rem;
-    font-size: 0.85rem;
+    font-size: 1rem !important;
   }
 }
 
@@ -2911,6 +2911,12 @@ padding : 0.5rem 0.5rem 0.rem 0rem !important
     justify-content: flex-start !important;
   }
   
+  .contact-item svg {
+    width: 20px !important;
+    height: 20px !important;
+    margin-top: 1px !important;
+  }
+  
   .footer-social-icons {
     justify-content: flex-start !important;
   }
@@ -3219,7 +3225,7 @@ padding : 0.5rem 0.5rem 0.rem 0rem !important
 .footer-description {
   font-size: 15px;
   line-height: 1.6;
-  color: #b0b0b0;
+  color: #c8c9cb;
   margin: 0;
 }
 
@@ -3242,7 +3248,7 @@ padding : 0.5rem 0.5rem 0.rem 0rem !important
 }
 
 .footer-menu a {
-  color: #9ca3af;
+  color: #c8c9cb;
   text-decoration: none;
   font-size: 0.9rem;
 }
@@ -3267,6 +3273,12 @@ padding : 0.5rem 0.5rem 0.rem 0rem !important
   margin-bottom: 1rem;
 }
 
+.contact-item svg {
+  color: #a0aec0;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
 .contact-symbol {
   font-size: 16px;
   min-width: 16px;
@@ -3275,7 +3287,7 @@ padding : 0.5rem 0.5rem 0.rem 0rem !important
 
 .contact-item span {
   font-size: 15px;
-  color: #9ca3af;
+  color: #c8c9cb;
   line-height: 1.5;
 }
 
@@ -3309,7 +3321,7 @@ padding : 0.5rem 0.5rem 0.rem 0rem !important
 
 .footer-bottom-left p {
   font-size: 0.85rem;
-  color: #999999;
+  color: #c8c9cb;
   margin: 0;
 }
 
@@ -3688,7 +3700,7 @@ padding : 0.5rem 0.5rem 0.rem 0rem !important
 }
 
 .mobile-card-content {
-  padding: 1.5rem;
+  padding: 1rem;
 }
 
 .mobile-card-title {
