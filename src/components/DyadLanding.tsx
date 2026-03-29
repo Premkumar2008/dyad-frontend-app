@@ -80,7 +80,7 @@ const DyadLanding: React.FC = () => {
         const elementPosition = element.getBoundingClientRect().top + window.pageYOffset;
         
         // Calculate target position with header clearance
-        const targetPosition = elementPosition - headerHeight - 20;
+        const targetPosition = elementPosition - headerHeight - 100;
         
         console.log('Header height:', headerHeight);
         console.log('Element position:', elementPosition);
@@ -130,25 +130,15 @@ const DyadLanding: React.FC = () => {
     setIsAboutDropdownOpen(false);
     setHoveredMenu(null);
     
-    // Always redirect to main About Us section with header offset
-    const aboutElement = document.getElementById('about');
-    if (aboutElement) {
-      const headerHeight = 80; // Approximate header height
-      const elementPosition = aboutElement.getBoundingClientRect().top + window.pageYOffset;
-      const offsetPosition = elementPosition - headerHeight;
-      
-      window.scrollTo({
-        top: offsetPosition,
-        behavior: 'smooth'
-      });
-    }
+    // Navigate to the specific about-us-details page with hash
+    navigate(href);
   };
 
   const handleWhoWeServeDropdownItemClick = (href: string) => {
-    // Don't set active menu for Who We Serve
     setIsWhoWeServeDropdownOpen(false);
     setHoveredMenu(null);
-    // No navigation - just close dropdown
+    // Navigate to the specific service-detail page with hash
+    navigate(href);
   };
 
   const handleMenuHover = (menuName: string | null) => {
@@ -344,19 +334,19 @@ const DyadLanding: React.FC = () => {
   ];
 
   const aboutDropdownItems = [
-    { name: 'Our Story & Inspiration', href: '#about-story' },
-    { name: 'Our Mission & Vision', href: '#about-mission' },
-    { name: 'Our Values & Principles', href: '#about-values' },
-    { name: 'Our Approach & Methodology', href: '#about-approach' },
-    { name: 'Our Innovative Technologies', href: '#about-technology' },
-    { name: 'Our Team & Expertise', href: '#about-team' }
+    { name: 'Our Story & Inspiration', href: '/about-us-details#our-story-&-inspiration' },
+    { name: 'Our Mission & Vision', href: '/about-us-details#our-mission-&-vision' },
+    { name: 'Our Values & Principles', href: '/about-us-details#our-values-&-principles' },
+    { name: 'Our Approach & Methodology', href: '/about-us-details#our-approach-&-methodology' },
+    { name: 'Our Innovative Technologies', href: '/about-us-details#our-innovative-technologies' },
+    { name: 'Our Team & Expertise', href: '/about-us-details#our-team-&-expertise' }
   ];
 
   const whoWeServeDropdownItems = [
-    { name: 'Surgical & Procedural Specialties', href: '#surgical-specialties' },
-    { name: 'Interventional & Diagnostic Care', href: '#interventional-care' },
-    { name: 'Perioperative & Supportive Services', href: '#perioperative-services' },
-    { name: 'Outpatient & Specialty Facilities', href: '#outpatient-facilities' }
+    { name: 'Surgical & Procedural Specialties', href: '/' },
+    { name: 'Interventional & Diagnostic Care', href: '/' },
+    { name: 'Perioperative & Supportive Services', href: '/' },
+    { name: 'Outpatient & Specialty Facilities', href: '/' }
   ];
 
   const navigationItems = [
@@ -459,6 +449,7 @@ const DyadLanding: React.FC = () => {
                                   e.preventDefault();
                                   handleAboutDropdownItemClick(dropdownItem.href);
                                 }}
+                                href={dropdownItem.href}
                                 className="dropdown-item"
                                 style={{
                                   display: 'block',
@@ -749,9 +740,11 @@ const DyadLanding: React.FC = () => {
                 <div className="about-card-overlay">
                   <h3 className="about-card-title">{item.title}</h3>
                   <p className="about-card-subtitle">{item.subtitle}</p>
+                  <a href={`/about-us-details#${item.title.toLowerCase().replace(/\s+/g, '-')}`}>
                   <div className="about-card-learn-more">
                     <span>Learn More →</span>
                   </div>
+                  </a>
                   <p className="about-card-paragraph">{item.paragraph}</p>
                 </div>
               </div>

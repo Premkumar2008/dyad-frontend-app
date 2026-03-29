@@ -1,0 +1,167 @@
+/* Service Detail Page Styles - Specific hierarchy to avoid affecting other pages */
+
+
+/* Service Detail Specific Container */
+.services-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 1rem;
+  font-family: 'Prompt', sans-serif;
+}
+
+
+/* Service Detail Grid - 3 cards per row */
+.leadership-grid.service-detail {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+  margin-bottom: 4rem;
+}
+
+/* Service Detail Card Layout */
+.leadership-grid.service-detail .service-us-card-detail {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column; /* Changed to column for top image layout */
+  min-height: 500px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border: 1px solid #8080802b;
+}
+
+.leadership-grid.service-detail .service-us-card-detail:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* Service Detail Image - Top Section */
+.leadership-grid.service-detail .service-us-image {
+  flex: 0 0 auto;
+  height: 200px;
+  overflow: hidden;
+  order: 1;
+}
+
+.leadership-grid.service-detail .service-us-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.leadership-grid.service-detail .service-us-card-detail:hover .service-us-image img {
+  transform: scale(1.05);
+}
+
+/* Service Detail Content - Bottom Section */
+.leadership-grid.service-detail .leadership-content {
+  flex: 1;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  order: 2;
+}
+
+/* Service Detail Title */
+.leadership-grid.service-detail .leader-name {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 0.5rem;
+  font-family: 'Prompt', sans-serif;
+}
+
+/* Service Detail Subtitle */
+.leadership-grid.service-detail .leader-title {
+  font-size: 0.9rem;
+  color: #1D6DD8;
+  margin-bottom: 1rem;
+  font-weight: 500;
+  font-family: 'Prompt', sans-serif;
+  line-height: 1.4;
+}
+
+/* Service Detail Features List */
+.leadership-grid.service-detail .description-features ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.leadership-grid.service-detail .description-features li {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 0.5rem;
+  font-size: 0.85rem;
+  color: #374151;
+  line-height: 1.4;
+  font-family: 'Prompt', sans-serif;
+}
+
+.leadership-grid.service-detail .tick-icon {
+  width: 14px;
+  height: 14px;
+  margin-right: 0.5rem;
+  margin-top: 0.1rem;
+  flex-shrink: 0;
+}
+
+/* Responsive Design for Service Detail */
+@media (max-width: 1200px) {
+  .leadership-grid.service-detail {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .leadership-grid.service-detail {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  .leadership-grid.service-detail .service-us-card-detail {
+    min-height: auto;
+  }
+  
+  .leadership-grid.service-detail .service-us-image {
+    height: 180px;
+  }
+  
+  .leadership-grid.service-detail .leadership-content {
+    padding: 1rem;
+  }
+  
+  .leadership-grid.service-detail .leader-name {
+    font-size: 1.1rem;
+  }
+  
+  .leadership-grid.service-detail .leader-title {
+    font-size: 0.85rem;
+  }
+  
+  .leadership-grid.service-detail .description-features li {
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .leadership-grid.service-detail .service-us-image {
+    height: 150px;
+  }
+  
+  .leadership-grid.service-detail .leadership-content {
+    padding: 0.75rem;
+  }
+  
+  .leadership-grid.service-detail .leader-name {
+    font-size: 1rem;
+  }
+  
+  .leadership-grid.service-detail .description-features li {
+    font-size: 0.75rem;
+  }
+}

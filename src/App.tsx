@@ -14,6 +14,9 @@ import ResetPassword from './pages/ResetPassword';
 import ContactUs from './pages/ContactUs';
 import { initializeSecurity } from './utils/security';
 import SecurityMonitor from './utils/securityMonitor';
+import ComingSoon from './pages/ComingSoon';
+import AboutUsDetail from './pages/about-us-detail';
+import ServiceDetail from './pages/service-detail';
 
 // Initialize security measures on app startup
 initializeSecurity();
@@ -33,6 +36,8 @@ function App() {
             <Route path="/verify-otp" element={<OTPVerification />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+             <Route path="/about-us-details" element={<AboutUsDetail />} />
+             <Route path="/service-details" element={<ServiceDetail />} />
             <Route 
               path="/admin/*" 
               element={
@@ -43,7 +48,7 @@ function App() {
             />
             <Route 
               path="/user/*" 
-              element={<ClientDashboard />} 
+              element={<ComingSoon />} 
             />
             {/* Temporary test route - remove in production */}
             <Route path="/test-dashboard" element={<ClientDashboard />} />

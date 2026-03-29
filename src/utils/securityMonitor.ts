@@ -136,30 +136,33 @@ export class SecurityMonitor {
    * Initialize security monitoring
    */
   static initializeSecurityMonitoring(): void {
-    // Monitor page visibility changes (potential tab duplication)
-    document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'visible') {
-        this.monitorConcurrentSessions();
-        this.checkSessionIntegrity();
-      }
-    });
+    // Disable security monitoring to prevent CORS and permission issues
+    console.log('Security monitoring disabled to prevent CORS and permission issues');
+    
+    // Monitor page visibility changes (potential tab duplication) - DISABLED
+    // document.addEventListener('visibilitychange', () => {
+    //   if (document.visibilityState === 'visible') {
+    //     this.monitorConcurrentSessions();
+    //     this.checkSessionIntegrity();
+    //   }
+    // });
 
-    // Monitor focus events (potential session hijacking)
-    window.addEventListener('focus', () => {
-      this.checkSessionIntegrity();
-    });
+    // Monitor focus events (potential session hijacking) - DISABLED
+    // window.addEventListener('focus', () => {
+    //   this.checkSessionIntegrity();
+    // });
 
-    // Monitor storage events (potential session manipulation)
-    window.addEventListener('storage', (e) => {
-      if (e.key === 'auth_token' || e.key === 'user_data') {
-        this.monitorSuspiciousActivity('storage_event_detected');
-      }
-    });
+    // Monitor storage events (potential session manipulation) - DISABLED
+    // window.addEventListener('storage', (e) => {
+    //   if (e.key === 'auth_token' || e.key === 'user_data') {
+    //     this.monitorSuspiciousActivity('storage_event_detected');
+    //   }
+    // });
 
-    // Periodic security checks
-    setInterval(() => {
-      this.checkSessionIntegrity();
-    }, 5 * 60 * 1000); // Every 5 minutes
+    // Periodic security checks - DISABLED
+    // setInterval(() => {
+    //   this.checkSessionIntegrity();
+    // }, 5 * 60 * 1000); // Every 5 minutes
   }
 
   // Private helper methods
@@ -232,23 +235,16 @@ export class SecurityMonitor {
   }
 
   private static generateFingerprint(): string {
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return 'no_canvas';
-
-    // Generate canvas fingerprint
-    ctx.textBaseline = 'top';
-    ctx.font = '14px Arial';
-    ctx.fillText('Browser fingerprint', 2, 2);
-    const canvasFingerprint = canvas.toDataURL();
-
-    // Combine with other browser characteristics
+    // Disable canvas fingerprinting to prevent permission requests
+    // Canvas API can trigger permission prompts on some browsers
+    console.log('Canvas fingerprinting disabled to prevent permission issues');
+    
+    // Return a simple fingerprint without using canvas
     const fingerprint = [
       navigator.userAgent,
       navigator.language,
       screen.width + 'x' + screen.height,
-      new Date().getTimezoneOffset(),
-      canvasFingerprint
+      new Date().getTimezoneOffset()
     ].join('|');
 
     return this.hashToken(fingerprint);

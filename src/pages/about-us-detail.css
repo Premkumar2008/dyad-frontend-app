@@ -1,0 +1,8 @@
+.leadership-image.about-us-image{
+min-width: 300px !important;
+width: 30% !important;
+}
+.leadership-card.about-us-card-detail {
+    min-height: 340px;
+    border: 1px solid #8080802b;
+}

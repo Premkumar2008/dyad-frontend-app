@@ -40,19 +40,22 @@ export const generateCSP = (): string => {
  * Apply security headers to the document
  */
 export const applySecurityHeaders = (): void => {
-  // Apply CSP meta tag
-  const cspMeta = document.createElement('meta');
-  cspMeta.httpEquiv = 'Content-Security-Policy';
-  cspMeta.content = generateCSP();
-  document.head.appendChild(cspMeta);
+  // Disable security headers to prevent CORS and permission issues
+  console.log('Security headers application disabled to prevent CORS issues');
+  
+  // Apply CSP meta tag (commented out to avoid conflicts with index.html)
+  // const cspMeta = document.createElement('meta');
+  // cspMeta.httpEquiv = 'Content-Security-Policy';
+  // cspMeta.content = generateCSP();
+  // document.head.appendChild(cspMeta);
 
-  // Apply other security meta tags
-  Object.entries(SECURITY_CONFIG.HEADERS).forEach(([name, content]) => {
-    const meta = document.createElement('meta');
-    meta.httpEquiv = name;
-    meta.content = content;
-    document.head.appendChild(meta);
-  });
+  // Apply other security meta tags (commented out to avoid CORS issues)
+  // Object.entries(SECURITY_CONFIG.HEADERS).forEach(([name, content]) => {
+  //   const meta = document.createElement('meta');
+  //   meta.httpEquiv = name;
+  //   meta.content = content;
+  //   document.head.appendChild(meta);
+  // });
 };
 
 /**

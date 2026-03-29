@@ -1,0 +1,361 @@
+/* Coming Soon Page Styles */
+.coming-soon-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  font-family: 'Prompt', sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.coming-soon-content {
+  width: 100%;
+  max-width: 1200px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+  backdrop-filter: blur(10px);
+}
+
+/* Header */
+.coming-soon-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 40px;
+  background: rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.logo-section {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.logo-section .logo {
+  height: 50px;
+  width: auto;
+}
+
+.logo-section h1 {
+  color: #1D6DD8;
+  font-size: 1.8rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.logout-btn {
+  background: #ff6b6b;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.logout-btn:hover {
+  background: #ff5252;
+  transform: translateY(-2px);
+}
+
+/* Main Content */
+.coming-soon-main {
+  padding: 60px 40px;
+  text-align: center;
+}
+
+.coming-soon-card {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.coming-soon-title {
+  font-size: 4rem;
+  font-weight: 700;
+  color: #1D6DD8;
+  margin-bottom: 20px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.coming-soon-subtitle {
+  font-size: 1.2rem;
+  color: #666;
+  margin-bottom: 60px;
+  line-height: 1.6;
+}
+
+/* Countdown Timer */
+.countdown-timer {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  margin-bottom: 80px;
+}
+
+.time-unit {
+  background: linear-gradient(135deg, #1D6DD8 0%, #1558b8 100%);
+  border-radius: 15px;
+  padding: 30px 20px;
+  min-width: 120px;
+  box-shadow: 0 10px 30px rgba(29, 109, 216, 0.3);
+  transition: transform 0.3s ease;
+}
+
+.time-unit:hover {
+  transform: translateY(-5px);
+}
+
+.time-value {
+  display: block;
+  font-size: 3rem;
+  font-weight: 700;
+  color: white;
+  margin-bottom: 10px;
+}
+
+.time-label {
+  display: block;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.8);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Feature Highlights */
+.feature-highlights {
+  margin-bottom: 60px;
+}
+
+.feature-highlights h3 {
+  font-size: 2rem;
+  color: #1D6DD8;
+  margin-bottom: 40px;
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 30px;
+}
+
+.feature-item {
+  background: rgba(29, 109, 216, 0.05);
+  border-radius: 15px;
+  padding: 30px 20px;
+  text-align: center;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+}
+
+.feature-item:hover {
+  transform: translateY(-5px);
+  border-color: #1D6DD8;
+  background: rgba(29, 109, 216, 0.1);
+}
+
+.feature-icon {
+  font-size: 3rem;
+  margin-bottom: 20px;
+}
+
+.feature-item h4 {
+  font-size: 1.2rem;
+  color: #1D6DD8;
+  margin-bottom: 15px;
+  font-weight: 600;
+}
+
+.feature-item p {
+  color: #666;
+  line-height: 1.5;
+  font-size: 0.9rem;
+}
+
+/* Notification Section */
+.notification-section {
+  background: linear-gradient(135deg, rgba(29, 109, 216, 0.1) 0%, rgba(29, 109, 216, 0.05) 100%);
+  border-radius: 15px;
+  padding: 40px;
+  margin-bottom: 40px;
+  border: 2px solid rgba(29, 109, 216, 0.2);
+}
+
+.notification-section h3 {
+  font-size: 1.8rem;
+  color: #1D6DD8;
+  margin-bottom: 15px;
+}
+
+.notification-section p {
+  color: #666;
+  margin-bottom: 30px;
+}
+
+.notification-form {
+  display: flex;
+  gap: 15px;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.email-input {
+  flex: 1;
+  padding: 15px 20px;
+  border: 2px solid #e1e8ed;
+  border-radius: 10px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+.email-input:focus {
+  outline: none;
+  border-color: #1D6DD8;
+  box-shadow: 0 0 0 3px rgba(29, 109, 216, 0.1);
+}
+
+.notify-btn {
+  background: linear-gradient(135deg, #1D6DD8 0%, #1558b8 100%);
+  color: white;
+  border: none;
+  padding: 15px 30px;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.notify-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(29, 109, 216, 0.3);
+}
+
+/* Contact Section */
+.contact-section {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.contact-section a {
+  color: #1D6DD8;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.contact-section a:hover {
+  text-decoration: underline;
+}
+
+/* Footer */
+.coming-soon-footer {
+  background: rgba(255, 255, 255, 0.1);
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 20px 40px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.footer-links {
+  display: flex;
+  gap: 20px;
+}
+
+.footer-links a {
+  color: #1D6DD8;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.3s ease;
+}
+
+.footer-links a:hover {
+  color: #1558b8;
+  text-decoration: underline;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .coming-soon-header {
+    flex-direction: column;
+    gap: 20px;
+    padding: 20px;
+  }
+
+  .logo-section h1 {
+    font-size: 1.5rem;
+  }
+
+  .coming-soon-main {
+    padding: 40px 20px;
+  }
+
+  .coming-soon-title {
+    font-size: 3rem;
+  }
+
+  .countdown-timer {
+    flex-wrap: wrap;
+    gap: 20px;
+  }
+
+  .time-unit {
+    min-width: 100px;
+    padding: 20px 15px;
+  }
+
+  .time-value {
+    font-size: 2.5rem;
+  }
+
+  .features-grid {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 20px;
+  }
+
+  .notification-form {
+    flex-direction: column;
+  }
+
+  .coming-soon-footer {
+    flex-direction: column;
+    gap: 15px;
+    text-align: center;
+  }
+
+  .footer-links {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .coming-soon-title {
+    font-size: 2.5rem;
+  }
+
+  .countdown-timer {
+    gap: 15px;
+  }
+
+  .time-unit {
+    min-width: 80px;
+    padding: 15px 10px;
+  }
+
+  .time-value {
+    font-size: 2rem;
+  }
+
+  .notification-section {
+    padding: 30px 20px;
+  }
+}

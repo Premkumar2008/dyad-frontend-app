@@ -51,14 +51,7 @@ header.dyad-header {
   align-items: center;
 }
 
-.about-card:hover{
-    opacity: 0.95;
-    transform: translateY(-2px);
-    transition: all 0.3s ease;
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-    scale: 1.15;
-    z-index: 999;
-}
+
 .service-card:hover{
     opacity: 0.95;
     transform: translateY(-2px);
@@ -66,6 +59,13 @@ header.dyad-header {
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
     scale: 1.03;
     z-index: 999;
+}
+
+.about-card-title{
+      margin-bottom: 5px;
+    font-weight: 600;
+    font-size: 22px;
+    color: white;
 }
 
  .desktop-about-us{
@@ -849,7 +849,7 @@ header.dyad-header .dyad-nav-actions .dyad-nav .nav-list .dyad-nav .nav-link.act
     pointer-events: none !important;
   }
   
-  .about-card:hover .about-card-overlay {
+  /* .about-card:hover .about-card-overlay {
     background: white !important;
     top: 0 !important;
     bottom: 0 !important;
@@ -887,7 +887,7 @@ header.dyad-header .dyad-nav-actions .dyad-nav .nav-list .dyad-nav .nav-link.act
     max-height: max-content !important;
     overflow-y: auto !important;
     color: #222222 !important;
-  }
+  } */
   
   .about-card.active .about-card-overlay {
     background: white !important;
@@ -1702,12 +1702,12 @@ padding : 0.5rem 0.5rem 0.rem 0rem !important
   box-shadow: 0 4px 20px rgb(0 0 0 / 11%);
 }
 
-.about-card:hover {
+/* .about-card:hover {
   transform: translateY(-5px);
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
 }
 
-/* Modern Scrollbar Styling */
+
 .about-card:hover::-webkit-scrollbar {
   width: 4px;
 }
@@ -1725,7 +1725,7 @@ padding : 0.5rem 0.5rem 0.rem 0rem !important
 
 .about-card:hover::-webkit-scrollbar-thumb:hover {
   background: #00A7D8;
-}
+} */
 
 .about-card-image {
   width: 100%;
@@ -1741,9 +1741,9 @@ padding : 0.5rem 0.5rem 0.rem 0rem !important
   transition: transform 0.3s ease;
 }
 
-.about-card:hover .about-card-image img {
+/* .about-card:hover .about-card-image img {
   transform: scale(1.1);
-}
+} */
 
 .about-card-overlay {
   position: absolute;
@@ -1755,7 +1755,7 @@ padding : 0.5rem 0.5rem 0.rem 0rem !important
   transition: all 0.3s ease;
 }
 
-.about-card:hover .about-card-overlay {
+/* .about-card:hover .about-card-overlay {
   background: white;
   top: 0;
   bottom: 0;
@@ -1799,7 +1799,7 @@ padding : 0.5rem 0.5rem 0.rem 0rem !important
   margin-top: 10px;
 }
 
-/* Modern Scrollbar Styling */
+
 .about-card:hover .about-card-overlay::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -1827,7 +1827,7 @@ padding : 0.5rem 0.5rem 0.rem 0rem !important
   transform: scale(1.1);
 }
 
-/* Firefox Scrollbar Styling */
+
 .about-card:hover .about-card-overlay * {
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.3) rgba(29, 109, 216, 0.5);
@@ -1851,7 +1851,7 @@ padding : 0.5rem 0.5rem 0.rem 0rem !important
 .about-card:hover .about-card-overlay *::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(135deg, #00A7D8, #1D6DD8);
   transform: scale(1.1);
-}
+} */
 
 .about-card-title {
   font-size: 20px;
@@ -1892,7 +1892,7 @@ padding : 0.5rem 0.5rem 0.rem 0rem !important
 }
 
 
-.about-card:hover .about-card-subtitle {
+/* .about-card:hover .about-card-subtitle {
   display: none;
 }
 
@@ -1907,7 +1907,7 @@ padding : 0.5rem 0.5rem 0.rem 0rem !important
   max-height: max-content;
   overflow-y: auto;
   color:#222222;
-}
+} */
 
 .about-card-paragraph {
   font-size: 0.95rem;
@@ -1921,12 +1921,12 @@ padding : 0.5rem 0.5rem 0.rem 0rem !important
   overflow: hidden;
 }
 
-.about-card:hover .about-card-paragraph {
+/* .about-card:hover .about-card-paragraph {
   opacity: 1;
   transform: translateY(0);
    max-height: max-content;
    color:#222222
-}
+} */
 
 /* Responsive Design for About Grid */
 @media (max-width: 1024px) {
@@ -2222,9 +2222,9 @@ padding : 0.5rem 0.5rem 0.rem 0rem !important
   transition: transform 0.3s ease;
 }
 
-.about-card:hover .card-image img {
+/* .about-card:hover .card-image img {
   transform: scale(1.05);
-}
+} */
 
 .card-content {
   padding: 1.25rem;
@@ -4413,8 +4413,8 @@ padding : 0.5rem 0.5rem 0.rem 0rem !important
   position: relative;
 }
 
-.leadership-card:nth-child(1),
-.leadership-card:nth-child(3) {
+.leadership-card:nth-child(odd),
+.leadership-card:nth-child(3), .leadership-card:nth-child(5) {
   display: flex;
   flex-direction: row;
   background: white;
@@ -4426,7 +4426,7 @@ padding : 0.5rem 0.5rem 0.rem 0rem !important
   position: relative;
 }
 
-.leadership-card:nth-child(2) {
+.leadership-card:nth-child(even){
   display: flex;
   flex-direction: row-reverse;
   background: white;
@@ -4527,6 +4527,7 @@ padding : 0.5rem 0.5rem 0.rem 0rem !important
   padding: 2rem;
   display: flex;
   flex-direction: column;
+  justify-content: center;
   gap: 0.75rem;
   flex: 1;
   position: relative;
