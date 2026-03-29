@@ -11,16 +11,14 @@ export const SECURITY_CONFIG = {
     'style-src': ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
     'font-src': ["'self'", 'https://fonts.gstatic.com'],
     'img-src': ["'self'", 'data:', 'https:'],
-    'connect-src': ["'self'", 'https://api.dyadpractice.com'], // Update with your API domain
-    'frame-ancestors': ["'none'"],
+    'connect-src': ["'self'", 'https:', 'http:', 'ws:', 'wss:', 'localhost', '127.0.0.1', 'http://localhost:5000', 'https://dyad-backend-server-dev.up.railway.app'], // Allow local and production API
     'base-uri': ["'self'"],
     'form-action': ["'self'"],
   },
   
-  // Additional security headers
+  // Additional security headers (only ones that work with meta tags)
   HEADERS: {
     'X-Content-Type-Options': 'nosniff',
-    'X-Frame-Options': 'DENY',
     'X-XSS-Protection': '1; mode=block',
     'Referrer-Policy': 'strict-origin-when-cross-origin',
     'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
