@@ -49,18 +49,20 @@ const ContactUs: React.FC = () => {
     { name: 'Who We Serve', href: '#who-we-serve', hasDropdown: true }
   ];
 
-  const aboutDropdownItems = [
-    { name: 'Our Story & Inspiration', href: '#about-story' },
-    { name: 'Our Mission & Vision', href: '#about-mission' },
-    { name: 'Our Values & Principles', href: '#about-values' },
-    { name: 'Our Team & Expertise', href: '#about-team' }
+  const aboutDropdownItems2 = [
+    { name: 'Our Story & Inspiration', href: '/about-us-details#our-story-&-inspiration' },
+    { name: 'Our Mission & Vision', href: '/about-us-details#our-mission-&-vision' },
+    { name: 'Our Values & Principles', href: '/about-us-details#our-values-&-principles' },
+    { name: 'Our Approach & Methodology', href: '/about-us-details#our-approach-&-methodology' },
+    { name: 'Our Innovative Technologies', href: '/about-us-details#our-innovative-technologies' },
+    { name: 'Our Team & Expertise', href: '/about-us-details#our-team-&-expertise' }
   ];
 
   const whoWeServeDropdownItems = [
-    { name: 'Surgical & Procedural Specialties', href: '#surgical-specialties' },
-    { name: 'Interventional & Diagnostic Care', href: '#interventional-care' },
-    { name: 'Perioperative & Supportive Services', href: '#perioperative-services' },
-    { name: 'Outpatient & Specialty Facilities', href: '#outpatient-facilities' }
+    { name: 'Surgical & Procedural Specialties'},
+    { name: 'Interventional & Diagnostic Care'},
+    { name: 'Perioperative & Supportive Services'},
+    { name: 'Outpatient & Specialty Facilities' }
   ];
 
   const handleNavClick = (item: { name: string; href: string }) => {
@@ -107,13 +109,9 @@ const ContactUs: React.FC = () => {
   };
 
   const handleContactRequest = () => {
-    // Scroll to form or stay on current page since we're already on contact page
-    const formElement = document.querySelector('.contact-form-section');
-    if (formElement) {
-      formElement.scrollIntoView({ behavior: 'smooth' });
-    }
+    // Navigate to contact page
+    navigate('/contact');
   };
-
   const {
     register,
     handleSubmit,
@@ -264,7 +262,7 @@ const ContactUs: React.FC = () => {
                             (item.name === 'Who We Serve' && isWhoWeServeDropdownOpen) 
                               ? 'open' : ''
                           }`}>
-                            {item.name === 'About Us' && aboutDropdownItems.map((dropdownItem) => (
+                            {item.name === 'About Us' && aboutDropdownItems2.map((dropdownItem) => (
                               <a
                                 key={dropdownItem.name}
                                 onClick={(e) => {
@@ -291,7 +289,7 @@ const ContactUs: React.FC = () => {
                                 key={dropdownItem.name}
                                 onClick={(e) => {
                                   e.preventDefault();
-                                  handleWhoWeServeDropdownItemClick(dropdownItem.href);
+                                 
                                 }}
                                 className="dropdown-item"
                                 style={{
@@ -340,8 +338,8 @@ const ContactUs: React.FC = () => {
 
             {/* Action Buttons */}
             <div className="dyad-actions">
-              <button className="btn btn-secondary" onClick={handleLogin}>
-                <span>Login</span>
+              <button className="btn btn-primary" onClick={handleLogin}>
+                <span>Login / Register</span>
               </button>
               <button className="btn btn-primary" onClick={handleContactRequest}>
                 <span>Contact Us</span>
@@ -415,7 +413,7 @@ const ContactUs: React.FC = () => {
                             (item.name === 'Who We Serve' && isWhoWeServeDropdownOpen) 
                               ? 'open' : ''
                           }`}>
-                            {item.name === 'About Us' && aboutDropdownItems.map((dropdownItem) => (
+                            {item.name === 'About Us' && aboutDropdownItems2.map((dropdownItem) => (
                               <a
                                 key={dropdownItem.name}
                                 onClick={(e) => {
@@ -442,7 +440,7 @@ const ContactUs: React.FC = () => {
                                 key={dropdownItem.name}
                                 onClick={(e) => {
                                   e.preventDefault();
-                                  handleWhoWeServeDropdownItemClick(dropdownItem.href);
+                                 
                                 }}
                                 className="mobile-dropdown-item"
                                 style={{

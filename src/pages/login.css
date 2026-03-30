@@ -62,18 +62,7 @@
     background: #fff5f5;
 }
 
-.btn-primary {
-    background: linear-gradient(135deg, #1D6DD8 0%, #1557b8 100%);
-    color: white;
-    border: none;
-    padding: 1rem 2rem;
-    border-radius: 8px;
-    font-size: 1.1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    font-family: 'Prompt', sans-serif;
-}
+
 
 .btn-primary:hover:not(:disabled) {
     transform: translateY(-2px);

@@ -6,11 +6,13 @@ const DyadLanding: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeAboutCard, setActiveAboutCard] = useState<number | null>(null);
   const [expandedMobileCard, setExpandedMobileCard] = useState<number | null>(null);
-   const [expandedserviceMobileCard, setExpandedserviceMobileCard] = useState<number | null>(null);
+  const [expandedserviceMobileCard, setExpandedserviceMobileCard] = useState<number | null>(null);
   const [activeMenu, setActiveMenu] = useState('Home');
   const [isAboutDropdownOpen, setIsAboutDropdownOpen] = useState(false);
   const [isWhoWeServeDropdownOpen, setIsWhoWeServeDropdownOpen] = useState(false);
   const [hoveredMenu, setHoveredMenu] = useState<string | null>(null);
+  const [isTrustSectionSticky, setIsTrustSectionSticky] = useState(false);
+  const [selectedAboutCard, setSelectedAboutCard] = useState<typeof aboutContent[0] | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -158,9 +160,40 @@ const DyadLanding: React.FC = () => {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  // Handle sticky detection for trust section
+  useEffect(() => {
+    const handleScroll = () => {
+      const trustSectionElement = document.querySelector('.trust-logos-section') as HTMLElement;
+      const headerElement = document.querySelector('.dyad-header') as HTMLElement;
+      
+      if (trustSectionElement && headerElement) {
+        const headerHeight = headerElement.offsetHeight;
+        const trustSectionTop = trustSectionElement.offsetTop;
+        const currentScrollY = window.scrollY;
+        
+        // Check if trust section should be sticky
+        if (currentScrollY >= trustSectionTop - headerHeight) {
+          setIsTrustSectionSticky(true);
+        } else {
+          setIsTrustSectionSticky(false);
+        }
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
   
   const handleAboutCardClick = (cardId: number) => {
-    setActiveAboutCard(activeAboutCard === cardId ? null : cardId);
+    const card = aboutContent.find(item => item.id === cardId);
+    if (card) {
+      setSelectedAboutCard(card);
+    }
+  };
+
+  const closeAboutPopup = () => {
+    setSelectedAboutCard(null);
   };
 
   const toggleMobileCard = (cardId: number) => {
@@ -176,23 +209,23 @@ const DyadLanding: React.FC = () => {
       id: 1,
       name: 'S. Jaikumar',
       title: 'Founder',
-      description: '27+ years building institutional-grade financial, payments, and risk infrastructure. A Treasurer at global enterprises with deep expertise in collections optimization, cash acceleration, and controls for over 2.5 trillion in assets under management. Designed real-time receivables, merchant processing, and fraud mitigation platforms — applied directly to healthcare revenue cycle. Brings fiduciary discipline and payer-level rigor to physician reimbursement.',
+      description: 'Brings over 26 years of institutional treasury, capital markets, and financial risk management experience to her role. She has held senior leadership positions at Capital Group, Latham & Watkins, Western Digital Corporation, Levi Strauss & Co., BNP Paribas, and ProLogis. Across these roles, she has directed oversight of $2.5 trillion in global securities valuations, structured over $35 billion in syndicated financings, managed over $40 billion in global derivatives portfolios, and has overseen treasury operations across 110 countries. She holds a Master of Science in Financial Analysis and Investment Management and a Master of Business Administration in Finance. She is an FAA-certified private pilot.',
       image: '/assets/images/leadershipnew1.jpeg',
       mobileImage: '/assets/images/leadershipmb1.jpeg'
     },
     {
       id: 2,
-      name: 'A. Subramaniam',
-      title: 'Chief Technology & AI Officer',
-      description: '27+ years architecting enterprise data, AI, and automation platforms across healthcare and financial services at major insurers and global banks. Chief AI Officer who has scaled 50+ production AI and GenAI accelerators including data ingestion, rules engines, and document intelligence. Expert in paper-elimination, workflow automation, and real-time analytics. Adjunct professor at Johns Hopkins AI graduate studies.',
+      name: 'A. Subramaniam ',
+      title: 'Chief Technology and AI Solutions Officer',
+      description: 'Brings over 27 years architecting enterprise data, AI, and automation platforms across healthcare and financial services at major health care insurers and global banks.  At Bank of America, he served as Vice President and India Head of Data Practice, supporting 14 million wealth management clients across a multi million dollar platform. He subsequently built and scaled an AI and data analytics practice from 5 to 130 professionals, delivering over 50 production AI and GenAI accelerators across banking, lending, and healthcare. He holds a Post Graduate Diploma in Business Analytics and Business Intelligence and is an adjunct professor at Johns Hopkins University for AI graduate studies.',
       image: '/assets/images/leadershipnew2.jpeg',
       mobileImage: '/assets/images/leadershipmb2.jpeg'
     },
     {
       id: 3,
       name: 'S. Rajan',
-      title: 'Chief Operating Officer, India',
-      description: '28+ years running large-scale U.S. healthcare RCM operations across onshore and offshore teams. Former global P&L leader for multi-billion-dollar RCM platforms serving thousands of providers. Deep expertise in specialty billing, AR recovery, denials, IDR workflows, SLA governance, and compliance. Scales Dyad\'s operations with a quality-first, audit-defensible model.',
+      title: 'Chief Operating Officer',
+      description: 'Brings over 27 years of healthcare finance operations leadership to his role. He previously served as Senior Vice President of Global Revenue Cycle Operations at a Veritas Capital portfolio company, where he held P&L responsibility for $190 million in revenue and led an organization of over 15,000 individuals globally. Prior to that, he served as President of Global Revenue Cycle Operations at a Carlyle Group company, scaling revenue from $108 million to $160 million and expanding EBITDA by six percent. He holds a Post Graduate Diploma in Business Administration in Finance, a Master of Business Administration, and a Six Sigma Black Belt from KPMG. He is a licensed private pilot.',
       image: '/assets/images/leadershipnew3.jpeg',
       mobileImage: '/assets/images/leadershipmb3.jpeg'
     }
@@ -522,8 +555,8 @@ const DyadLanding: React.FC = () => {
 
             {/* Action Buttons */}
             <div className="dyad-actions">
-              <button className="btn btn-secondary" onClick={handleLogin}>
-                <span>Login</span>
+              <button className="btn btn-primary" onClick={handleLogin}>
+                <span>Login / Register</span>
               </button>
               <button className="btn btn-primary" onClick={handleContactRequest}>
                 <span>Contact Us</span>
@@ -689,7 +722,9 @@ const DyadLanding: React.FC = () => {
       </main>
 
        {/* Trust Logos Section */}
-      <section className="trust-logos-section">
+      {/* <section 
+        className={`trust-logos-section ${isTrustSectionSticky ? 'sticky-active' : ''}`}
+      >
         <div className="trust-container">
           <div className="logos-scroll">
             <div className="logos-track">
@@ -715,7 +750,109 @@ const DyadLanding: React.FC = () => {
             </div>
           </div>
         </div>
-      </section>
+      </section> */}
+<section 
+        className={`trust-logos-section ${isTrustSectionSticky ? 'sticky-active' : ''}`} >
+        <footer className="marquee trust-container">
+  <div className="marquee__track ">
+   
+    <div className="marquee__content">
+      <ul className="marquee__list">
+        <li className="marquee__item marquee__item--text">
+           <div className="logo-item">
+                    <img src="/assets/images/logo_section.svg" alt="Trust Logo " />
+                  </div>
+        </li>
+         <li className="marquee__item marquee__item--text">
+           <div className="logo-item">
+                    <img src="/assets/images/logo_section1.svg" alt="Trust Logo 1" />
+                  </div>
+        </li>
+         <li className="marquee__item marquee__item--text">
+           <div className="logo-item">
+                    <img src="/assets/images/logo_section2.svg" alt="Trust Logo 2" />
+                  </div>
+        </li>
+         <li className="marquee__item marquee__item--text">
+           <div className="logo-item">
+                    <img src="/assets/images/logo_section3.svg" alt="Trust Logo 3" />
+                  </div>
+        </li>
+         <li className="marquee__item marquee__item--text">
+           <div className="logo-item">
+                    <img src="/assets/images/logo_section4.svg" alt="Trust Logo 4" />
+                  </div>
+        </li>
+        
+       </ul>
+    </div>
+
+       <div className="marquee__content">
+      <ul className="marquee__list">
+        <li className="marquee__item marquee__item--text">
+           <div className="logo-item">
+                    <img src="/assets/images/logo_section.svg" alt="Trust Logo " />
+                  </div>
+        </li>
+         <li className="marquee__item marquee__item--text">
+           <div className="logo-item">
+                    <img src="/assets/images/logo_section1.svg" alt="Trust Logo 1" />
+                  </div>
+        </li>
+         <li className="marquee__item marquee__item--text">
+           <div className="logo-item">
+                    <img src="/assets/images/logo_section2.svg" alt="Trust Logo 2" />
+                  </div>
+        </li>
+         <li className="marquee__item marquee__item--text">
+           <div className="logo-item">
+                    <img src="/assets/images/logo_section3.svg" alt="Trust Logo 3" />
+                  </div>
+        </li>
+         <li className="marquee__item marquee__item--text">
+           <div className="logo-item">
+                    <img src="/assets/images/logo_section4.svg" alt="Trust Logo 4" />
+                  </div>
+        </li>
+        
+       </ul>
+    </div>
+
+
+    <div className="marquee__content">
+      <ul className="marquee__list">
+        <li className="marquee__item marquee__item--text">
+           <div className="logo-item">
+                    <img src="/assets/images/logo_section.svg" alt="Trust Logo " />
+                  </div>
+        </li>
+         <li className="marquee__item marquee__item--text">
+           <div className="logo-item">
+                    <img src="/assets/images/logo_section1.svg" alt="Trust Logo 1" />
+                  </div>
+        </li>
+         <li className="marquee__item marquee__item--text">
+           <div className="logo-item">
+                    <img src="/assets/images/logo_section2.svg" alt="Trust Logo 2" />
+                  </div>
+        </li>
+         <li className="marquee__item marquee__item--text">
+           <div className="logo-item">
+                    <img src="/assets/images/logo_section3.svg" alt="Trust Logo 3" />
+                  </div>
+        </li>
+         <li className="marquee__item marquee__item--text">
+           <div className="logo-item">
+                    <img src="/assets/images/logo_section4.svg" alt="Trust Logo 4" />
+                  </div>
+        </li>
+        
+       </ul>
+    </div>
+
+  </div>
+</footer>
+</section>
 
       {/* About Us Section */}
       <section className="about-us-section" id="about">
@@ -734,18 +871,30 @@ const DyadLanding: React.FC = () => {
                 className={`about-card ${activeAboutCard === item.id ? 'active' : ''}`}
                 onClick={() => handleAboutCardClick(item.id)}
               >
-                <div className="about-card-image">
-                  <img src={item.image} alt={item.title} />
-                </div>
-                <div className="about-card-overlay">
-                  <h3 className="about-card-title">{item.title}</h3>
-                  <p className="about-card-subtitle">{item.subtitle}</p>
-                  <a href={`/about-us-details#${item.title.toLowerCase().replace(/\s+/g, '-')}`}>
-                  <div className="about-card-learn-more">
-                    <span>Learn More →</span>
+                <div className="about-card-layout">
+                  <div className="about-card-image-section">
+                    <img src={item.image} alt={item.title} />
                   </div>
-                  </a>
-                  <p className="about-card-paragraph">{item.paragraph}</p>
+                  <div className="about-card-content-box">
+                    <div className="about-card-content">
+                      <div className="about-card-text-content">
+                        <div className="about-card-header">
+                          <div className="about-card-title-subtitle">
+                            <h3 className="about-card-title">{item.title}</h3>
+                            <p className="about-card-subtitle">{item.subtitle}</p>
+                          </div>
+                          <div className="about-card-arrow">
+                            <div className="arrow-circle">
+                              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M9 18L15 12L9 6" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                              </svg>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <p className="about-card-paragraph">{item.paragraph}</p>
+                  </div>
                 </div>
               </div>
             ))}
@@ -757,18 +906,26 @@ const DyadLanding: React.FC = () => {
         <div className="container">
           <div className="mobile-cards-container">
             {aboutContent.map((card) => (
-              <div key={card.id} className="mobile-card">
+              <div key={card.id} className={`mobile-card ${expandedMobileCard === card.id ? 'expanded' : ''}`} onClick={() => toggleMobileCard(card.id)}>
                 <div className="mobile-card-image">
                   <img src={card.image} alt={card.title} />
                 </div>
                 <div className="mobile-card-content">
-                  <h3 className="mobile-card-title">{card.title}</h3>
-                  <p className="mobile-card-subtitle">{card.subtitle}</p>
-                  <div 
-                    className="mobile-card-learn-more"
-                    onClick={() => toggleMobileCard(card.id)}
-                  >
-                    {expandedMobileCard === card.id ? 'Show Less' : 'Learn More'}
+                  <div className="mobile-card-header">
+                    <div className="mobile-card-title-subtitle">
+                      <h3 className="mobile-card-title">{card.title}</h3>
+                      <p className="mobile-card-subtitle">{card.subtitle}</p>
+                    </div>
+                    <div className="mobile-card-arrow">
+                      <div className="mobile-arrow-circle" onClick={(e) => {
+                        e.stopPropagation();
+                        toggleMobileCard(card.id);
+                      }}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M9 18L15 12L9 6" stroke="rgb(29 109 216)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </div>
+                    </div>
                   </div>
                   <div className={`mobile-card-description ${expandedMobileCard === card.id ? 'expanded' : ''}`}>
                     <p>{card.paragraph}</p>
@@ -789,7 +946,7 @@ const DyadLanding: React.FC = () => {
           <div className="leadership-header">
             <h2 className="leadership-title">Leadership</h2>
             <p className="leadership-subtitle">
-              Decades of proven expertise at the intersection of healthcare, finance and technology
+            Dyad was built on the simple conviction that the same financial discipline that governs global financial platforms should apply to healthcare revenue.
             </p>
           </div>
           <div className="leadership-grid">
@@ -831,12 +988,20 @@ const DyadLanding: React.FC = () => {
                   <img src={service.image} alt={service.title} />
                 </div>
                 <div className="service-card-content">
-                  <h3 className="service-card-title">{service.title}</h3>
-                  <p className="service-card-subtitle">{service.subtitle}</p>
-                  <div className="service-card-learn-more" style={{ position: 'absolute', bottom: '1rem', left: '1rem' }}>
-                    <span>Learn More</span>
+                  <div className="service-card-header">
+                    <div className="service-card-title-subtitle">
+                      <h3 className="service-card-title">{service.title}</h3>
+                      <p className="service-card-subtitle">{service.subtitle}</p>
+                    </div>
+                    <div className="service-card-arrow">
+                      <div className="arrow-circle">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M9 18L15 12L9 6" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </div>
+                    </div>
                   </div>
-                </div>
+                                  </div>
                 <div className="service-card-description-overlay">
                   <div className="description-content">
                     <h3>{service.title}</h3>
@@ -860,18 +1025,26 @@ const DyadLanding: React.FC = () => {
         <div className="container">
           <div className="mobile-cards-container services">
             {servicesData.map((card) => (
-              <div key={card.id} className="mobile-card">
+              <div key={card.id} className={`mobile-card ${expandedserviceMobileCard === card.id ? 'expanded' : ''}`} onClick={() => toggleMobileCardService(card.id)}>
                 <div className="mobile-card-image">
                   <img src={card.image} alt={card.title} />
                 </div>
                 <div className="mobile-card-content">
-                  <h3 className="mobile-card-title">{card.title}</h3>
-                  <p className="mobile-card-subtitle">{card.subtitle}</p>
-                  <div 
-                    className="mobile-card-learn-more"
-                    onClick={() => toggleMobileCardService(card.id)}
-                  >
-                    {expandedserviceMobileCard === card.id ? 'Show Less' : 'Learn More'}
+                  <div className="mobile-card-header">
+                    <div className="mobile-card-title-subtitle">
+                      <h3 className="mobile-card-title">{card.title}</h3>
+                      <p className="mobile-card-subtitle">{card.subtitle}</p>
+                    </div>
+                    <div className="mobile-card-arrow">
+                      <div className="mobile-arrow-circle" onClick={(e) => {
+                        e.stopPropagation();
+                        toggleMobileCardService(card.id);
+                      }}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M9 18L15 12L9 6" stroke="rgb(29 109 216)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </div>
+                    </div>
                   </div>
                   <div className={`mobile-card-description ${expandedserviceMobileCard === card.id ? 'expanded' : ''}`}>
                    <div className="description-features">
@@ -965,7 +1138,32 @@ const DyadLanding: React.FC = () => {
           </div>
         </div>
       </footer>
-    </div>
+
+
+      {/* About Us Popup */}
+      {selectedAboutCard && (
+        <div className="about-popup-overlay" onClick={closeAboutPopup}>
+          <div className="about-popup-content" onClick={(e) => e.stopPropagation()}>
+            <div className="about-popup-header">
+              <div className="about-popup-left">
+                <h2 className="about-popup-title">{selectedAboutCard.title}</h2>
+                <p className="about-popup-subtitle">{selectedAboutCard.subtitle}</p>
+              </div>
+              <button className="about-popup-close" onClick={closeAboutPopup}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+            </div>
+            <div className="about-popup-body">
+              <div className="about-popup-description">
+                <p>{selectedAboutCard.paragraph}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+     </div>
   );
 };
 

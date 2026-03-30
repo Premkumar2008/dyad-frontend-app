@@ -72,10 +72,10 @@ const AboutUsDetail: React.FC = () => {
     { name: 'Our Team & Expertise', href: '#our-team-&-expertise' }
   ];
   const whoWeServeDropdownItems = [
-    { name: 'Surgical & Procedural Specialties', href: '#surgical-specialties' },
-    { name: 'Interventional & Diagnostic Care', href: '#interventional-care' },
-    { name: 'Perioperative & Supportive Services', href: '#perioperative-services' },
-    { name: 'Outpatient & Specialty Facilities', href: '#outpatient-facilities' }
+    { name: 'Surgical & Procedural Specialties' },
+    { name: 'Interventional & Diagnostic Care' },
+    { name: 'Perioperative & Supportive Services' },
+    { name: 'Outpatient & Specialty Facilities'}
   ];
 
     const handleWhoWeServeDropdownItemClick = (href: string) => {
@@ -96,14 +96,10 @@ const AboutUsDetail: React.FC = () => {
     navigate('/login');
   };
 
-  const handleContactRequest = () => {
-    // Scroll to form or stay on current page since we're already on contact page
-    const formElement = document.querySelector('.contact-form-section');
-    if (formElement) {
-      formElement.scrollIntoView({ behavior: 'smooth' });
-    }
+   const handleContactRequest = () => {
+    // Navigate to contact page
+    navigate('/contact');
   };
-
 
   const handleNavClick = (item: { name: string; href: string }) => {
     setActiveMenu(item.name);
@@ -296,7 +292,7 @@ const AboutUsDetail: React.FC = () => {
                                 key={dropdownItem.name}
                                 onClick={(e) => {
                                   e.preventDefault();
-                                  handleWhoWeServeDropdownItemClick(dropdownItem.href);
+                                 
                                 }}
                                 className="dropdown-item"
                                 style={{
@@ -345,8 +341,8 @@ const AboutUsDetail: React.FC = () => {
 
             {/* Action Buttons */}
             <div className="dyad-actions">
-              <button className="btn btn-secondary" onClick={handleLogin}>
-                <span>Login</span>
+              <button className="btn btn-primary" onClick={handleLogin}>
+                <span>Login / Register</span>
               </button>
               <button className="btn btn-primary" onClick={handleContactRequest}>
                 <span>Contact Us</span>
@@ -447,7 +443,7 @@ const AboutUsDetail: React.FC = () => {
                                 key={dropdownItem.name}
                                 onClick={(e) => {
                                   e.preventDefault();
-                                  handleWhoWeServeDropdownItemClick(dropdownItem.href);
+                                 
                                 }}
                                 className="mobile-dropdown-item"
                                 style={{
