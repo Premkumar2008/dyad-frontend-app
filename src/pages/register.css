@@ -86,9 +86,10 @@
 }
 
 .btn-primary:disabled {
-    opacity: 0.6;
+    opacity: 0.8;
     cursor: not-allowed;
     transform: none;
+    background-color: #9ca3af;
 }
 
 @media (max-width: 480px) {

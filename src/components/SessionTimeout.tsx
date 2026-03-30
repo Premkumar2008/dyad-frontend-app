@@ -60,9 +60,8 @@ const SessionTimeout: React.FC<SessionTimeoutProps> = ({ onSessionExpired }) => 
     }
   }, [countdown, isOpen, handleSessionExpired]);
 
-  // Session monitoring - temporarily disabled for debugging
+  // Session monitoring
   useEffect(() => {
-    console.log('SessionTimeout component mounted - monitoring disabled for debugging');
     return () => {
       console.log('SessionTimeout component unmounted');
     };

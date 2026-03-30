@@ -138,6 +138,7 @@ export interface VerifyOTPRequest {
 export interface VerifyOTPResponse {
   message: string;
   success: boolean;
+  emailVerified?: boolean;
 }
 
 // API Functions
@@ -196,6 +197,13 @@ export const resetPassword = async (resetData: ResetPasswordRequest): Promise<Ax
  */
 export const verifyEmail = async (token: string): Promise<AxiosResponse<string>> => {
   return api.get(`/verify-email?token=${token}`);
+};
+
+/**
+ * Check if email exists in database
+ */
+export const checkEmail = async (email: string): Promise<AxiosResponse<{ success: boolean; exists: boolean; message: string }>> => {
+  return api.post('/check-email', { email });
 };
 
 /**

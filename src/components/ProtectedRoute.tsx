@@ -11,12 +11,6 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requiredRole 
   const { user, isLoading } = useAuth();
   const location = useLocation();
 
-  // Temporary bypass for testing - remove in production
-  if (window.location.pathname.includes('/user/dashboard') || window.location.pathname.includes('/admin/dashboard')) {
-    console.log('Bypassing authentication for dashboard testing');
-    return <>{children}</>;
-  }
-
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">

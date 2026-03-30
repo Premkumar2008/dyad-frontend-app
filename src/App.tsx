@@ -7,16 +7,14 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import OTPVerification from './pages/OTPVerification';
 import AdminDashboard from './pages/AdminDashboard';
-import ClientDashboard from './pages/ClientDashboard';
-import TestDashboard from './pages/TestDashboard';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import ContactUs from './pages/ContactUs';
 import { initializeSecurity } from './utils/security';
 import SecurityMonitor from './utils/securityMonitor';
-import ComingSoon from './pages/ComingSoon';
 import AboutUsDetail from './pages/about-us-detail';
 import ServiceDetail from './pages/service-detail';
+import ComingSoon from './pages/ComingSoon';
 
 // Initialize security measures on app startup
 initializeSecurity();
@@ -48,11 +46,12 @@ function App() {
             />
             <Route 
               path="/user/*" 
-              element={<ComingSoon />} 
+              element={
+                <ProtectedRoute requiredRole="user">
+                  <ComingSoon />
+                </ProtectedRoute>
+              } 
             />
-            {/* Temporary test route - remove in production */}
-            <Route path="/test-dashboard" element={<ClientDashboard />} />
-            <Route path="/simple-test" element={<TestDashboard />} />
           </Routes>
         </div>
         <Toaster 

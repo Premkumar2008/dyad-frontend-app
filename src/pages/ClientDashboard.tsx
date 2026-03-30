@@ -227,18 +227,6 @@ const ClientDashboard: React.FC = () => {
     }
   };
 
-  // Test function to bypass validation
-  const handleTestNext = () => {
-    console.log('Test next button clicked');
-    const newCompletedSteps = new Set(completedSteps);
-    newCompletedSteps.add(currentStep);
-    setCompletedSteps(newCompletedSteps);
-    
-    if (currentStep < workflowSteps.length - 1) {
-      setCurrentStep(currentStep + 1);
-    }
-  };
-
   const handleStepBack = () => {
     if (currentStep > 0) {
       setCurrentStep(currentStep - 1);
@@ -335,12 +323,6 @@ const ClientDashboard: React.FC = () => {
             className="mt-2 px-3 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600"
           >
             Manual Validate
-          </button>
-          <button 
-            onClick={handleTestNext}
-            className="mt-2 ml-2 px-3 py-1 bg-green-500 text-white text-xs rounded hover:bg-green-600"
-          >
-            Test Next (Bypass)
           </button>
         </div>
       </div>

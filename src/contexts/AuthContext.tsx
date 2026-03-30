@@ -8,6 +8,7 @@ import {
   getUserProfile,
   sendResetOTP,
   resetPassword,
+  checkEmail,
   handleApiError,
   LoginRequest,
   RegisterRequest,
@@ -32,7 +33,6 @@ interface AuthContextType {
   sendPasswordResetOTP: (email: string) => Promise<{ success: boolean; error?: string; errorMessage?: string }>;
   resetPasswordWithOTP: (email: string, otp: string, newPassword: string) => Promise<{ success: boolean; error?: string; errorMessage?: string }>;
   isLoading: boolean;
-  registrationSuccess: boolean;
   clearRegistrationSuccess: () => void;
   pendingVerificationEmail: string | null;
   setPendingVerificationEmail: (email: string) => void;
@@ -55,15 +55,13 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [registrationSuccess, setRegistrationSuccess] = useState(false);
   const [pendingVerificationEmail, setPendingVerificationEmail] = useState<string | null>(null);
   const [pendingRegistrationData, setPendingRegistrationData] = useState<any>(null);
   const [sessionExpired, setSessionExpired] = useState(false);
 
   useEffect(() => {
-    // Initialize secure session monitoring - temporarily disabled for debugging
+    // Initialize secure session monitoring
     // SecureSessionStorage.initializeSessionMonitoring();
-    console.log('AuthContext mounted - session monitoring disabled for debugging');
     
     // Check for existing session on mount
     const sessionData = SecureSessionStorage.getSessionData();
@@ -342,85 +340,63 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       localStorage.setItem('pendingRegistration', JSON.stringify(registerData));
       localStorage.setItem('registrationTimestamp', Date.now().toString());
       
-      const response = await apiRegister(registerData);
-      
-      if (response.data) {
-        // Registration successful, now send OTP
-        try {
-          const otpResponse = await sendEmailOTP(userData.email);
-          
-          if (otpResponse.status === 200) {
-            // Registration successful, show success message
-            ToastManager.success('Registration successful! Please check your email for verification.');
-            setRegistrationSuccess(true);
-            
-            // Set pending verification email
-            setPendingVerificationEmail(userData.email);
-            
-            return { 
-              success: true, 
-              needsVerification: { email: userData.email }
-            };
-          } else {
-            // Registration succeeded but OTP failed
-            ToastManager.error('Registration successful but failed to send verification code. Please try again.');
-            return { success: false, error: 'Registration successful but failed to send verification code.' };
-          }
-        } catch (otpError) {
-          console.error('Failed to send OTP after registration:', otpError);
-          ToastManager.error('Registration successful but failed to send verification code. Please try again.');
-          return { success: false, error: 'Registration successful but failed to send verification code.' };
+      // Check if email already exists before sending OTP
+      try {
+        console.log('Checking if email exists for registration:', userData.email);
+        const emailCheckResponse = await checkEmail(userData.email);
+        console.log('Email check response for registration:', emailCheckResponse);
+        
+        if (emailCheckResponse.data.success && emailCheckResponse.data.exists) {
+          const errorMessage = 'An account with this email already exists. Please log in instead.';
+          console.log('Email already exists, stopping registration flow');
+          ToastManager.error(errorMessage);
+          return { success: false, error: errorMessage };
+        } else {
+          console.log('Email does not exist, proceeding with registration OTP');
         }
-      } else {
-        // Handle API error messages properly
-        const errorMessage = (response.data as any)?.message || 'Registration failed. Please try again.';
+      } catch (emailCheckError: any) {
+        console.error('Email check error during registration:', emailCheckError);
+        const errorMessage = handleApiError(emailCheckError);
+        ToastManager.error(errorMessage);
+        return { success: false, error: errorMessage };
+      }
+      
+      // Send OTP for verification before storing in database
+      try {
+        const otpResponse = await sendEmailOTP(userData.email);
+        
+        if (otpResponse.status === 200) {
+          // OTP sent successfully, redirect to verification
+          ToastManager.success('Please check your email for verification code.');
+          setPendingVerificationEmail(userData.email);
+          
+          return { 
+            success: true, 
+            needsVerification: { email: userData.email }
+          };
+        } else {
+          // Failed to send OTP
+          ToastManager.error('Failed to send verification code. Please try again.');
+          return { success: false, error: 'Failed to send verification code. Please try again.' };
+        }
+      } catch (otpError: any) {
+        console.error('Failed to send OTP:', otpError);
+        
+        // Check if error is because email already exists
+        if (otpError.response?.status === 409) {
+          const errorMessage = otpError.response.data?.message || 'An account with this email already exists.';
+          ToastManager.error(errorMessage);
+          return { success: false, error: errorMessage };
+        }
+        
+        // For other errors, use standard error handling
+        const errorMessage = handleApiError(otpError);
         ToastManager.error(errorMessage);
         return { success: false, error: errorMessage };
       }
     } catch (apiError: any) {
       const errorMessage = handleApiError(apiError);
       console.error('Registration error:', apiError);
-      
-      // Check if this is an existing but unverified user scenario
-      if (apiError.response?.status === 409) {
-        const errorData = apiError.response.data;
-        if (errorData?.needsVerification || errorData?.message?.toLowerCase().includes('verify') || errorData?.message?.toLowerCase().includes('exists')) {
-          console.log('Existing unverified user detected, redirecting to OTP verification');
-          setPendingVerificationEmail(userData.email);
-          
-          // Store registration data for existing user as well
-          const existingUserData = {
-            email: userData.email,
-            password: userData.password,
-            firstName: userData.firstName,
-            lastName: userData.lastName,
-            npi: userData.npi,
-            phone: userData.phone,
-          };
-          setPendingRegistrationData(existingUserData);
-          localStorage.setItem('pendingRegistration', JSON.stringify(existingUserData));
-          localStorage.setItem('registrationTimestamp', Date.now().toString());
-          
-          // Send OTP automatically for existing unverified user
-          try {
-            await sendEmailOTP(userData.email);
-            ToastManager.info('Account exists but not verified. We have sent you a verification code.');
-          } catch (otpError) {
-            console.error('Failed to send OTP:', otpError);
-          }
-          
-          return { 
-            success: false, 
-            error: 'Account exists but email not verified. We have sent you a verification code.',
-            needsVerification: { email: userData.email }
-          };
-        }
-        
-        // Regular conflict (already verified user)
-        ToastManager.error('An account with this email already exists. Please log in instead.');
-        return { success: false, error: 'An account with this email already exists. Please log in instead.' };
-      }
-      
       ToastManager.error(errorMessage);
       return { success: false, error: errorMessage };
     } finally {
@@ -469,17 +445,46 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         };
         
         const verifyResponse = await apiVerifyOTP(verifyData);
+        console.log('Verify OTP API response:', verifyResponse);
+        console.log('Verify OTP response data:', verifyResponse.data);
         
         if (verifyResponse.status === 200 && verifyResponse.data.success) {
-          // OTP verified successfully, clean up session data
-          localStorage.removeItem('pendingRegistration');
-          localStorage.removeItem('registrationTimestamp');
-          setPendingRegistrationData(null);
-          setPendingVerificationEmail(null);
-          
-          ToastManager.success('Email verified successfully! You can now log in.');
-          
-          return { success: true };
+          console.log('OTP verified successfully, now registering user in database');
+          // OTP verified successfully, now register the user in database
+          try {
+            // Add emailVerified field from OTP verification response
+            const registerDataWithVerification = {
+              ...registerData,
+              emailVerified: verifyResponse.data.emailVerified || true
+            };
+            
+            const registerResponse = await apiRegister(registerDataWithVerification);
+            console.log('Register API response:', registerResponse);
+            console.log('Register response data:', registerResponse.data);
+            
+            if (registerResponse.status === 200) {
+              console.log('Registration successful, cleaning up session data');
+              // Registration successful, clean up session data
+              localStorage.removeItem('pendingRegistration');
+              localStorage.removeItem('registrationTimestamp');
+              setPendingRegistrationData(null);
+              setPendingVerificationEmail(null);
+              
+              ToastManager.success('Registration completed successfully! You can now log in.');
+              
+              return { success: true };
+            } else {
+              console.log('Registration failed with status:', registerResponse.status);
+              // OTP verified but registration failed
+              ToastManager.error('OTP verified but registration failed. Please try again.');
+              return { success: false, error: 'OTP verified but registration failed. Please try again.' };
+            }
+          } catch (registerError) {
+            console.error('Registration error after OTP verification:', registerError);
+            const errorMessage = handleApiError(registerError);
+            ToastManager.error(errorMessage);
+            return { success: false, error: errorMessage };
+          }
         } else {
           ToastManager.error(verifyResponse.data.message || 'OTP verification failed. Please try again.');
           return { success: false, error: verifyResponse.data.message || 'OTP verification failed.' };
@@ -574,6 +579,27 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         return { success: false, error: 'Please enter a valid email address.' };
       }
       
+      // Check if email exists before sending OTP
+      try {
+        console.log('Checking if email exists:', email);
+        const emailCheckResponse = await checkEmail(email);
+        console.log('Email check response:', emailCheckResponse);
+        
+        if (emailCheckResponse.data.success && emailCheckResponse.data.exists) {
+          console.log('Email exists, proceeding with password reset OTP');
+        } else {
+          const errorMessage = 'User not found. No account exists with this email address.';
+          console.log('Email does not exist, stopping flow');
+          ToastManager.error(errorMessage);
+          return { success: false, error: errorMessage };
+        }
+      } catch (emailCheckError: any) {
+        console.error('Email check error:', emailCheckError);
+        const errorMessage = handleApiError(emailCheckError);
+        ToastManager.error(errorMessage);
+        return { success: false, error: errorMessage };
+      }
+      
       console.log('Making API call to sendResetOTP');
       const response = await sendResetOTP(email);
       console.log('API response:', response);
@@ -588,27 +614,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         return { success: true };
       } else {
         console.log('API returned failure:', response.data);
-        // For testing, if API fails but OTP was actually sent, treat as success
-        ToastManager.success('Password reset code sent to your email address.');
-        localStorage.setItem('resetEmail', email);
-        localStorage.setItem('resetTimestamp', Date.now().toString());
-        return { success: true };
+        ToastManager.error(response.data.message || 'Failed to send reset code.');
+        return { success: false, error: response.data.message || 'Failed to send reset code.' };
       }
     } catch (apiError: any) {
       console.error('Send reset OTP error:', apiError);
       console.error('Error status:', apiError.response?.status);
       console.error('Error data:', apiError.response?.data);
       
-      // Security: Always show same message whether email exists or not
-      if (apiError.response?.status === 404) {
-        console.log('404 error - treating as success for security');
-        // Store reset email for verification page even if user doesn't exist
-        localStorage.setItem('resetEmail', email);
-        localStorage.setItem('resetTimestamp', Date.now().toString());
-        
-        ToastManager.success('Password reset code sent to your email address.');
-        return { success: true };
-      } else if (apiError.response?.status === 429) {
+      if (apiError.response?.status === 429) {
         ToastManager.error('Too many reset attempts. Please try again later.');
         return { success: false, error: 'Too many reset attempts. Please try again later.' };
       } else {
@@ -711,9 +725,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     sendPasswordResetOTP,
     resetPasswordWithOTP,
     isLoading,
-    registrationSuccess,
     clearRegistrationSuccess: () => {
-      setRegistrationSuccess(false);
       ToastManager.success('Registration completed! Please login to continue.');
     },
     pendingVerificationEmail,

@@ -16,6 +16,10 @@
     flex-direction: column;
 }
 
+.login-form-box{
+    max-width: 500px;
+}
+
 .input-field {
     padding: 0.875rem 1rem;
     border: 2px solid #e2e8f0;
@@ -69,10 +73,10 @@
 }
 
 .btn-primary:disabled {
-    opacity: 0.6;
+    opacity: 0.8;
     cursor: not-allowed;
     transform: none;
-    background-color: #f9f9f9;
+    background-color: #9ca3af;
 }
 
 
