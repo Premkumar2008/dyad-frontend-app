@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate, useLocation } from 'react-router-dom';
 import './DyadLanding.css';
 
@@ -12,6 +12,7 @@ const DyadLanding: React.FC = () => {
   const [isWhoWeServeDropdownOpen, setIsWhoWeServeDropdownOpen] = useState(false);
   const [hoveredMenu, setHoveredMenu] = useState<string | null>(null);
   const [isTrustSectionSticky, setIsTrustSectionSticky] = useState(false);
+  const [isStickyDivActive, setIsStickyDivActive] = useState(false);
   const [selectedAboutCard, setSelectedAboutCard] = useState<typeof aboutContent[0] | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
@@ -161,29 +162,250 @@ const DyadLanding: React.FC = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Handle sticky detection for trust section
-  useEffect(() => {
-    const handleScroll = () => {
-      const trustSectionElement = document.querySelector('.trust-logos-section') as HTMLElement;
-      const headerElement = document.querySelector('.dyad-header') as HTMLElement;
-      
-      if (trustSectionElement && headerElement) {
-        const headerHeight = headerElement.offsetHeight;
-        const trustSectionTop = trustSectionElement.offsetTop;
-        const currentScrollY = window.scrollY;
-        
-        // Check if trust section should be sticky
-        if (currentScrollY >= trustSectionTop - headerHeight) {
-          setIsTrustSectionSticky(true);
-        } else {
-          setIsTrustSectionSticky(false);
-        }
-      }
+  const SPEED_PX_PER_SEC = 40;
+ 
+// ─── Replace each `url` with your actual image paths or remote URLs ───────────
+// alt text and ratio are used for accessibility and correct sizing.
+const IMAGES = [
+  {
+    id: "img1",
+    url: "/assets/images/logo_section.svg",
+    alt: "Image 1",
+    ratio: { w: 211, h: 59 },   // aspect ratio — controls slot proportions
+  },
+  {
+    id: "img2",
+    url: "/assets/images/logo_section1.svg",
+    alt: "Image 2",
+    ratio: { w: 1, h: 1 },
+  },
+  {
+    id: "img3",
+    url: "/assets/images/logo_section2.svg",
+    alt: "Image 3",
+    ratio: { w: 1, h: 1 },
+  },
+  {
+    id: "img4",
+    url: "/assets/images/logo_section3.svg",
+    alt: "Image 4",
+    ratio: { w: 25, h: 23 },
+  },
+  {
+    id: "img5",
+    url: "/assets/images/logo_section4.svg",
+    alt: "Image 5",
+    ratio: { w: 198, h: 115 },
+  },
+];
+ 
+// Responsive size config per breakpoint
+function getSizes(vw) {
+  if (vw <= 480) {
+    return {
+      default:{ img1: [185, 75], img2: [75, 75], img3: [75, 75], img4: [78, 75], img5: [98, 75] },
+      shrunk:  { img1: [115, 45],  img2: [45, 45], img3: [45, 45], img4: [48, 45], img5: [68, 45] },
+      gap: 30,
+      shrunkGap: 25,
+      barPad: "8px 0",
+      shrunkBarPad: "4px 0",
     };
+  }
+  if (vw <= 768) {
+    return {
+      default: { img1: [270, 80], img2: [95, 95], img3: [95, 95], img4: [106, 95], img5: [155, 95] },
+    shrunk:  { img1: [135, 45], img2: [45, 45], img3: [45, 45], img4: [48, 45], img5: [68, 45] },
+    gap: 70,
+    shrunkGap: 40,
+      barPad: "10px 0",
+      shrunkBarPad: "5px 0",
+    };
+  }
+  return {
+    default: { img1: [270, 80], img2: [95, 95], img3: [95, 95], img4: [106, 95], img5: [155, 95] },
+    shrunk:  { img1: [135, 45], img2: [45, 45], img3: [45, 45], img4: [48, 45], img5: [68, 45] },
+    gap: 70,
+    shrunkGap: 40,
+    barPad: "10px 0",
+    shrunkBarPad: "5px 0",
+  };
+}
+ 
+// Single image wrapper
+function ImgWrap({ imgId, shrunk, sizes }) {
+  const key = imgId;
+  const [w, h] = shrunk ? sizes.shrunk[key] : sizes.default[key];
+  const margin = `0 ${shrunk ? sizes.shrunkGap : sizes.gap}px`;
+  const img = IMAGES.find((i) => i.id === imgId);
 
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+  return (
+    <div
+      style={{
+        flexShrink: 0,
+        overflow: "hidden",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+       
+        borderRadius: 6,
+        width: w,
+        height: h,
+        margin,
+        transition: "width 0.38s cubic-bezier(0.4,0,0.2,1), height 0.38s cubic-bezier(0.4,0,0.2,1), margin 0.38s cubic-bezier(0.4,0,0.2,1)",
+      }}
+    >
+      <img
+        src={img.url}
+        alt={img.alt}
+        style={{
+          width: "100%",
+          height: "100%",
+          objectFit: "contain",
+          display: "block",
+          filter: "grayscale(1)",
+          transition: "filter 0.3s ease-in-out",
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.filter = "grayscale(0)";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.filter = "grayscale(1)";
+        }}
+        draggable={false}
+      />
+    </div>
+  );
+}
+ 
+// One full set of 5 images
+function ImageSet({ shrunk, sizes }) {
+  return (
+    <>
+      {IMAGES.map((img) => (
+        <ImgWrap key={img.id} imgId={img.id} shrunk={shrunk} sizes={sizes} />
+      ))}
+    </>
+  );
+}
+ 
+// Marquee component
+function Marquee({ shrunk, sizes }) {
+  const trackRef = useRef(null);
+  const styleRef = useRef(null);
+  const [sets, setSets] = useState(2);
+  const builtRef = useRef(false);
+ 
+  const build = useCallback(() => {
+    const track = trackRef.current;
+    if (!track) return;
+ 
+    builtRef.current = false;
+    track.style.animation = "none";
+ 
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if (!trackRef.current) return;
+        const setW = trackRef.current.scrollWidth;
+        if (setW === 0) return;
+ 
+        const vw = window.innerWidth || 375;
+        const setsNeeded = Math.max(2, Math.ceil((vw * 2.5) / setW) + 1);
+        const total = setsNeeded * 2;
+        setSets(total);
+ 
+        requestAnimationFrame(() => {
+          if (!trackRef.current) return;
+          const halfW = setW * setsNeeded;
+          const duration = halfW / SPEED_PX_PER_SEC;
+ 
+          if (styleRef.current) styleRef.current.remove();
+          const s = document.createElement("style");
+          s.textContent = `@keyframes marquee-tkr{0%{transform:translateX(0)}100%{transform:translateX(-${halfW}px)}}`;
+          document.head.appendChild(s);
+          styleRef.current = s;
+ 
+          trackRef.current.style.animation = `marquee-tkr ${duration}s linear infinite`;
+          builtRef.current = true;
+        });
+      });
+    });
   }, []);
+ 
+  useEffect(() => {
+    build();
+    let tm;
+    const onResize = () => { clearTimeout(tm); tm = setTimeout(build, 250); };
+    window.addEventListener("resize", onResize);
+    return () => {
+      window.removeEventListener("resize", onResize);
+      clearTimeout(tm);
+      if (styleRef.current) styleRef.current.remove();
+    };
+  }, [build]);
+ 
+  return (
+    <div className="trust-logo-first-level"  style={{ display: "flex", width: "100%", overflow: "hidden" }}>
+      <div className="trust-logo-second-level"
+        ref={trackRef}
+        style={{ display: "flex", alignItems: "center", flexShrink: 0 }}
+        onMouseEnter={(e) => { if (e.currentTarget) e.currentTarget.style.animationPlayState = "paused"; }}
+        onMouseLeave={(e) => { if (e.currentTarget) e.currentTarget.style.animationPlayState = "running"; }}
+      >
+        {Array.from({ length: sets }).map((_, i) => (
+          <ImageSet key={i} shrunk={shrunk} sizes={sizes} />
+        ))}
+      </div>
+    </div>
+  );
+}
+ 
+// Main sticky bar
+function StickyMarqueeBar() {
+  const barRef = useRef(null);
+  const [shrunk, setShrunk] = useState(false);
+  const [vw, setVw] = useState(window.innerWidth || 800);
+ 
+  useEffect(() => {
+    const onScroll = () => {
+      if (!barRef.current) return;
+      setShrunk(Math.round(barRef.current.getBoundingClientRect().top) <= 80);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+ 
+  useEffect(() => {
+    let tm;
+    const onResize = () => { clearTimeout(tm); tm = setTimeout(() => setVw(window.innerWidth), 250); };
+    window.addEventListener("resize", onResize);
+    return () => { window.removeEventListener("resize", onResize); clearTimeout(tm); };
+  }, []);
+ 
+  const sizes = getSizes(vw);
+ 
+  return (
+    <div 
+      ref={barRef}
+      className="sticky-bar-trust-logo"
+      style={{
+        position: "sticky",
+      
+        zIndex: 100,
+        background: "#ffffff",
+        borderTop: "0.5px solid rgba(0,0,0,0.1)",
+        borderBottom: "0.5px solid rgba(0,0,0,0.1)",
+        overflow: "hidden",
+        padding: shrunk ? sizes.shrunkBarPad : sizes.barPad,
+        transition: "padding 0.38s cubic-bezier(0.4,0,0.2,1)",
+      }}
+    >
+     
+ 
+      <Marquee shrunk={shrunk} sizes={sizes} />
+    </div>
+  );
+}
   
   const handleAboutCardClick = (cardId: number) => {
     const card = aboutContent.find(item => item.id === cardId);
@@ -388,6 +610,8 @@ const DyadLanding: React.FC = () => {
     { name: 'What We Do', href: '#services' },
     { name: 'Who We Serve', href: '#who-we-serve', hasDropdown: true }
   ];
+
+ 
 
   return (
     <div className="dyad-landing-container" id="top">
@@ -721,139 +945,13 @@ const DyadLanding: React.FC = () => {
         </div>
       </main>
 
-       {/* Trust Logos Section */}
-      {/* <section 
-        className={`trust-logos-section ${isTrustSectionSticky ? 'sticky-active' : ''}`}
-      >
-        <div className="trust-container">
-          <div className="logos-scroll">
-            <div className="logos-track">
-              {[...Array(2)].map((_, index) => (
-                <div key={index} className="logo-set">
-                  <div className="logo-item">
-                    <img src="/assets/images/logo_section.svg" alt="Trust Logo 1" />
-                  </div>
-                  <div className="logo-item">
-                    <img src="/assets/images/logo_section1.svg" alt="Trust Logo 2" />
-                  </div>
-                  <div className="logo-item">
-                    <img src="/assets/images/logo_section2.svg" alt="Trust Logo 3" />
-                  </div>
-                  <div className="logo-item">
-                    <img src="/assets/images/logo_section3.svg" alt="Trust Logo 4" />
-                  </div>
-                  <div className="logo-item">
-                    <img src="/assets/images/logo_section4.svg" alt="Trust Logo 5" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section> */}
-<section 
-        className={`trust-logos-section ${isTrustSectionSticky ? 'sticky-active' : ''}`} >
-        <footer className="marquee trust-container">
-  <div className="marquee__track ">
-   
-    <div className="marquee__content">
-      <ul className="marquee__list">
-        <li className="marquee__item marquee__item--text">
-           <div className="logo-item">
-                    <img src="/assets/images/logo_section.svg" alt="Trust Logo " />
-                  </div>
-        </li>
-         <li className="marquee__item marquee__item--text">
-           <div className="logo-item">
-                    <img src="/assets/images/logo_section1.svg" alt="Trust Logo 1" />
-                  </div>
-        </li>
-         <li className="marquee__item marquee__item--text">
-           <div className="logo-item">
-                    <img src="/assets/images/logo_section2.svg" alt="Trust Logo 2" />
-                  </div>
-        </li>
-         <li className="marquee__item marquee__item--text">
-           <div className="logo-item">
-                    <img src="/assets/images/logo_section3.svg" alt="Trust Logo 3" />
-                  </div>
-        </li>
-         <li className="marquee__item marquee__item--text">
-           <div className="logo-item">
-                    <img src="/assets/images/logo_section4.svg" alt="Trust Logo 4" />
-                  </div>
-        </li>
-        
-       </ul>
-    </div>
 
-       <div className="marquee__content">
-      <ul className="marquee__list">
-        <li className="marquee__item marquee__item--text">
-           <div className="logo-item">
-                    <img src="/assets/images/logo_section.svg" alt="Trust Logo " />
-                  </div>
-        </li>
-         <li className="marquee__item marquee__item--text">
-           <div className="logo-item">
-                    <img src="/assets/images/logo_section1.svg" alt="Trust Logo 1" />
-                  </div>
-        </li>
-         <li className="marquee__item marquee__item--text">
-           <div className="logo-item">
-                    <img src="/assets/images/logo_section2.svg" alt="Trust Logo 2" />
-                  </div>
-        </li>
-         <li className="marquee__item marquee__item--text">
-           <div className="logo-item">
-                    <img src="/assets/images/logo_section3.svg" alt="Trust Logo 3" />
-                  </div>
-        </li>
-         <li className="marquee__item marquee__item--text">
-           <div className="logo-item">
-                    <img src="/assets/images/logo_section4.svg" alt="Trust Logo 4" />
-                  </div>
-        </li>
-        
-       </ul>
-    </div>
+       <StickyMarqueeBar />
 
 
-    <div className="marquee__content">
-      <ul className="marquee__list">
-        <li className="marquee__item marquee__item--text">
-           <div className="logo-item">
-                    <img src="/assets/images/logo_section.svg" alt="Trust Logo " />
-                  </div>
-        </li>
-         <li className="marquee__item marquee__item--text">
-           <div className="logo-item">
-                    <img src="/assets/images/logo_section1.svg" alt="Trust Logo 1" />
-                  </div>
-        </li>
-         <li className="marquee__item marquee__item--text">
-           <div className="logo-item">
-                    <img src="/assets/images/logo_section2.svg" alt="Trust Logo 2" />
-                  </div>
-        </li>
-         <li className="marquee__item marquee__item--text">
-           <div className="logo-item">
-                    <img src="/assets/images/logo_section3.svg" alt="Trust Logo 3" />
-                  </div>
-        </li>
-         <li className="marquee__item marquee__item--text">
-           <div className="logo-item">
-                    <img src="/assets/images/logo_section4.svg" alt="Trust Logo 4" />
-                  </div>
-        </li>
-        
-       </ul>
-    </div>
 
-  </div>
-</footer>
-</section>
 
+ 
       {/* About Us Section */}
       <section className="about-us-section" id="about">
         <div className="about-container">
@@ -937,6 +1035,8 @@ const DyadLanding: React.FC = () => {
         </div>
       </section>
       </section>
+
+    
 
      
 

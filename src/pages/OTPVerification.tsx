@@ -7,13 +7,13 @@ import { Mail, ArrowLeft, RefreshCw } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import ToastManager from '../utils/toastHelpers';
 
-const otpSchema = yup.object().shape({
-  otp: yup.string().length(6, 'OTP must be 6 digits').required('OTP is required'),
-});
-
 interface OTPFormData {
   otp: string;
 }
+
+const otpSchema: yup.ObjectSchema<OTPFormData> = yup.object({
+  otp: yup.string().length(6, 'OTP must be 6 digits').required('OTP is required'),
+});
 
 const OTPVerification: React.FC = () => {
   const [error, setError] = useState<string>('');
@@ -62,7 +62,7 @@ const OTPVerification: React.FC = () => {
     setValue,
     watch,
   } = useForm<OTPFormData>({
-    resolver: yupResolver(otpSchema),
+    resolver: yupResolver(otpSchema) as any,
   });
 
   const otpValue = watch('otp');

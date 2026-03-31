@@ -5,6 +5,69 @@ html {
   scroll-behavior: smooth;
 }
 
+
+
+    
+    /* Sticky Section */
+    .sticky-section {
+      position: sticky;
+      top: 80px;
+    padding:1rem;
+      background: #111;
+      display: flex;
+      align-items: center;
+      overflow: hidden;
+      transition: height 0.4s ease;
+      z-index: 10;
+    }
+
+    .sticky-section.shrink {
+      height: 50px;
+    }
+
+    /* Logo Wrapper */
+    .logo-track {
+      display: flex;
+      width: max-content;
+      animation: scroll 15s linear infinite;
+    }
+
+    /* Logos */
+    .logo {
+      width: 80px;
+      height: auto;
+      margin: 0 30px;
+      transition: width 0.4s ease;
+    }
+
+    /* Shrink logos */
+    .sticky-section.shrink .logo {
+      width: 50px;
+    }
+    .trust-logo-new{
+width: 250px;
+    padding-left: 8rem;
+    }
+
+    /* Infinite scroll animation */
+    @keyframes scroll {
+      from {
+        transform: translateX(0);
+      }
+      to {
+        transform: translateX(-50%);
+      }
+    }
+
+    /* Duplicate track for seamless loop */
+    .logo-container {
+      display: flex;
+    }
+
+    .content {
+      padding: 20px;
+    }
+
 /* Section scroll offset for fixed header */
 section {
   scroll-margin-top: 80px;
@@ -13,6 +76,35 @@ section {
 footer {
   scroll-margin-top: 80px;
 }
+div.stickytrustlogos {
+  z-index: 9999;
+  position: sticky;
+  top: 80px;
+}
+
+div.stickytrustlogos.active .logo-item{
+  height: 65px;
+}
+
+div.stickytrustlogos.active .logo-item img{
+  min-width: 165px;
+}
+
+/* Mobile styles for active sticky div */
+@media (max-width: 768px) {
+  div.stickytrustlogos.active {
+    height: 80px;
+   
+  }
+}
+
+@media (max-width: 480px) {
+  div.stickytrustlogos.active {
+    height: 70px;
+    top: 65px;
+  }
+}
+
 
 /* Header Styles - Match Contact Us Page */
 header.dyad-header {
@@ -4560,7 +4652,18 @@ padding : 0.5rem 0.5rem 0.rem 0rem !important
   position: sticky;
   top: 80px;
   z-index: 999;
-  transition: all 0.3s ease;
+  transition: all 0.1s ease-out;
+  will-change: transform, box-shadow;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+  /* iOS-specific fixes */
+  -webkit-transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  -webkit-perspective: 1000;
+  perspective: 1000;
+  /* Prevent sub-pixel rendering issues */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 .trust-logos-section.sticky-active {
@@ -4581,14 +4684,30 @@ padding : 0.5rem 0.5rem 0.rem 0rem !important
 @media (max-width: 768px) {
   .trust-logos-section {
     top: 65px;
+    will-change: transform, box-shadow;
+    backface-visibility: hidden;
+    transform: translateZ(0);
+    /* iOS-specific fixes */
+    -webkit-transform: translateZ(0);
+    -webkit-backface-visibility: hidden;
+    -webkit-perspective: 1000;
+    perspective: 1000;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   
   .trust-logos-section.sticky-active {
     padding: 0.5rem 0;
+    transition: all 0.1s ease-out;
   }
   
   .trust-logos-section.sticky-active .logo-item img {
     transform: scale(0.5);
+    transition: transform 0.1s ease-out;
+    /* iOS-specific fixes */
+    -webkit-transform: scale(0.5);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
   }
   
   .trust-logos-section.sticky-active .logo-set {
@@ -4605,20 +4724,32 @@ padding : 0.5rem 0.5rem 0.rem 0rem !important
 @media (max-width: 480px) {
   .trust-logos-section {
     top: 65px;
-   
+    will-change: transform, box-shadow;
+    backface-visibility: hidden;
+    transform: translateZ(0);
   }
   .trust-logos-section.sticky-active .marquee__list {
     padding: 0rem !important;
   }
-  
+  div.stickytrustlogos {
+  z-index: 9999;
+  position: sticky;
+  top: 60px;
+ 
+}
   
   .trust-logos-section.sticky-active {
     padding: 0.25rem 0;
+    transition: all 0.1s ease-out;
   }
   
- .marquee {
-    padding : 0rem !important
- }
+  .trust-logos-section.sticky-active .logo-item img {
+    transform: scale(0.4);
+    transition: transform 0.1s ease-out;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    will-change: transform;
+  }
   
   .trust-logos-section.sticky-active .logo-set {
     gap: 0rem;
@@ -5395,3 +5526,166 @@ padding : 0.5rem 0.5rem 0.rem 0rem !important
   margin: 0;
   white-space: nowrap;
 }
+
+
+
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+  /* ── Sticky bar ── */
+  .sticky-bar {
+    position: sticky;
+    top: 80px;
+    z-index: 100;
+    background: var(--color-background-primary);
+    border-top: 0.5px solid var(--color-border-tertiary);
+    border-bottom: 0.5px solid var(--color-border-tertiary);
+    overflow: hidden;
+    padding: 10px 0;
+    transition: padding 0.38s cubic-bezier(0.4,0,0.2,1);
+  }
+  .sticky-bar.shrunk { padding: 5px 0; }
+
+  .sticky-bar::before,
+  .sticky-bar::after {
+    content: '';
+    position: absolute;
+    top: 0; bottom: 0;
+    width: 48px;
+    z-index: 2;
+    pointer-events: none;
+  }
+  .sticky-bar::before { left: 0; background: linear-gradient(to right, var(--color-background-primary), transparent); }
+  .sticky-bar::after  { right: 0; background: linear-gradient(to left,  var(--color-background-primary), transparent); }
+
+  .marquee-outer { display: flex; width: 100%; overflow: hidden; }
+
+  .marquee-track {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    will-change: transform;
+  }
+  .marquee-track:hover { animation-play-state: paused; }
+
+  /* ── Image wrappers — desktop defaults ── */
+  .img-wrap {
+    flex-shrink: 0;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-background-secondary);
+    border-radius: 6px;
+    margin: 0 4rem 0 4rem;
+    transition: width .38s cubic-bezier(.4,0,.2,1),
+                height .38s cubic-bezier(.4,0,.2,1),
+                margin .38s cubic-bezier(.4,0,.2,1);
+    will-change: width, height;
+  }
+
+  /* desktop sizes */
+  .img1 { width: 270px; height: 80px; }
+  .img2 { width: 80px;  height: 80px; }
+  .img3 { width: 80px;  height: 80px; }
+  .img4 { width: 86px;  height: 80px; }
+  .img5 { width: 130px;  height: 80px; }
+
+  /* desktop shrunk (−40%) */
+  .sticky-bar.shrunk .img1 { width: 108px; height: 31px; }
+  .sticky-bar.shrunk .img2 { width: 31px;  height: 31px; }
+  .sticky-bar.shrunk .img3 { width: 31px;  height: 31px; }
+  .sticky-bar.shrunk .img4 { width: 34px;  height: 31px; }
+  .sticky-bar.shrunk .img5 { width: 53px;  height: 31px; }
+  .sticky-bar.shrunk .img-wrap { margin: 0 10px; }
+
+  .sticky-bar-trust-logo{ top : 80px }
+
+   .sticky-bar-trust-logo .trust-logo-first-level .trust-logo-second-level div img{
+    filter: grayscale(1);
+   }
+
+   .sticky-bar-trust-logo .trust-logo-first-level .trust-logo-second-level div img:hover{
+    filter: grayscale(0) !important;
+   }
+  
+
+  /* ── Tablet (≤768px) ── */
+  @media (max-width: 768px) {
+    .img1 { width: 130px; height: 37px; }
+    .img2 { width: 37px;  height: 37px; }
+    .img3 { width: 37px;  height: 37px; }
+    .img4 { width: 40px;  height: 37px; }
+    .img5 { width: 64px;  height: 37px; }
+    .img-wrap { margin: 0 12px; border-radius: 5px; }
+
+    .sticky-bar.shrunk .img1 { width: 78px;  height: 22px; }
+    .sticky-bar.shrunk .img2 { width: 22px;  height: 22px; }
+    .sticky-bar.shrunk .img3 { width: 22px;  height: 22px; }
+    .sticky-bar.shrunk .img4 { width: 24px;  height: 22px; }
+    .sticky-bar.shrunk .img5 { width: 38px;  height: 22px; }
+    .sticky-bar.shrunk .img-wrap { margin: 0 8px; }
+    .sticky-bar-trust-logo{ top : 65px }
+  }
+
+  /* ── Mobile (≤480px) ── */
+  @media (max-width: 480px) {
+    .img1 { width: 100px; height: 28px; }
+    .img2 { width: 28px;  height: 28px; }
+    .img3 { width: 28px;  height: 28px; }
+    .img4 { width: 31px;  height: 28px; }
+    .img5 { width: 49px;  height: 28px; }
+    .img-wrap { margin: 0 10px; border-radius: 4px; }
+
+    .sticky-bar.shrunk .img1 { width: 60px;  height: 17px; }
+    .sticky-bar.shrunk .img2 { width: 17px;  height: 17px; }
+    .sticky-bar.shrunk .img3 { width: 17px;  height: 17px; }
+    .sticky-bar.shrunk .img4 { width: 18px;  height: 17px; }
+    .sticky-bar.shrunk .img5 { width: 29px;  height: 17px; }
+    .sticky-bar.shrunk .img-wrap { margin: 0 6px; }
+
+    .sticky-bar { padding: 8px 0; }
+    .sticky-bar.shrunk { padding: 4px 0; }
+    .sticky-bar-trust-logo{ top : 65px }
+  }
+
+  .img-wrap svg { width: 100%; height: 100%; display: block; pointer-events: none; }
+
+  /* status pill */
+  .status-pill {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 99px;
+    background: var(--color-background-success);
+    color: var(--color-text-success);
+    font-weight: 500;
+    white-space: nowrap;
+    z-index: 3;
+    pointer-events: none;
+    transition: background .3s, color .3s;
+  }
+  .status-pill.shrunk-state {
+    background: var(--color-background-info);
+    color: var(--color-text-info);
+  }
+  @media (max-width: 480px) { .status-pill { display: none; } }
+
+  /* page content */
+  .page-content { padding: 40px 16px 0; }
+  .content-card {
+    background: var(--color-background-primary);
+    border: 0.5px solid var(--color-border-tertiary);
+    border-radius: var(--border-radius-lg);
+    padding: 20px;
+    max-width: 640px;
+    margin-bottom: 20px;
+  }
+  .content-card h3 { font-size: 14px; font-weight: 500; color: var(--color-text-primary); margin-bottom: 6px; }
+  .content-card p  { font-size: 13px; color: var(--color-text-secondary); line-height: 1.6; }
+  .scroll-hint { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--color-text-tertiary); margin-top: 12px; }
+  .arrow-anim { animation: bd 1.2s ease-in-out infinite; }
+  @keyframes bd { 0%,100%{transform:translateY(0)} 50%{transform:translateY(4px)} }
