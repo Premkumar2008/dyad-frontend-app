@@ -25,6 +25,9 @@
     margin-top:4rem;
 }
 
+
+
+
 /* Form field container spacing */
 .register-form-box form > div:not(.flex):not(.text-center) {
     margin-bottom: 1.5rem;

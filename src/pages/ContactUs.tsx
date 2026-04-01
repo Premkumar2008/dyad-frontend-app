@@ -42,20 +42,22 @@ const ContactUs: React.FC = () => {
   const [isAboutDropdownOpen, setIsAboutDropdownOpen] = useState(false);
   const [isWhoWeServeDropdownOpen, setIsWhoWeServeDropdownOpen] = useState(false);
 
-  const contactNavigationItems = [
+
+ const contactNavigationItems = [
     { name: 'About Us', href: '#about', hasDropdown: true },
-    { name: 'Leadership', href: '#leadership' },
     { name: 'What We Do', href: '#services' },
     { name: 'Who We Serve', href: '#who-we-serve', hasDropdown: true }
   ];
 
-  const aboutDropdownItems2 = [
-    { name: 'Our Story & Inspiration', href: '/about-us-details#our-story-&-inspiration' },
-    { name: 'Our Mission & Vision', href: '/about-us-details#our-mission-&-vision' },
-    { name: 'Our Values & Principles', href: '/about-us-details#our-values-&-principles' },
-    { name: 'Our Approach & Methodology', href: '/about-us-details#our-approach-&-methodology' },
-    { name: 'Our Innovative Technologies', href: '/about-us-details#our-innovative-technologies' },
-    { name: 'Our Team & Expertise', href: '/about-us-details#our-team-&-expertise' }
+
+
+   const aboutDropdownItems2 = [
+    { name: 'Our Story & Inspiration', href: '#about', cardId: 0 },
+    { name: 'Our Mission & Vision', href: '#about', cardId: 1 },
+    { name: 'Our Values & Principles', href: '#about', cardId: 2 },
+    { name: 'Our Approach & Methodology', href: '#about', cardId: 3 },
+    { name: 'Our Innovative Technologies', href: '#about', cardId: 4 },
+    { name: 'Our Team & Expertise', href: '#leadership', cardId: 5 }
   ];
 
   const whoWeServeDropdownItems = [
@@ -128,15 +130,12 @@ const ContactUs: React.FC = () => {
     
     try {
       const payload = {
-        name: data.name,
-        phoneNumber: data.phoneNumber,
-        email: data.email,
-        organization: data.organization,
-        message: data.message,
-        scheduledTime: new Date(data.scheduledTime).toISOString()
+        ...data,
+        scheduledTime: new Date().toISOString()
       };
 
-      const response = await axios.post('/api/contact-requests', payload);
+      const apiUrl = import.meta.env.VITE_API_URL || '';
+      const response = await axios.post(`${apiUrl}/api/contact-requests`, payload);
       
       if (response.data.success) {
         toast.success('Your request has been submitted successfully!');
@@ -146,17 +145,20 @@ const ContactUs: React.FC = () => {
         setValue('email', '');
         setValue('organization', '');
         setValue('message', '');
-        setValue('scheduledTime', '');
         setRecaptchaVerified(false);
         setValue('recaptcha', false);
+        
+        // Scroll to top when form is submitted successfully with a delay
+        setTimeout(() => {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }, 100);
       } else {
         toast.error(response.data.message || 'Failed to submit request. Please try again.');
       }
     } catch (error: any) {
       console.error('Contact form submission error:', error);
-      if (error.response?.data?.message) {
-        toast.error(error.response.data.message);
-      } else if (error.response?.status === 429) {
+      
+      if (error.response?.status === 429) {
         toast.error('Too many requests. Please try again later.');
       } else if (error.response?.status >= 500) {
         toast.error('Server error. Please try again later.');
@@ -319,7 +321,7 @@ const ContactUs: React.FC = () => {
                             color: isActive ? '#1D6DD8' : '#374151',
                             cursor: 'pointer',
                             textDecoration: 'none',
-                            fontWeight: 500,
+                            fontWeight: 400,
                             fontSize: '1.1rem',
                             fontFamily: 'Prompt, sans-serif',
                             padding: '0.5rem 1rem',
@@ -485,7 +487,7 @@ const ContactUs: React.FC = () => {
             <button className="btn btn-primary btn-full" onClick={handleContactRequest}>
               <span>Contact Us</span>
             </button>
-            <button className="btn btn-secondary btn-full" onClick={handleLogin}>
+            <button className="btn btn-primary btn-full" onClick={handleLogin}>
               <span>Login</span>
             </button>
           </div>
@@ -507,17 +509,14 @@ const ContactUs: React.FC = () => {
         {/* Form Section */}
         <section className="contact-form-section mb-8">
           <div className="form-container">
-            <div className="form-header">
+            {/* Left Side - Form */}
+            <div className="form-left-section">
               <div className="form-header-content">
-                <h2 className="form-title">Get in Touch</h2>
+                <h2 className="form-title">Providers or Administrators:</h2>
                 <p className="form-subtitle">Please Fill Out The Form Below</p>
               </div>
-              <div className="form-header-image">
-                <img src="/assets/images/contact-us.jpeg" alt="Contact Us" className="contact-form-image" />
-              </div>
-            </div>
-            
-            <form onSubmit={handleSubmit(onSubmit)} className="contact-form">
+              
+              <form onSubmit={handleSubmit(onSubmit)} className="contact-form">
               {/* Name Field */}
               <div className="form-group">
                 <label htmlFor="name" className="form-label">
@@ -652,7 +651,13 @@ const ContactUs: React.FC = () => {
                   {isSubmitting ? 'Submitting...' : 'Submit'}
                 </button>
               </div>
-            </form>
+              </form>
+            </div>
+            
+            {/* Right Side - Image */}
+            <div className="form-right-section">
+              <img src="/assets/images/contact-us.jpeg" alt="Contact Us" />
+            </div>
           </div>
         </section>
       </main>

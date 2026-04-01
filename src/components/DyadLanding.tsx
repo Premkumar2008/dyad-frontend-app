@@ -128,13 +128,32 @@ const DyadLanding: React.FC = () => {
     }
   };
 
-  const handleAboutDropdownItemClick = (href: string) => {
+  const handleAboutDropdownItemClick = (item: any) => {
     setActiveMenu('About Us');
     setIsAboutDropdownOpen(false);
     setHoveredMenu(null);
     
-    // Navigate to the specific about-us-details page with hash
-    navigate(href);
+    // For Our Team & Expertise, open popup first, then scroll to leadership section
+    if (item.name === 'Our Team & Expertise') {
+      const card = aboutContent.find(c => c.id === item.cardId);
+      if (card) {
+        setSelectedAboutCard(card);
+        // Scroll to leadership section after popup is open
+        setTimeout(() => {
+          handleNavClick('About Us', item.href);
+        }, 100);
+      }
+    } else {
+      // For other items, open popup first, then scroll in background
+      const card = aboutContent.find(c => c.id === item.cardId);
+      if (card) {
+        setSelectedAboutCard(card);
+        // Scroll to about section after popup is open
+        setTimeout(() => {
+          handleNavClick('About Us', item.href);
+        }, 100);
+      }
+    }
   };
 
   const handleWhoWeServeDropdownItemClick = (href: string) => {
@@ -166,246 +185,7 @@ const DyadLanding: React.FC = () => {
  
 // ─── Replace each `url` with your actual image paths or remote URLs ───────────
 // alt text and ratio are used for accessibility and correct sizing.
-const IMAGES = [
-  {
-    id: "img1",
-    url: "/assets/images/logo_section.svg",
-    alt: "Image 1",
-    ratio: { w: 211, h: 59 },   // aspect ratio — controls slot proportions
-  },
-  {
-    id: "img2",
-    url: "/assets/images/logo_section1.svg",
-    alt: "Image 2",
-    ratio: { w: 1, h: 1 },
-  },
-  {
-    id: "img3",
-    url: "/assets/images/logo_section2.svg",
-    alt: "Image 3",
-    ratio: { w: 1, h: 1 },
-  },
-  {
-    id: "img4",
-    url: "/assets/images/logo_section3.svg",
-    alt: "Image 4",
-    ratio: { w: 25, h: 23 },
-  },
-  {
-    id: "img5",
-    url: "/assets/images/logo_section4.svg",
-    alt: "Image 5",
-    ratio: { w: 198, h: 115 },
-  },
-];
- 
-// Responsive size config per breakpoint
-function getSizes(vw) {
-  if (vw <= 480) {
-    return {
-      default:{ img1: [185, 75], img2: [75, 75], img3: [75, 75], img4: [78, 75], img5: [98, 75] },
-      shrunk:  { img1: [115, 45],  img2: [45, 45], img3: [45, 45], img4: [48, 45], img5: [68, 45] },
-      gap: 30,
-      shrunkGap: 25,
-      barPad: "8px 0",
-      shrunkBarPad: "4px 0",
-    };
-  }
-  if (vw <= 768) {
-    return {
-      default: { img1: [270, 80], img2: [95, 95], img3: [95, 95], img4: [106, 95], img5: [155, 95] },
-    shrunk:  { img1: [135, 45], img2: [45, 45], img3: [45, 45], img4: [48, 45], img5: [68, 45] },
-    gap: 70,
-    shrunkGap: 40,
-      barPad: "10px 0",
-      shrunkBarPad: "5px 0",
-    };
-  }
-  return {
-    default: { img1: [270, 80], img2: [95, 95], img3: [95, 95], img4: [106, 95], img5: [155, 95] },
-    shrunk:  { img1: [135, 45], img2: [45, 45], img3: [45, 45], img4: [48, 45], img5: [68, 45] },
-    gap: 70,
-    shrunkGap: 40,
-    barPad: "10px 0",
-    shrunkBarPad: "5px 0",
-  };
-}
- 
-// Single image wrapper
-function ImgWrap({ imgId, shrunk, sizes }) {
-  const key = imgId;
-  const [w, h] = shrunk ? sizes.shrunk[key] : sizes.default[key];
-  const margin = `0 ${shrunk ? sizes.shrunkGap : sizes.gap}px`;
-  const img = IMAGES.find((i) => i.id === imgId);
 
-  return (
-    <div
-      style={{
-        flexShrink: 0,
-        overflow: "hidden",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-       
-        borderRadius: 6,
-        width: w,
-        height: h,
-        margin,
-        transition: "width 0.38s cubic-bezier(0.4,0,0.2,1), height 0.38s cubic-bezier(0.4,0,0.2,1), margin 0.38s cubic-bezier(0.4,0,0.2,1)",
-      }}
-    >
-      <img
-        src={img.url}
-        alt={img.alt}
-        style={{
-          width: "100%",
-          height: "100%",
-          objectFit: "contain",
-          display: "block",
-          filter: "grayscale(1)",
-          transition: "filter 0.3s ease-in-out",
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.filter = "grayscale(0)";
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.filter = "grayscale(1)";
-        }}
-        draggable={false}
-      />
-    </div>
-  );
-}
- 
-// One full set of 5 images
-function ImageSet({ shrunk, sizes }) {
-  return (
-    <>
-      {IMAGES.map((img) => (
-        <ImgWrap key={img.id} imgId={img.id} shrunk={shrunk} sizes={sizes} />
-      ))}
-    </>
-  );
-}
- 
-// Marquee component
-function Marquee({ shrunk, sizes }) {
-  const trackRef = useRef(null);
-  const styleRef = useRef(null);
-  const [sets, setSets] = useState(2);
-  const builtRef = useRef(false);
- 
-  const build = useCallback(() => {
-    const track = trackRef.current;
-    if (!track) return;
- 
-    builtRef.current = false;
-    track.style.animation = "none";
- 
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        if (!trackRef.current) return;
-        const setW = trackRef.current.scrollWidth;
-        if (setW === 0) return;
- 
-        const vw = window.innerWidth || 375;
-        const setsNeeded = Math.max(2, Math.ceil((vw * 2.5) / setW) + 1);
-        const total = setsNeeded * 2;
-        setSets(total);
- 
-        requestAnimationFrame(() => {
-          if (!trackRef.current) return;
-          const halfW = setW * setsNeeded;
-          const duration = halfW / SPEED_PX_PER_SEC;
- 
-          if (styleRef.current) styleRef.current.remove();
-          const s = document.createElement("style");
-          s.textContent = `@keyframes marquee-tkr{0%{transform:translateX(0)}100%{transform:translateX(-${halfW}px)}}`;
-          document.head.appendChild(s);
-          styleRef.current = s;
- 
-          trackRef.current.style.animation = `marquee-tkr ${duration}s linear infinite`;
-          builtRef.current = true;
-        });
-      });
-    });
-  }, []);
- 
-  useEffect(() => {
-    build();
-    let tm;
-    const onResize = () => { clearTimeout(tm); tm = setTimeout(build, 250); };
-    window.addEventListener("resize", onResize);
-    return () => {
-      window.removeEventListener("resize", onResize);
-      clearTimeout(tm);
-      if (styleRef.current) styleRef.current.remove();
-    };
-  }, [build]);
- 
-  return (
-    <div className="trust-logo-first-level"  style={{ display: "flex", width: "100%", overflow: "hidden" }}>
-      <div className="trust-logo-second-level"
-        ref={trackRef}
-        style={{ display: "flex", alignItems: "center", flexShrink: 0 }}
-        onMouseEnter={(e) => { if (e.currentTarget) e.currentTarget.style.animationPlayState = "paused"; }}
-        onMouseLeave={(e) => { if (e.currentTarget) e.currentTarget.style.animationPlayState = "running"; }}
-      >
-        {Array.from({ length: sets }).map((_, i) => (
-          <ImageSet key={i} shrunk={shrunk} sizes={sizes} />
-        ))}
-      </div>
-    </div>
-  );
-}
- 
-// Main sticky bar
-function StickyMarqueeBar() {
-  const barRef = useRef(null);
-  const [shrunk, setShrunk] = useState(false);
-  const [vw, setVw] = useState(window.innerWidth || 800);
- 
-  useEffect(() => {
-    const onScroll = () => {
-      if (!barRef.current) return;
-      setShrunk(Math.round(barRef.current.getBoundingClientRect().top) <= 80);
-    };
-    window.addEventListener("scroll", onScroll, { passive: true });
-    onScroll();
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
- 
-  useEffect(() => {
-    let tm;
-    const onResize = () => { clearTimeout(tm); tm = setTimeout(() => setVw(window.innerWidth), 250); };
-    window.addEventListener("resize", onResize);
-    return () => { window.removeEventListener("resize", onResize); clearTimeout(tm); };
-  }, []);
- 
-  const sizes = getSizes(vw);
- 
-  return (
-    <div 
-      ref={barRef}
-      className="sticky-bar-trust-logo"
-      style={{
-        position: "sticky",
-      
-        zIndex: 100,
-        background: "#ffffff",
-        borderTop: "0.5px solid rgba(0,0,0,0.1)",
-        borderBottom: "0.5px solid rgba(0,0,0,0.1)",
-        overflow: "hidden",
-        padding: shrunk ? sizes.shrunkBarPad : sizes.barPad,
-        transition: "padding 0.38s cubic-bezier(0.4,0,0.2,1)",
-      }}
-    >
-     
- 
-      <Marquee shrunk={shrunk} sizes={sizes} />
-    </div>
-  );
-}
   
   const handleAboutCardClick = (cardId: number) => {
     const card = aboutContent.find(item => item.id === cardId);
@@ -523,7 +303,7 @@ function StickyMarqueeBar() {
       description: 'Advanced technology solutions that modernize your practice operations. Our integrated platform ensures seamless workflows and compliance with industry standards.',
       features: [
         'iOS mobile supported Anesthesia workflows',
-        'ONC Integration FHIR',
+        'ONC-Aligned FHIR Integration',
         'Fully automated and integrated document management',
         '24/7 365 ecosystem monitoring, governance, and compliance'
       ]
@@ -589,12 +369,12 @@ function StickyMarqueeBar() {
   ];
 
   const aboutDropdownItems = [
-    { name: 'Our Story & Inspiration', href: '/about-us-details#our-story-&-inspiration' },
-    { name: 'Our Mission & Vision', href: '/about-us-details#our-mission-&-vision' },
-    { name: 'Our Values & Principles', href: '/about-us-details#our-values-&-principles' },
-    { name: 'Our Approach & Methodology', href: '/about-us-details#our-approach-&-methodology' },
-    { name: 'Our Innovative Technologies', href: '/about-us-details#our-innovative-technologies' },
-    { name: 'Our Team & Expertise', href: '/about-us-details#our-team-&-expertise' }
+    { name: 'Our Story & Inspiration', href: '#about', cardId: 0 },
+    { name: 'Our Mission & Vision', href: '#about', cardId: 1 },
+    { name: 'Our Values & Principles', href: '#about', cardId: 2 },
+    { name: 'Our Approach & Methodology', href: '#about', cardId: 3 },
+    { name: 'Our Innovative Technologies', href: '#about', cardId: 4 },
+    { name: 'Our Team & Expertise', href: '#leadership', cardId: 5 }
   ];
 
   const whoWeServeDropdownItems = [
@@ -606,12 +386,21 @@ function StickyMarqueeBar() {
 
   const navigationItems = [
     { name: 'About Us', href: '#about', hasDropdown: true },
-    { name: 'Leadership', href: '#leadership' },
     { name: 'What We Do', href: '#services' },
     { name: 'Who We Serve', href: '#who-we-serve', hasDropdown: true }
   ];
 
- 
+   const icons = [
+    { name: 'img1',       src: '/assets/images/logo_section.svg'},
+    { name: 'img2',        src: '/assets/images/logo_section1.svg' },
+    { name: 'img3', src: '/assets/images/logo_section2.svg' },
+    { name: 'img4', src: '/assets/images/logo_section3.svg' },
+    { name: 'img5',      src: '/assets/images/logo_section4.svg' },
+   ];
+
+ const ITEMS = [...icons, ...icons, ...icons, ...icons];
+
+  const [paused, setPaused] = useState(false);
 
   return (
     <div className="dyad-landing-container" id="top">
@@ -704,7 +493,7 @@ function StickyMarqueeBar() {
                                 key={dropdownItem.name}
                                 onClick={(e) => {
                                   e.preventDefault();
-                                  handleAboutDropdownItemClick(dropdownItem.href);
+                                  handleAboutDropdownItemClick(dropdownItem);
                                 }}
                                 href={dropdownItem.href}
                                 className="dropdown-item"
@@ -859,7 +648,7 @@ function StickyMarqueeBar() {
                                 key={dropdownItem.name}
                                 onClick={(e) => {
                                   e.preventDefault();
-                                  handleAboutDropdownItemClick(dropdownItem.href);
+                                  handleAboutDropdownItemClick(dropdownItem);
                                   setIsMobileMenuOpen(false);
                                 }}
                                 className="mobile-dropdown-item"
@@ -908,7 +697,7 @@ function StickyMarqueeBar() {
             <button className="btn btn-primary btn-full" onClick={handleContactRequest}>
               <span>Contact Us</span>
             </button>
-            <button className="btn btn-secondary btn-full" onClick={handleLogin}>
+            <button className="btn btn-primary btn-full" onClick={handleLogin}>
               <span>Login</span>
             </button>
           </div>
@@ -934,7 +723,7 @@ function StickyMarqueeBar() {
             <div className="video-content">
               <div className="title-container">
                 <h1 className="video-title">
-                  <span className="title-line">A Bold Partnership Model for Smarter Healthcare Operations</span>
+                  <span className="title-line">A Bold Partnership Model<br />for Smarter Healthcare Operations</span>
                 
                 </h1>
                 <p className="video-subtitle" style={{ marginTop: '2rem' }}>
@@ -946,9 +735,84 @@ function StickyMarqueeBar() {
       </main>
 
 
-       <StickyMarqueeBar />
+   
+<style>{`
+        .scroller {
+          width: 100%;
+          overflow: hidden;
+         background: #f9f9f9;
+         border-bottom: 1px solid #8080800f;
+        }
 
+        .track {
+          display: flex;
+          gap: 7rem;
+          padding: 20px 0;
+          width: max-content;
+          animation: scroll-left 120s linear infinite;
+        }
 
+        .track.paused {
+          animation-play-state: paused;
+        }
+
+        @keyframes scroll-left {
+          from { transform: translateX(0); }
+          to   { transform: translateX(-50%); }
+        }
+
+        .icon-item {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 8px;
+          flex-shrink: 0;
+        }
+
+        .icon-item img {
+          height: 100px;
+          width: auto;
+          max-width: 160px;
+          object-fit: contain;
+          filter: grayscale(1);
+          transition: filter 0.3s ease;
+        }
+
+        .icon-item:hover img {
+          filter: grayscale(0);
+        }
+
+        .icon-item span {
+          color: #aaa;
+          font-size: 12px;
+          font-family: sans-serif;
+        }
+
+        @media (max-width: 768px) {
+          .track { gap: 5rem; padding: 16px 0; }
+          .icon-item img { height: 80px; }
+          .icon-item span { font-size: 10px; }
+        }
+
+        @media (max-width: 480px) {
+          .track { gap: 4rem; }
+          .icon-item img { height: 75px; }
+        }
+      `}</style>
+
+      <div
+        className="scroller"
+        onMouseEnter={() => setPaused(true)}
+        onMouseLeave={() => setPaused(false)}
+      >
+        <div className={`track ${paused ? "paused" : ""}`}>
+          {ITEMS.map((icon, i) => (
+            <div className="icon-item" key={i}>
+              <img src={icon.src} alt={icon.name} />
+            </div>
+          ))}
+        </div>
+      </div>
 
 
  
@@ -1109,9 +973,14 @@ function StickyMarqueeBar() {
                     <div className="description-features">
                       <ul>
                         {service.features.map((feature, index) => (
-                          <li key={index}>
-                            <img src="/assets/images/Vector.svg" alt="✓" className="tick-icon" />
-                            {feature}
+                          <li key={index} className={feature === 'ONC Integration FHIR' ? 'red-feature' : ''}>
+                           <div> <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 622 622" width="17" height="17" aria-hidden="true" fill="none">
+                              <g transform="translate(0,28)">
+                                <path d="M 430.134 68.771 A 260 260 0 1 0 521.365 183.135" stroke="#1D6DD8" stroke-width="52" stroke-linecap="butt"/>
+                                <polyline points="196 265 288 382 552 40" stroke="#00A7D8" stroke-width="52" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                              </g>
+                            </svg></div>
+                         <div >{feature}</div>
                           </li>
                         ))}
                       </ul>
@@ -1150,9 +1019,14 @@ function StickyMarqueeBar() {
                    <div className="description-features">
                       <ul>
                         {card.features.map((feature, index) => (
-                          <li key={index}>
-                            <img src="/assets/images/Vector.svg" alt="✓" className="tick-icon" />
-                            {feature}
+                          <li key={index} className={feature === 'ONC Integration FHIR' ? 'red-feature' : ''}>
+                           <div> <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 622 622" width="17" height="17" aria-hidden="true" fill="none">
+                              <g transform="translate(0,28)">
+                                <path d="M 430.134 68.771 A 260 260 0 1 0 521.365 183.135" stroke="#1D6DD8" stroke-width="45" stroke-linecap="butt"/>
+                                <polyline points="196 265 288 382 552 40" stroke="#00A7D8" stroke-width="45" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                              </g>
+                            </svg></div>
+                           <div>{feature}</div>
                           </li>
                         ))}
                       </ul>

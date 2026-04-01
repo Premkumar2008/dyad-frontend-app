@@ -306,7 +306,7 @@ export const createEmailService = (): EmailService => {
     },
     sendgrid: {
       apiKey: import.meta.env.VITE_SENDGRID_API_KEY || '',
-      from: import.meta.env.VITE_SENDGRID_FROM || 'noreply@dyadpractice.com'
+      from: import.meta.env.VITE_SENDGRID_FROM || ''
     },
     ses: {
       accessKeyId: import.meta.env.VITE_AWS_ACCESS_KEY_ID || '',

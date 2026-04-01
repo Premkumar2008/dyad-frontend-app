@@ -1,0 +1,419 @@
+/* New Login Page Layout */
+.login-page-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: row;
+  background: url('/assets/images/loginbanner1.jpeg') center/cover no-repeat;
+}
+
+/* Register Page Layout */
+.register-page-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: row;
+  background: url('/assets/images/loginbanner2.jpeg') center/cover no-repeat;
+}
+
+/* Left Side - Login Form Section */
+.login-form-section {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background:white;
+  max-width: 50%;
+  height: 100vh;
+  overflow-y: auto;
+}
+.login-form-section.register-box{
+align-items: flex-start !important;
+}
+
+.login-form-content {
+  width: 100%;
+  max-width: 450px;
+  padding-top: 4rem;
+  background: white !important;
+}
+
+/* Right Side - Carousel Section */
+.login-carousel-section {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  background: #1a1a1a;
+  max-width: 50%;
+}
+
+.carousel-container {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* Carousel Images */
+.carousel-images {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.carousel-slide {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  transition: all 0.6s ease-in-out;
+  opacity: 0;
+  transform: translateX(100%);
+}
+
+.carousel-slide.active {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* Carousel Content Overlay */
+.carousel-content {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 50%, transparent 100%);
+  padding: 3rem 2rem 2rem;
+  color: white;
+  z-index: 2;
+}
+
+.carousel-text {
+  max-width: 600px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.carousel-text h2 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  font-family: 'Prompt', sans-serif;
+  line-height: 1.2;
+}
+
+.carousel-text p {
+  font-size: 1.2rem;
+  line-height: 1.6;
+  opacity: 0.9;
+  font-family: 'Prompt', sans-serif;
+}
+
+/* Carousel Controls */
+.carousel-control {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  z-index: 3;
+  backdrop-filter: blur(10px);
+}
+
+.carousel-control:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: translateY(-50%) scale(1.1);
+}
+
+.carousel-control-prev {
+  left: 2rem;
+}
+
+.carousel-control-next {
+  right: 2rem;
+}
+
+/* Carousel Indicators */
+.carousel-indicators {
+  position: absolute;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 0.75rem;
+  z-index: 3;
+}
+
+.carousel-indicator {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.carousel-indicator:hover {
+  border-color: rgba(255, 255, 255, 0.6);
+}
+
+.carousel-indicator.active {
+  background: white;
+  border-color: white;
+}
+
+/* Form Styling */
+.login-form-content .logo-image {
+  height: 60px;
+  width: auto;
+  margin-bottom: 1rem;
+}
+
+.login-form-content h3 {
+  color: #1a202c;
+  font-family: 'Prompt', sans-serif;
+  font-weight: 600;
+}
+
+.login-form-content p {
+  text-align: justify;
+  color: #64748b;
+  font-family: 'Prompt', sans-serif;
+}
+
+.input-field {
+  padding: 0.875rem 1rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-family: 'Prompt', sans-serif;
+  transition: all 0.3s ease;
+  background: #f8fafc;
+  width: 100%;
+}
+
+.input-field:focus {
+  outline: none;
+  border-color: #1D6DD8;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(29, 109, 216, 0.1);
+}
+
+.input-field.error {
+  border-color: #e53e3e;
+  background: #fff5f5;
+}
+
+.btn-primary {
+  background: #1D6DD8;
+  color: white;
+  padding: 0.875rem 1.5rem;
+  border: none;
+  border-radius: 2px;
+  font-size: 1rem;
+  font-weight: 600;
+  font-family: 'Prompt', sans-serif;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #1a5fc4;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(29, 109, 216, 0.3);
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  background-color: #9ca3af;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .login-form-section {
+    max-width: 60%;
+  }
+  
+  .login-carousel-section {
+    max-width: 40%;
+  }
+  
+  .carousel-text h2 {
+    font-size: 2rem;
+  }
+  
+  .carousel-text p {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .login-page-container {
+    flex-direction: column;
+  }
+  
+  .login-form-section {
+    max-width: 100%;
+    height: 100vh;
+    padding: 1.5rem;
+    overflow-y: auto;
+  }
+  
+  .login-form-content {
+    padding-top: 2rem;
+  }
+  
+  .login-carousel-section {
+    max-width: 100%;
+    height: 30vh;
+  }
+  
+  .carousel-container {
+    height: 30vh;
+  }
+  
+  .carousel-content {
+    padding: 2rem 1.5rem 1.5rem;
+  }
+  
+  .carousel-text h2 {
+    font-size: 1.5rem;
+  }
+  
+  .carousel-text p {
+    font-size: 0.9rem;
+  }
+  
+  .carousel-control {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .carousel-control-prev {
+    left: 1rem;
+  }
+  
+  .carousel-control-next {
+    right: 1rem;
+  }
+  
+  .carousel-indicators {
+    bottom: 1rem;
+    gap: 0.5rem;
+  }
+  
+  .carousel-indicator {
+    width: 8px;
+    height: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .login-form-section {
+    padding: 1rem;
+  }
+  
+  .login-form-content {
+    max-width: 100%;
+  }
+  
+  .carousel-text h2 {
+    font-size: 1.2rem;
+  }
+  
+  .carousel-text p {
+    font-size: 0.8rem;
+  }
+  
+  .carousel-content {
+    padding: 1.5rem 1rem 1rem;
+  }
+  
+  .carousel-control {
+    width: 35px;
+    height: 35px;
+  }
+  
+  .carousel-control-prev {
+    left: 0.5rem;
+  }
+  
+  .carousel-control-next {
+    right: 0.5rem;
+  }
+}
+
+/* Animation for carousel slides */
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.carousel-slide.active {
+  animation: slideInRight 0.6s ease-out;
+}
+
+/* Additional form styling */
+.login-form-content label {
+  color: #374151;
+  font-weight: 500;
+  font-family: 'Prompt', sans-serif;
+}
+
+.login-form-content .text-primary-600 {
+  color: #1D6DD8;
+}
+
+.login-form-content .text-primary-600:hover {
+  color: #1a5fc4;
+}
+
+.login-form-content .text-gray-600 {
+  color: #6b7280;
+}
+
+.login-form-content .text-gray-500 {
+  color: #9ca3af;
+}
+
+.login-form-content .text-gray-500:hover {
+  color: #6b7280;
+}

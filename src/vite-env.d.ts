@@ -6,6 +6,7 @@ interface ImportMetaEnv {
   readonly PROD: boolean
   readonly DEV: boolean
   readonly VITE_ENABLE_DEMO_MODE?: string
+  readonly VITE_API_URL?: string
 }
 
 interface ImportMeta {

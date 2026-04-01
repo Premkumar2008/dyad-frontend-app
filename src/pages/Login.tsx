@@ -3,30 +3,62 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { LoginFormData } from '../types/auth';
 import toast from 'react-hot-toast';
-import "../pages/login.css";
+import "../pages/login-new.css";
 
+// Define the form type directly
+interface LoginFormData {
+  email: string;
+  password: string;
+  rememberMe: boolean;
+}
 
-const loginSchema = yup.object().shape({
+const loginSchema = yup.object({
   email: yup.string().email('Invalid email address').required('Email is required'),
   password: yup.string().required('Password is required'),
-  rememberMe: yup.boolean().default(false),
+  rememberMe: yup.boolean(),
 });
+
+// Carousel images for the right side
+const carouselImages = [
+  {
+    url: '/assets/images/loginbanner1.jpeg',
+    title: 'Healthcare Excellence',
+    description: 'Transforming healthcare operations with innovative solutions'
+  },
+  {
+    url: '/assets/images/loginbanner2.jpeg',
+    title: 'Partnership Model',
+    description: 'Building strong partnerships for better healthcare outcomes'
+  },
+  {
+    url: '/assets/images/loginbanner3.jpeg',
+    title: 'Technology Driven',
+    description: 'Leveraging cutting-edge technology for healthcare efficiency'
+  }
+];
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string>('');
+  const [currentSlide, setCurrentSlide] = useState(0);
   const { login, isLoading, user } = useAuth();
 
   const handleLogoClick = () => {
     navigate('/');
   };
 
-  // const from = location.state?.from?.pathname || '/'; // Reserved for future redirect functionality
+  // Auto-sliding carousel
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % carouselImages.length);
+    }, 5000); // Change slide every 5 seconds
+
+    return () => clearInterval(interval);
+  }, []);
 
   // Handle redirection when user state changes
   useEffect(() => {
@@ -50,7 +82,7 @@ const Login: React.FC = () => {
     handleSubmit,
     formState: { errors },
   } = useForm<LoginFormData>({
-    resolver: yupResolver(loginSchema),
+    resolver: yupResolver(loginSchema) as any,
   });
 
   const onSubmit = async (data: LoginFormData) => {
@@ -101,29 +133,39 @@ const Login: React.FC = () => {
     }
   };
 
+  const goToSlide = (index: number) => {
+    setCurrentSlide(index);
+  };
+
+  const goToPreviousSlide = () => {
+    setCurrentSlide((prev) => (prev - 1 + carouselImages.length) % carouselImages.length);
+  };
+
+  const goToNextSlide = () => {
+    setCurrentSlide((prev) => (prev + 1) % carouselImages.length);
+  };
+
   return (
-    <div className="login-form-container">
+    <div className="login-page-container">
       
-      {/* Main Content */}
-      <div className="flex-1 flex items-center justify-center p-8">
-        <div className="login-form-box">
+      {/* Left Side - Login Form */}
+      <div className="login-form-section">
+        <div className="login-form-content">
           {/* Logo */}
           <div className="text-center mb-8">
             <div className="flex items-center justify-center gap-2 mb-4">
-             
               <div className="dyad-logo" onClick={handleLogoClick} style={{ cursor: 'pointer' }}>
-            <img 
-              src="/assets/images/dyadmain-ogo.svg" 
-              alt="Dyad Logo" 
-              className="logo-image"
-            />
-          </div>
+                <img 
+                  src="/assets/images/dyadmain-ogo.svg" 
+                  alt="Dyad Logo" 
+                  className="logo-image"
+                />
+              </div>
             </div>
-         
           </div>
 
-             <h3 className="text-2xl font-medium text-gray-900">Login</h3>
-             <br />
+          <h3 className="text-2xl font-medium text-gray-900 mb-6">Login</h3>
+          <p className="text-gray-600 mb-8"></p>
 
           {/* Login Form */}
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -221,7 +263,7 @@ const Login: React.FC = () => {
 
             {/* Register Link */}
             <div className="text-center">
-              <span className="text-sm text-gray-600">
+              <span className="text-md text-gray-600">
                 Don't have an account?{' '}
                 <Link
                   to="/register"
@@ -231,18 +273,70 @@ const Login: React.FC = () => {
                 </Link>
               </span>
             </div>
-            <br />
             
             {/* Back to Home Link */}
             <div className="text-center">
               <Link
                 to="/"
-                className="text-sm text-gray-500 hover:text-gray-700 font-medium"
+                className="text-md text-gray-500 hover:text-gray-700 font-medium"
               >
                 ← Back to Home
               </Link>
             </div>
           </form>
+        </div>
+      </div>
+
+      {/* Right Side - Image Carousel */}
+      <div className="login-carousel-section">
+        <div className="carousel-container">
+          {/* Carousel Images */}
+          <div className="carousel-images">
+            {carouselImages.map((image, index) => (
+              <div
+                key={index}
+                className={`carousel-slide ${index === currentSlide ? 'active' : ''}`}
+                style={{
+                  backgroundImage: `url(${image.url})`,
+                  opacity: index === currentSlide ? 1 : 0,
+                  transform: `translateX(${(index - currentSlide) * 100}%)`
+                }}
+              />
+            ))}
+          </div>
+
+          {/* Carousel Content - Removed title and subtitle */}
+          <div className="carousel-content">
+            {/* Content removed as requested */}
+          </div>
+
+          {/* Carousel Controls */}
+          <button
+            className="carousel-control carousel-control-prev"
+            onClick={goToPreviousSlide}
+            aria-label="Previous slide"
+          >
+            <ChevronLeft size={24} />
+          </button>
+          <button
+            className="carousel-control carousel-control-next"
+            onClick={goToNextSlide}
+            aria-label="Next slide"
+          >
+            <ChevronRight size={24} />
+          </button>
+
+          {/* Carousel Indicators */}
+          <div className="carousel-indicators">
+            {carouselImages.map((_, index) => (
+              <button
+                key={index}
+                className={`carousel-indicator ${index === currentSlide ? 'active' : ''}`}
+                onClick={() => goToSlide(index)}
+                aria-label={`Go to slide ${index + 1}`}
+              />
+            ))}
+          </div>
         </div>
       </div>
     </div>

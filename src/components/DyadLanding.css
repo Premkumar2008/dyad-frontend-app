@@ -4,6 +4,9 @@
 html {
   scroll-behavior: smooth;
 }
+.text-red-600{
+  color :red !important
+}
 
 
 
@@ -88,6 +91,15 @@ div.stickytrustlogos.active .logo-item{
 
 div.stickytrustlogos.active .logo-item img{
   min-width: 165px;
+}
+
+/* About popup description and leadership description text alignment */
+.about-popup-description {
+  text-align: justify !important;
+}
+
+.leader-description {
+  text-align: justify !important;
 }
 
 /* Mobile styles for active sticky div */
@@ -260,6 +272,11 @@ header.dyad-header {
   transition: transform 0.3s ease;
 }
 
+/* Red text styling for ONC Integration FHIR content only */
+.red-text {
+  color: #DC2626 !important;
+}
+
 .arrow-circle svg path {
   stroke: rgb(29 109 216);
 }
@@ -288,6 +305,7 @@ header.dyad-header {
   position: relative;
   display: flex;
   align-items: center;
+  height: 50px;
 }
 
 .nav-item-container > a {
@@ -364,7 +382,7 @@ font-size: 17px !important;
   border-bottom: none;
   transition: all 0.3s ease;
   color: rgb(55 65 81 / var(--tw-text-opacity));
-  border-radius: 0.125rem;
+  border-radius: 2px;
   padding: 0.5rem 1rem;
 }
 
@@ -372,7 +390,7 @@ font-size: 17px !important;
   color: #1D6DD8 !important;
   padding-left: 1.5rem;
   background: transparent !important;
-  border-radius: 0.125rem !important;
+  border-radius: 2px !important;
   text-decoration: none !important;
   text-underline-offset: 4px;
 }
@@ -399,8 +417,7 @@ font-size: 17px !important;
 }
 
 .logo-image {
-  height: 50px;
-  width: auto;
+  width: 200px;
   object-fit: contain;
 }
 
@@ -425,7 +442,7 @@ header.dyad-header .dyad-nav-actions .dyad-nav .nav-list .dyad-nav .nav-link {
   font-size: 1.1rem;
   font-family: 'Prompt', sans-serif;
   padding: 0.5rem 1rem;
-  border-radius: 6px;
+  border-radius: 0;
   transition: all 0.3s ease;
   position: relative;
   cursor: pointer;
@@ -490,6 +507,7 @@ header.dyad-header .dyad-nav-actions .dyad-nav .nav-list .dyad-nav .nav-link.act
 
 /* Combined right side navigation and actions */
 .dyad-nav-actions {
+  padding-top:33px;
   display: flex;
   align-items: center;
   gap: 1rem;
@@ -499,20 +517,35 @@ header.dyad-header .dyad-nav-actions .dyad-nav .nav-list .dyad-nav .nav-link.act
   gap: 1.5rem;
 }
 
+.dropdown-container a{
+ padding : 0.5rem 1rem 0rem 0.5rem !important;
+}
+.dropdown-menu.open a{
+ padding : 0.5rem 1rem !important;
+}
+
+.dropdown-menu a{
+ padding : 0.5rem 1rem !important;
+}
+.nav-item-container a{
+padding : 0.5rem 1rem 0rem 0.5rem !important;
+}
+
 /* Button Styles - Match Contact Us Page */
 .btn {
   padding: 0.75rem 1.5rem;
-  border-radius: 0.5rem;
-  font-weight: 600;
+  border-radius: 2px !important;
+  font-weight: 500 !important;
   font-size: 1rem;
   font-family: 'Prompt', sans-serif;
-  border: none;
-  cursor: pointer;
   transition: all 0.3s ease;
-  text-decoration: none;
+  cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  text-decoration: none;
+  position: relative;
+  overflow: hidden;
 }
 
 .btn-primary {
@@ -520,12 +553,11 @@ header.dyad-header .dyad-nav-actions .dyad-nav .nav-list .dyad-nav .nav-link.act
   color: white;
   border: none;
   padding: 0.5rem 1rem !important;
-  border-radius: .125rem;
-  font-weight: 500;
+  border-radius: 2px !important;
+  font-weight: 500 !important;
   font-family: 'Prompt', sans-serif;
   cursor: pointer;
   transition: all 0.3s ease;
-  text-decoration: none;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -548,16 +580,15 @@ header.dyad-header .dyad-nav-actions .dyad-nav .nav-list .dyad-nav .nav-link.act
 }
 
 .btn-secondary {
-  background: #1D6DD8;
+  background: transparent;
   color: white;
   border: 2px solid #1D6DD8;
   padding: 0.5rem 1rem !important;
-  border-radius: .125rem;
-  font-weight: 500;
+  border-radius: 2px !important;
+  font-weight: 500 !important;
   font-family: 'Prompt', sans-serif;
   cursor: pointer;
   transition: all 0.3s ease;
-  text-decoration: none;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -856,8 +887,8 @@ header.dyad-header .dyad-nav-actions .dyad-nav .nav-list .dyad-nav .nav-link.act
 }
 
 .video-title {
-  font-size: 50px;
-  max-width: 775px;
+  font-size: 52px;
+  max-width: 900px;
   font-weight: 600;
   color: white;
   margin: 0;
@@ -984,7 +1015,7 @@ header.dyad-header .dyad-nav-actions .dyad-nav .nav-list .dyad-nav .nav-link.act
     width: 100% !important;
 }
  .video-title {
-    font-size: 28px !important;
+    font-size: 25px !important;
   }
   
   .video-subtitle {
@@ -1184,9 +1215,9 @@ header.dyad-header .dyad-nav-actions .dyad-nav .nav-list .dyad-nav .nav-link.act
   color: white;
   border: none;
   padding: 1.5rem 2.5rem;
-  border-radius: 0.5rem;
+  border-radius: 2px;
   font-size: 1rem;
-  font-weight: 600;
+  font-weight: 500;
   font-family: 'Prompt', sans-serif;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -1315,7 +1346,7 @@ header.dyad-header .dyad-nav-actions .dyad-nav .nav-list .dyad-nav .nav-link.act
   }
   
   .dyad-logo img {
-    height: 35px !important;
+    height: 45px !important;
     width: auto !important;
   }
 
@@ -1737,9 +1768,9 @@ padding : 0.5rem 0.5rem 0.rem 0rem !important
   background: linear-gradient(135deg, #1D6DD8 0%, #00A7D8 100%);
   color: white;
   padding: 1rem 2rem;
-  border-radius: 3rem;
+  border-radius: 0;
   font-size: 1.25rem;
-  font-weight: 700;
+  font-weight: 500;
   font-family: 'Prompt', sans-serif;
   box-shadow: 0 10px 30px rgba(29, 109, 216, 0.3);
 }
@@ -1871,7 +1902,7 @@ padding : 0.5rem 0.5rem 0.rem 0rem !important
   font-family: 'Prompt', sans-serif;
   cursor: pointer;
   transition: all 0.3s ease;
-  border-radius: 0.5rem;
+  border-radius: 0;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
@@ -3230,6 +3261,9 @@ padding : 0.5rem 0.5rem 0.rem 0rem !important
     font-size: 14.5px !important;
     font-weight: 400;
   }
+  .description-features li div svg{
+  margin-top:3px !important;
+}
   
   .description-content h3 {
     font-size: 15px !important;
@@ -4566,6 +4600,10 @@ padding : 0.5rem 0.5rem 0.rem 0rem !important
   gap: 0.5rem;
 }
 
+.description-features li div svg{
+  margin-top:4px;
+}
+
 /* Tick Icon Styling */
 .tick-icon {
   margin-top:4px;
@@ -5532,160 +5570,48 @@ padding : 0.5rem 0.5rem 0.rem 0rem !important
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
-  /* ── Sticky bar ── */
-  .sticky-bar {
-    position: sticky;
-    top: 80px;
-    z-index: 100;
-    background: var(--color-background-primary);
-    border-top: 0.5px solid var(--color-border-tertiary);
-    border-bottom: 0.5px solid var(--color-border-tertiary);
-    overflow: hidden;
-    padding: 10px 0;
-    transition: padding 0.38s cubic-bezier(0.4,0,0.2,1);
+ .scroller {
+    width: 100%;
+    overflow-x: scroll;
+    scrollbar-width: none;
   }
-  .sticky-bar.shrunk { padding: 5px 0; }
+  .scroller::-webkit-scrollbar { display: none; }
 
-  .sticky-bar::before,
-  .sticky-bar::after {
-    content: '';
-    position: absolute;
-    top: 0; bottom: 0;
-    width: 48px;
-    z-index: 2;
-    pointer-events: none;
-  }
-  .sticky-bar::before { left: 0; background: linear-gradient(to right, var(--color-background-primary), transparent); }
-  .sticky-bar::after  { right: 0; background: linear-gradient(to left,  var(--color-background-primary), transparent); }
-
-  .marquee-outer { display: flex; width: 100%; overflow: hidden; }
-
-  .marquee-track {
+  .track {
     display: flex;
-    align-items: center;
-    flex-shrink: 0;
-    will-change: transform;
+    gap: 50px;
+    padding: 20px 0;
+    animation: scroll 40s linear infinite;
+    width: max-content;
+    cursor: grab;
+    user-select: none;
   }
-  .marquee-track:hover { animation-play-state: paused; }
 
-  /* ── Image wrappers — desktop defaults ── */
-  .img-wrap {
-    flex-shrink: 0;
-    overflow: hidden;
+  .track.dragging {
+    cursor: grabbing;
+    animation-play-state: paused;
+  }
+
+  @keyframes scroll {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+  }
+
+  .icon {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: center;
-    background: var(--color-background-secondary);
-    border-radius: 6px;
-    margin: 0 4rem 0 4rem;
-    transition: width .38s cubic-bezier(.4,0,.2,1),
-                height .38s cubic-bezier(.4,0,.2,1),
-                margin .38s cubic-bezier(.4,0,.2,1);
-    will-change: width, height;
+    gap: 8px;
+    flex-shrink: 0;
   }
 
-  /* desktop sizes */
-  .img1 { width: 270px; height: 80px; }
-  .img2 { width: 80px;  height: 80px; }
-  .img3 { width: 80px;  height: 80px; }
-  .img4 { width: 86px;  height: 80px; }
-  .img5 { width: 130px;  height: 80px; }
-
-  /* desktop shrunk (−40%) */
-  .sticky-bar.shrunk .img1 { width: 108px; height: 31px; }
-  .sticky-bar.shrunk .img2 { width: 31px;  height: 31px; }
-  .sticky-bar.shrunk .img3 { width: 31px;  height: 31px; }
-  .sticky-bar.shrunk .img4 { width: 34px;  height: 31px; }
-  .sticky-bar.shrunk .img5 { width: 53px;  height: 31px; }
-  .sticky-bar.shrunk .img-wrap { margin: 0 10px; }
-
-  .sticky-bar-trust-logo{ top : 80px }
-
-   .sticky-bar-trust-logo .trust-logo-first-level .trust-logo-second-level div img{
-    filter: grayscale(1);
-   }
-
-   .sticky-bar-trust-logo .trust-logo-first-level .trust-logo-second-level div img:hover{
-    filter: grayscale(0) !important;
-   }
-  
-
-  /* ── Tablet (≤768px) ── */
-  @media (max-width: 768px) {
-    .img1 { width: 130px; height: 37px; }
-    .img2 { width: 37px;  height: 37px; }
-    .img3 { width: 37px;  height: 37px; }
-    .img4 { width: 40px;  height: 37px; }
-    .img5 { width: 64px;  height: 37px; }
-    .img-wrap { margin: 0 12px; border-radius: 5px; }
-
-    .sticky-bar.shrunk .img1 { width: 78px;  height: 22px; }
-    .sticky-bar.shrunk .img2 { width: 22px;  height: 22px; }
-    .sticky-bar.shrunk .img3 { width: 22px;  height: 22px; }
-    .sticky-bar.shrunk .img4 { width: 24px;  height: 22px; }
-    .sticky-bar.shrunk .img5 { width: 38px;  height: 22px; }
-    .sticky-bar.shrunk .img-wrap { margin: 0 8px; }
-    .sticky-bar-trust-logo{ top : 65px }
+  .icon img {
+    width: 60px;
+    height: 60px;
+    object-fit: contain;
   }
 
-  /* ── Mobile (≤480px) ── */
-  @media (max-width: 480px) {
-    .img1 { width: 100px; height: 28px; }
-    .img2 { width: 28px;  height: 28px; }
-    .img3 { width: 28px;  height: 28px; }
-    .img4 { width: 31px;  height: 28px; }
-    .img5 { width: 49px;  height: 28px; }
-    .img-wrap { margin: 0 10px; border-radius: 4px; }
-
-    .sticky-bar.shrunk .img1 { width: 60px;  height: 17px; }
-    .sticky-bar.shrunk .img2 { width: 17px;  height: 17px; }
-    .sticky-bar.shrunk .img3 { width: 17px;  height: 17px; }
-    .sticky-bar.shrunk .img4 { width: 18px;  height: 17px; }
-    .sticky-bar.shrunk .img5 { width: 29px;  height: 17px; }
-    .sticky-bar.shrunk .img-wrap { margin: 0 6px; }
-
-    .sticky-bar { padding: 8px 0; }
-    .sticky-bar.shrunk { padding: 4px 0; }
-    .sticky-bar-trust-logo{ top : 65px }
+  .icon span {
+    color: #aaa;
+    font-size: 12px;
   }
-
-  .img-wrap svg { width: 100%; height: 100%; display: block; pointer-events: none; }
-
-  /* status pill */
-  .status-pill {
-    position: absolute;
-    right: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 10px;
-    padding: 2px 8px;
-    border-radius: 99px;
-    background: var(--color-background-success);
-    color: var(--color-text-success);
-    font-weight: 500;
-    white-space: nowrap;
-    z-index: 3;
-    pointer-events: none;
-    transition: background .3s, color .3s;
-  }
-  .status-pill.shrunk-state {
-    background: var(--color-background-info);
-    color: var(--color-text-info);
-  }
-  @media (max-width: 480px) { .status-pill { display: none; } }
-
-  /* page content */
-  .page-content { padding: 40px 16px 0; }
-  .content-card {
-    background: var(--color-background-primary);
-    border: 0.5px solid var(--color-border-tertiary);
-    border-radius: var(--border-radius-lg);
-    padding: 20px;
-    max-width: 640px;
-    margin-bottom: 20px;
-  }
-  .content-card h3 { font-size: 14px; font-weight: 500; color: var(--color-text-primary); margin-bottom: 6px; }
-  .content-card p  { font-size: 13px; color: var(--color-text-secondary); line-height: 1.6; }
-  .scroll-hint { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--color-text-tertiary); margin-top: 12px; }
-  .arrow-anim { animation: bd 1.2s ease-in-out infinite; }
-  @keyframes bd { 0%,100%{transform:translateY(0)} 50%{transform:translateY(4px)} }
