@@ -36,13 +36,19 @@ const DyadLanding: React.FC = () => {
   }, [location.state]);
   
   const handleLogin = () => {
-    // Navigate to login page
-    navigate('/login');
+    // Scroll to top first, then navigate to login page
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setTimeout(() => {
+      navigate('/login');
+    }, 300); // Small delay to ensure scroll completes
   };
   
   const handleContactRequest = () => {
-    // Navigate to contact page
-    navigate('/contact');
+    // Scroll to top first, then navigate to contact page
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setTimeout(() => {
+      navigate('/contact');
+    }, 300); // Small delay to ensure scroll completes
   };
   
   const handleLogoClick = () => {
@@ -455,7 +461,7 @@ const DyadLanding: React.FC = () => {
     const handleScroll = () => {
       const rect = el.getBoundingClientRect();
 
-      if (rect.top <= 117) {
+      if (rect.top <= 127) {
         el.classList.add('reached-top');
       } else {
         el.classList.remove('reached-top');
@@ -476,7 +482,7 @@ const DyadLanding: React.FC = () => {
           {/* Left - Logo */}
           <div className="dyad-logo" onClick={handleLogoClick} style={{ cursor: 'pointer' }}>
             <img 
-              src="/assets/images/dyadmain-ogo.svg" 
+              src="/assets/images/logo_main.png" 
               alt="Dyad Logo" 
               className="logo-image"
             />
@@ -524,7 +530,7 @@ const DyadLanding: React.FC = () => {
                               cursor: 'pointer',
                               textDecoration: 'none',
                               fontWeight: 400,
-                              fontSize: '1.1rem',
+                              fontSize: '18px',
                               fontFamily: 'Prompt, sans-serif',
                               padding: '0.5rem 1rem',
                               borderRadius: '6px',
@@ -856,7 +862,7 @@ const DyadLanding: React.FC = () => {
          background: #f9f9f9;
          border-bottom: 1px solid #ebe8e8;
          position: sticky;
-         top :93px;
+         top :117px;
          z-index:999;
          transition: height 0.6s ease;
         }
@@ -1047,7 +1053,7 @@ const DyadLanding: React.FC = () => {
                 className={`leadership-card ${index % 2 === 1 ? 'reversed' : ''}`}
               >
                 <div className="leadership-image">
-                  <div className="leadership-image-bg" data-mobile-bg={leader.mobileImage}></div>
+                
                   <img src={leader.image} alt={leader.name} data-mobile-src={leader.mobileImage} />
                 </div>
                 <div className="leadership-content">

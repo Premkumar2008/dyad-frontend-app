@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { ArrowRight, User, LogOut, ChevronDown, X } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useState } from 'react';
-import Logo from '../assets/images/dyadmain-ogo.svg';
+import Logo from '../assets/images/logo_main.png';
 
 const Landing: React.FC = () => {
   const { user, logout } = useAuth();

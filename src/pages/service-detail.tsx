@@ -184,7 +184,7 @@ const AboutUsDetail: React.FC = () => {
           {/* Left - Logo */}
           <div className="dyad-logo" onClick={handleLogoClick} style={{ cursor: 'pointer' }}>
             <img 
-              src="/assets/images/dyadmain-ogo.svg" 
+              src="/assets/images/logo_main.png" 
               alt="Dyad Logo" 
               className="logo-image"
             />

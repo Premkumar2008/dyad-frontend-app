@@ -27,7 +27,7 @@ const ComingSoon: React.FC = () => {
     }}>
       {/* Logo */}
       <img 
-        src="/assets/images/dyadmain-ogo.svg" 
+        src="/assets/images/logo_main.png" 
         alt="Dyad Logo" 
         style={{
           height: '60px',

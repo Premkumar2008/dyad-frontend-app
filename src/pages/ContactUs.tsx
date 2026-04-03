@@ -1,4 +1,4 @@
-import React, { useState, useRef  } from 'react';
+import React, { useState, useRef, useEffect  } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -34,6 +34,11 @@ const ContactUs: React.FC = () => {
   const [isWhoWeServeDropdownOpen, setIsWhoWeServeDropdownOpen] = useState(false);
   const [isWhatWeDoDropdownOpen, setIsWhatWeDoDropdownOpen] = useState(false);
  const captchaRef = useRef(null);
+
+ // Scroll to top when component mounts
+ useEffect(() => {
+   window.scrollTo({ top: 0, behavior: 'smooth' });
+ }, []);
 
  const handleRecaptchaChange = (token: string | null) => {
     console.log('reCAPTCHA changed:', token);
@@ -229,7 +234,7 @@ const ContactUs: React.FC = () => {
           {/* Left - Logo */}
           <div className="dyad-logo" onClick={handleLogoClick} style={{ cursor: 'pointer' }}>
             <img 
-              src="/assets/images/dyadmain-ogo.svg" 
+              src="/assets/images/logo_main.png" 
               alt="Dyad Logo" 
               className="logo-image"
             />
@@ -581,7 +586,7 @@ const ContactUs: React.FC = () => {
               <span>Contact Us</span>
             </button>
             <button className="btn btn-primary btn-full" onClick={handleLogin}>
-              <span>Login</span>
+              <span>Login/Register</span>
             </button>
           </div>
         </div>
@@ -606,7 +611,7 @@ const ContactUs: React.FC = () => {
             {/* Left Side - Form */}
             <div className="form-left-section">
               <div className="form-header-content">
-                <h2 className="form-title">To be filled out by Providers or Administrators:</h2>
+                <h2 className="form-title">To Be Filled Out By Providers Or Administrators:</h2>
               
               </div>
               <br />

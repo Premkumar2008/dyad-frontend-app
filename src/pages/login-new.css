@@ -73,6 +73,7 @@ align-items: flex-start !important;
 }
 
 .login-form-content {
+  margin-top:2rem;
   width: 100%;
   background: white !important;
 }
@@ -92,7 +93,7 @@ align-items: flex-start !important;
  border-radius: 0.75rem;
     position: relative;
     width: 83%;
-    min-height: 490px;
+    min-height: 575px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -291,6 +292,15 @@ align-items: flex-start !important;
   .form-row {
     gap: 0.5rem;
   }
+  .login-form-section {
+    min-height: unset;
+  }
+  .form-container-login{
+    min-height: unset;
+  }
+  .login-form-content{
+    margin-top:0px;
+  }
 }
 
 .input-field:focus {
@@ -311,7 +321,7 @@ align-items: flex-start !important;
   padding: 0.875rem 1.5rem;
   border: none;
   border-radius: 0.35rem;
-  font-size: 1.05rem;
+  font-size: 18px;
   font-weight: 600;
   font-family: 'Prompt', sans-serif;
   cursor: pointer;

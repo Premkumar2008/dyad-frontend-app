@@ -113,6 +113,11 @@ const Login: React.FC = () => {
     return () => clearInterval(interval);
   }, []);
 
+  // Scroll to top when component mounts or when switching between forms
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
+
   // Handle redirection when user state changes
   useEffect(() => {
     console.log('Login useEffect - User state changed:', user);
@@ -391,11 +396,11 @@ const Login: React.FC = () => {
       
       {/* Left Side - Login Form */}
       <div className="login-form-section">
-          <div className="text-center mb-8">
+          <div className="">
           
               <div className="dyad-logo" onClick={handleLogoClick} style={{ cursor: 'pointer' }}>
                 <img 
-                  src="/assets/images/dyadmain-ogo.svg" 
+                  src="/assets/images/logo_main.png" 
                   alt="Dyad Logo" 
                   className="logo-image"
                 />
@@ -406,7 +411,7 @@ const Login: React.FC = () => {
           {/* Logo */}
         
 
-          <h3 className="text-2xl font-medium text-gray-900 mb-6">
+          <h3 className="text-xl font-medium text-gray-900">
             {showRegister ? 'Register' : showResetPassword ? 'Reset Your Password' : showForgotPassword ? 'Forgot Your Password?' : 'Login'}
           </h3>
          

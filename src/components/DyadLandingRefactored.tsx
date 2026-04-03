@@ -309,7 +309,7 @@ const DyadLanding: React.FC = () => {
             {/* Logo */}
             <div className="dyad-logo" onClick={handleLogoClick}>
               <img 
-                src="/assets/images/dyadmain-ogo.svg" 
+                src="/assets/images/logo_main.png" 
                 alt="Dyad Logo" 
               />
             </div>
@@ -386,7 +386,7 @@ const DyadLanding: React.FC = () => {
           <div className="mobile-nav-header">
             <div className="dyad-logo" onClick={handleLogoClick}>
               <img 
-                src="/assets/images/dyadmain-ogo.svg" 
+                src="/assets/images/logo_main.png" 
                 alt="Dyad Logo" 
               />
             </div>
