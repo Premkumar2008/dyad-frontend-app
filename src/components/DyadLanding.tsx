@@ -10,10 +10,12 @@ const DyadLanding: React.FC = () => {
   const [activeMenu, setActiveMenu] = useState('Home');
   const [isAboutDropdownOpen, setIsAboutDropdownOpen] = useState(false);
   const [isWhoWeServeDropdownOpen, setIsWhoWeServeDropdownOpen] = useState(false);
+  const [isWhatWeDoDropdownOpen, setIsWhatWeDoDropdownOpen] = useState(false);
   const [hoveredMenu, setHoveredMenu] = useState<string | null>(null);
   const [isTrustSectionSticky, setIsTrustSectionSticky] = useState(false);
   const [isStickyDivActive, setIsStickyDivActive] = useState(false);
   const [selectedAboutCard, setSelectedAboutCard] = useState<typeof aboutContent[0] | null>(null);
+  const [selectedServiceCard, setSelectedServiceCard] = useState<typeof servicesData[0] | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -122,7 +124,19 @@ const DyadLanding: React.FC = () => {
     setIsWhoWeServeDropdownOpen(isOpen);
     if (isOpen) {
       setIsAboutDropdownOpen(false);
+      setIsWhatWeDoDropdownOpen(false);
       setHoveredMenu('Who We Serve');
+    } else {
+      setHoveredMenu(null);
+    }
+  };
+
+  const handleWhatWeDoDropdownHover = (isOpen: boolean) => {
+    setIsWhatWeDoDropdownOpen(isOpen);
+    if (isOpen) {
+      setIsAboutDropdownOpen(false);
+      setIsWhoWeServeDropdownOpen(false);
+      setHoveredMenu('What We Do');
     } else {
       setHoveredMenu(null);
     }
@@ -156,6 +170,22 @@ const DyadLanding: React.FC = () => {
     }
   };
 
+  const handleWhatWeDoDropdownItemClick = (item: any) => {
+    setActiveMenu('What We Do');
+    setIsWhatWeDoDropdownOpen(false);
+    setHoveredMenu(null);
+    
+    // Open popup first, then scroll to services section
+    const card = servicesData.find(c => c.id === item.cardId);
+    if (card) {
+      setSelectedServiceCard(card);
+      // Scroll to services section after popup is open
+      setTimeout(() => {
+        handleNavClick('What We Do', item.href);
+      }, 100);
+    }
+  };
+
   const handleWhoWeServeDropdownItemClick = (href: string) => {
     setIsWhoWeServeDropdownOpen(false);
     setHoveredMenu(null);
@@ -171,7 +201,7 @@ const DyadLanding: React.FC = () => {
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Element;
-      if (!target.closest('.dropdown-container') && !target.closest('.mobile-dropdown-container')) {
+      if (!target.closest('.nav-item-container') && !target.closest('.mobile-dropdown-container')) {
         setIsAboutDropdownOpen(false);
         setIsWhoWeServeDropdownOpen(false);
       }
@@ -196,6 +226,10 @@ const DyadLanding: React.FC = () => {
 
   const closeAboutPopup = () => {
     setSelectedAboutCard(null);
+  };
+
+  const closeServicePopup = () => {
+    setSelectedServiceCard(null);
   };
 
   const toggleMobileCard = (cardId: number) => {
@@ -285,7 +319,7 @@ const DyadLanding: React.FC = () => {
       subtitle: 'Startup support, compliance and credentialing',
       image: '/assets/images/ourservices1.jpg',
       icon: 'icon-building',
-      description: 'Comprehensive practice foundation services that ensure your startup success. From initial setup to ongoing compliance management, we provide the essential support needed for sustainable practice operations.',
+      description: '',
       features: [
         'Practice assessment',
         'Payer enrollment',
@@ -300,7 +334,7 @@ const DyadLanding: React.FC = () => {
       subtitle: 'Mobile supported work flows, ONC Integration FHIR, governance and compliance',
       image: '/assets/images/ourservices2.jpg',
       icon: 'icon-laptop',
-      description: 'Advanced technology solutions that modernize your practice operations. Our integrated platform ensures seamless workflows and compliance with industry standards.',
+      description: '',
       features: [
         'iOS mobile supported Anesthesia workflows',
         'ONC-Aligned FHIR Integration',
@@ -314,7 +348,7 @@ const DyadLanding: React.FC = () => {
       subtitle: 'Eligibility verifications, prior-authorizations, patient estimates, Precision driven charge capture, Specialty Coding',
       image: '/assets/images/ourservices3.jpg',
       icon: 'icon-clipboard',
-      description: 'Complete pre and post-encounter management that optimizes your revenue cycle. From patient eligibility to precise coding, we ensure accuracy at every step.',
+      description: '',
       features: [
         'Eligibility & Benefits verifications',
         'Prior-authorizations',
@@ -329,7 +363,7 @@ const DyadLanding: React.FC = () => {
       subtitle: 'Expedited submissions, resolutions & real-time tracking',
       image: '/assets/images/ourservices4.png',
       icon: 'icon-document',
-      description: 'Streamlined claims management that accelerates reimbursement and reduces denials. Our expert team ensures optimal claim submission and resolution.',
+      description: '',
       features: [
         'Denials & Appeals',
         'Accounts Receivable (AR)',
@@ -344,7 +378,7 @@ const DyadLanding: React.FC = () => {
       subtitle: 'Expert lien management for complex cases',
       image: '/assets/images/ourservices5.jpeg',
       icon: 'icon-medical',
-      description: 'Specialized billing services for complex cases requiring expert lien management. Our team handles intricate billing scenarios with precision.',
+      description: '',
       features: [
         'Personal injury',
         'Workers compensation'
@@ -356,7 +390,7 @@ const DyadLanding: React.FC = () => {
       subtitle: 'Credentials alert, reporting & strategic insights',
       image: '/assets/images/ourservices6.jpg',
       icon: 'icon-chart',
-      description: 'Real-time analytics and insights that drive strategic decision-making. Stay informed with instant alerts and comprehensive reporting.',
+      description: '',
       features: [
         'Track claims real time',
         'CAQH management',
@@ -384,9 +418,18 @@ const DyadLanding: React.FC = () => {
     { name: 'Outpatient & Specialty Facilities', href: '/' }
   ];
 
+  const whatWeDoDropdownItems = [
+    { name: 'Practice Foundations', href: '#services', cardId: 0 },
+    { name: 'Technology Driven Capabilities', href: '#services', cardId: 1 },
+    { name: 'Pre & Post Encounter', href: '#services', cardId: 2 },
+    { name: 'Claims Management', href: '#services', cardId: 3 },
+    { name: 'Specialty Billing', href: '#services', cardId: 4 },
+    { name: 'Real Time Insights', href: '#services', cardId: 5 }
+  ];
+
   const navigationItems = [
     { name: 'About Us', href: '#about', hasDropdown: true },
-    { name: 'What We Do', href: '#services' },
+    { name: 'What We Do', href: '#services', hasDropdown: true },
     { name: 'Who We Serve', href: '#who-we-serve', hasDropdown: true }
   ];
 
@@ -401,6 +444,29 @@ const DyadLanding: React.FC = () => {
  const ITEMS = [...icons, ...icons, ...icons, ...icons];
 
   const [paused, setPaused] = useState(false);
+
+
+  const divRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = divRef.current;
+    if (!el) return;
+
+    const handleScroll = () => {
+      const rect = el.getBoundingClientRect();
+
+      if (rect.top <= 117) {
+        el.classList.add('reached-top');
+      } else {
+        el.classList.remove('reached-top');
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll(); // check on mount
+
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   return (
     <div className="dyad-landing-container" id="top">
@@ -424,27 +490,34 @@ const DyadLanding: React.FC = () => {
                 {navigationItems.map((item) => {
                   const isActive = activeMenu === item.name;
                   return (
-                    <li key={item.name} className="nav-item-container">
+                    <li key={item.name} className="nav-item-container"
+                      onMouseEnter={() => {
+                        handleMenuHover(item.name);
+                        if (item.hasDropdown) {
+                          if (item.name === 'About Us') {
+                            handleAboutDropdownHover(true);
+                          } else if (item.name === 'Who We Serve') {
+                            handleWhoWeServeDropdownHover(true);
+                          } else if (item.name === 'What We Do') {
+                            handleWhatWeDoDropdownHover(true);
+                          }
+                        }
+                      }}
+                      onMouseLeave={() => {
+                        handleMenuHover(null);
+                        if (item.hasDropdown) {
+                          if (item.name === 'About Us') {
+                            handleAboutDropdownHover(false);
+                          } else if (item.name === 'Who We Serve') {
+                            handleWhoWeServeDropdownHover(false);
+                          } else if (item.name === 'What We Do') {
+                            handleWhatWeDoDropdownHover(false);
+                          }
+                        }
+                      }}
+                    >
                       {item.hasDropdown ? (
-                        <div 
-                          className="dropdown-container"
-                          onMouseEnter={() => {
-                            handleMenuHover(item.name);
-                            if (item.name === 'About Us') {
-                              handleAboutDropdownHover(true);
-                            } else if (item.name === 'Who We Serve') {
-                              handleWhoWeServeDropdownHover(true);
-                            }
-                          }}
-                          onMouseLeave={() => {
-                            handleMenuHover(null);
-                            if (item.name === 'About Us') {
-                              handleAboutDropdownHover(false);
-                            } else if (item.name === 'Who We Serve') {
-                              handleWhoWeServeDropdownHover(false);
-                            }
-                          }}
-                        >
+                        <div className="dropdown-container">
                           <a 
                             style={{ 
                               color: hoveredMenu === item.name ? '#1D6DD8' : '#374151',
@@ -465,7 +538,8 @@ const DyadLanding: React.FC = () => {
                             <svg 
                               className={`dropdown-arrow ${
                                 (item.name === 'About Us' && isAboutDropdownOpen) || 
-                                (item.name === 'Who We Serve' && isWhoWeServeDropdownOpen) 
+                                (item.name === 'Who We Serve' && isWhoWeServeDropdownOpen) ||
+                                (item.name === 'What We Do' && isWhatWeDoDropdownOpen)
                                   ? 'open' : ''
                               }`}
                               width="16" 
@@ -485,7 +559,8 @@ const DyadLanding: React.FC = () => {
                           </a>
                           <div className={`dropdown-menu ${
                             (item.name === 'About Us' && isAboutDropdownOpen) || 
-                            (item.name === 'Who We Serve' && isWhoWeServeDropdownOpen) 
+                            (item.name === 'Who We Serve' && isWhoWeServeDropdownOpen) ||
+                            (item.name === 'What We Do' && isWhatWeDoDropdownOpen)
                               ? 'open' : ''
                           }`}>
                             {item.name === 'About Us' && aboutDropdownItems.map((dropdownItem) => (
@@ -502,7 +577,7 @@ const DyadLanding: React.FC = () => {
                                   padding: '0.75rem 1rem',
                                   color: '#374151',
                                   textDecoration: 'none',
-                                  fontSize: '0.95rem',
+                                  fontSize: '16px',
                                   fontFamily: 'Prompt, sans-serif',
                                   transition: 'all 0.3s ease',
                                   cursor: 'pointer'
@@ -524,7 +599,29 @@ const DyadLanding: React.FC = () => {
                                   padding: '0.75rem 1rem',
                                   color: '#374151',
                                   textDecoration: 'none',
-                                  fontSize: '0.95rem',
+                                  fontSize: '16px',
+                                  fontFamily: 'Prompt, sans-serif',
+                                  transition: 'all 0.3s ease',
+                                  cursor: 'pointer'
+                                }}
+                              >
+                                {dropdownItem.name}
+                              </a>
+                            ))}
+                            {item.name === 'What We Do' && whatWeDoDropdownItems.map((dropdownItem) => (
+                              <a
+                                key={dropdownItem.name}
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  handleWhatWeDoDropdownItemClick(dropdownItem);
+                                }}
+                                className="dropdown-item"
+                                style={{
+                                  display: 'block',
+                                  padding: '0.75rem 1rem',
+                                  color: '#374151',
+                                  textDecoration: 'none',
+                                  fontSize: '16px',
                                   fontFamily: 'Prompt, sans-serif',
                                   transition: 'all 0.3s ease',
                                   cursor: 'pointer'
@@ -541,8 +638,6 @@ const DyadLanding: React.FC = () => {
                             e.preventDefault();
                             handleNavClick(item.name, item.href);
                           }}
-                          onMouseEnter={() => handleMenuHover(item.name)}
-                          onMouseLeave={() => handleMenuHover(null)}
                           style={{ 
                             color: hoveredMenu === item.name ? '#1D6DD8' : '#374151',
                             cursor: 'pointer',
@@ -569,7 +664,7 @@ const DyadLanding: React.FC = () => {
             {/* Action Buttons */}
             <div className="dyad-actions">
               <button className="btn btn-primary" onClick={handleLogin}>
-                <span>Login / Register</span>
+                <span>Login/Register</span>
               </button>
               <button className="btn btn-primary" onClick={handleContactRequest}>
                 <span>Contact Us</span>
@@ -605,6 +700,8 @@ const DyadLanding: React.FC = () => {
                                 handleAboutDropdownHover(!isAboutDropdownOpen);
                               } else if (item.name === 'Who We Serve') {
                                 handleWhoWeServeDropdownHover(!isWhoWeServeDropdownOpen);
+                              } else if (item.name === 'What We Do') {
+                                handleWhatWeDoDropdownHover(!isWhatWeDoDropdownOpen);
                               }
                             }}
                             className={`mobile-nav-link ${isActive ? 'active' : ''}`}
@@ -620,7 +717,8 @@ const DyadLanding: React.FC = () => {
                             <svg 
                               className={`mobile-dropdown-arrow ${
                                 (item.name === 'About Us' && isAboutDropdownOpen) || 
-                                (item.name === 'Who We Serve' && isWhoWeServeDropdownOpen) 
+                                (item.name === 'Who We Serve' && isWhoWeServeDropdownOpen) ||
+                                (item.name === 'What We Do' && isWhatWeDoDropdownOpen)
                                   ? 'open' : ''
                               }`}
                               width="16" 
@@ -640,7 +738,8 @@ const DyadLanding: React.FC = () => {
                           </a>
                           <div className={`mobile-dropdown-menu ${
                             (item.name === 'About Us' && isAboutDropdownOpen) || 
-                            (item.name === 'Who We Serve' && isWhoWeServeDropdownOpen) 
+                            (item.name === 'Who We Serve' && isWhoWeServeDropdownOpen) ||
+                            (item.name === 'What We Do' && isWhatWeDoDropdownOpen)
                               ? 'open' : ''
                           }`}>
                             {item.name === 'About Us' && aboutDropdownItems.map((dropdownItem) => (
@@ -662,6 +761,19 @@ const DyadLanding: React.FC = () => {
                                 onClick={(e) => {
                                   e.preventDefault();
                                   handleWhoWeServeDropdownItemClick(dropdownItem.href);
+                                  setIsMobileMenuOpen(false);
+                                }}
+                                className="mobile-dropdown-item"
+                              >
+                                {dropdownItem.name}
+                              </a>
+                            ))}
+                            {item.name === 'What We Do' && whatWeDoDropdownItems.map((dropdownItem) => (
+                              <a
+                                key={dropdownItem.name}
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  handleWhatWeDoDropdownItemClick(dropdownItem);
                                   setIsMobileMenuOpen(false);
                                 }}
                                 className="mobile-dropdown-item"
@@ -698,7 +810,7 @@ const DyadLanding: React.FC = () => {
               <span>Contact Us</span>
             </button>
             <button className="btn btn-primary btn-full" onClick={handleLogin}>
-              <span>Login</span>
+              <span>Login/Register</span>
             </button>
           </div>
         </div>
@@ -713,6 +825,7 @@ const DyadLanding: React.FC = () => {
             muted
             loop
             playsInline
+            controls={false}
           >
             <source src="/videos/dyad-bannervideo.mp4" type="video/mp4" />
             Your browser does not support the video tag.
@@ -741,9 +854,19 @@ const DyadLanding: React.FC = () => {
           width: 100%;
           overflow: hidden;
          background: #f9f9f9;
-         border-bottom: 1px solid #8080800f;
+         border-bottom: 1px solid #ebe8e8;
+         position: sticky;
+         top :93px;
+         z-index:999;
+         transition: height 0.6s ease;
         }
 
+        .scroller.reached-top .icon-item img{
+        height:70px;
+        }
+         .scroller.reached-top .track{
+         padding: 10px 0;
+         }
         .track {
           display: flex;
           gap: 7rem;
@@ -775,7 +898,7 @@ const DyadLanding: React.FC = () => {
           max-width: 160px;
           object-fit: contain;
           filter: grayscale(1);
-          transition: filter 0.3s ease;
+          transition: height 0.6s ease;
         }
 
         .icon-item:hover img {
@@ -797,14 +920,19 @@ const DyadLanding: React.FC = () => {
         @media (max-width: 480px) {
           .track { gap: 4rem; }
           .icon-item img { height: 75px; }
+           .scroller {top: 76px;}
+            .scroller.reached-top .icon-item img{
+        height:50px;
+        }
         }
       `}</style>
 
       <div
-        className="scroller"
+        className="scroller" id="scroller"
+        ref={divRef}
         onMouseEnter={() => setPaused(true)}
         onMouseLeave={() => setPaused(false)}
-      >
+      > 
         <div className={`track ${paused ? "paused" : ""}`}>
           {ITEMS.map((icon, i) => (
             <div className="icon-item" key={i}>
@@ -843,16 +971,18 @@ const DyadLanding: React.FC = () => {
                         <div className="about-card-header">
                           <div className="about-card-title-subtitle">
                             <h3 className="about-card-title">{item.title}</h3>
-                            <p className="about-card-subtitle">{item.subtitle}</p>
+                           
                           </div>
-                          <div className="about-card-arrow">
-                            <div className="arrow-circle">
-                              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M9 18L15 12L9 6" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                              </svg>
-                            </div>
-                          </div>
+                          
                         </div>
+                        <div className="aboutcard-subtitle-holder">
+                         <div className="aboutcard-subtitle">  <p className="about-card-subtitle">{item.subtitle}</p>
+                         </div>  <div className="about-card-arrow">
+                            <div className="arrow-circle">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="lucide lucide-chevron-right-circle w-6 h-6" style={{color: '#0066cc'}}><circle cx="12" cy="12" r="10"></circle><path d="m10 8 4 4-4 4"></path></svg>
+                              </div>
+                          </div>
+                           </div>
                       </div>
                     </div>
                     <p className="about-card-paragraph">{item.paragraph}</p>
@@ -883,10 +1013,7 @@ const DyadLanding: React.FC = () => {
                         e.stopPropagation();
                         toggleMobileCard(card.id);
                       }}>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <path d="M9 18L15 12L9 6" stroke="rgb(29 109 216)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                        </svg>
-                      </div>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="lucide lucide-chevron-right-circle w-6 h-6" style={{color: '#0066cc'}}><circle cx="12" cy="12" r="10"></circle><path d="m10 8 4 4-4 4"></path></svg>        </div>
                     </div>
                   </div>
                   <div className={`mobile-card-description ${expandedMobileCard === card.id ? 'expanded' : ''}`}>
@@ -955,16 +1082,18 @@ const DyadLanding: React.FC = () => {
                   <div className="service-card-header">
                     <div className="service-card-title-subtitle">
                       <h3 className="service-card-title">{service.title}</h3>
-                      <p className="service-card-subtitle">{service.subtitle}</p>
+                     
                     </div>
+                   
+                  </div>
+                   <div className="servicecard-subtitle-holder">
+                      <div className="servicecard-subtitle"> <p className="service-card-subtitle">{service.subtitle}</p></div>
                     <div className="service-card-arrow">
                       <div className="arrow-circle">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <path d="M9 18L15 12L9 6" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                        </svg>
-                      </div>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="lucide lucide-chevron-right-circle w-6 h-6" style={{color: '#0066cc'}}><circle cx="12" cy="12" r="10"></circle><path d="m10 8 4 4-4 4"></path></svg>
+                          </div>
                     </div>
-                  </div>
+                    </div>
                                   </div>
                 <div className="service-card-description-overlay">
                   <div className="description-content">
@@ -1009,10 +1138,8 @@ const DyadLanding: React.FC = () => {
                         e.stopPropagation();
                         toggleMobileCardService(card.id);
                       }}>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <path d="M9 18L15 12L9 6" stroke="rgb(29 109 216)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                        </svg>
-                      </div>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="lucide lucide-chevron-right-circle w-6 h-6" style={{color: '#0066cc'}}><circle cx="12" cy="12" r="10"></circle><path d="m10 8 4 4-4 4"></path></svg>
+                       </div>
                     </div>
                   </div>
                   <div className={`mobile-card-description ${expandedserviceMobileCard === card.id ? 'expanded' : ''}`}>
@@ -1078,6 +1205,7 @@ const DyadLanding: React.FC = () => {
                 <li><a href="#surgical-specialties">Surgical & Procedural Specialties</a></li>
                 <li><a href="#interventional-care">Interventional & Diagnostic Care</a></li>
                 <li><a href="#perioperative-services">Perioperative & Supportive Services</a></li>
+                <li><a href="#outpatient-facilities">Outpatient & Specialty Facilities</a></li>
               </ul>
             </div>
 
@@ -1091,7 +1219,7 @@ const DyadLanding: React.FC = () => {
                 </div>
                 <div className="contact-item">
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="lucide lucide-map-pin w-6 h-6 mr-3"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-                  <span>2573 Pacific Coast Hwy, Ste A277 Torrance, CA 90505</span>
+                  <span>2573 Pacific Coast Hwy, Suite A277<br />Torrance, CA 90505</span>
                 </div>
               </div>
             </div>
@@ -1132,6 +1260,45 @@ const DyadLanding: React.FC = () => {
             <div className="about-popup-body">
               <div className="about-popup-description">
                 <p>{selectedAboutCard.paragraph}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Services Popup */}
+      {selectedServiceCard && (
+        <div className="about-popup-overlay" onClick={closeServicePopup}>
+          <div className="about-popup-content" onClick={(e) => e.stopPropagation()}>
+            <div className="about-popup-header">
+              <div className="about-popup-left">
+                <h2 className="about-popup-title">{selectedServiceCard.title}</h2>
+                <p className="about-popup-subtitle">{selectedServiceCard.subtitle}</p>
+              </div>
+              <button className="about-popup-close" onClick={closeServicePopup}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+            </div>
+            <div className="about-popup-body">
+              <div className="about-popup-description">
+                <p>{selectedServiceCard.description}</p>
+              </div>
+              <div className="about-popup-features">
+                <ul>
+                  {selectedServiceCard.features.map((feature, index) => (
+                    <li key={index} className="feature-item">
+                      <div> <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 622 622" width="17" height="17" aria-hidden="true" fill="none">
+                        <g transform="translate(0,28)">
+                          <path d="M 430.134 68.771 A 260 260 0 1 0 521.365 183.135" stroke="#1D6DD8" stroke-width="45" stroke-linecap="butt"/>
+                          <polyline points="196 265 288 382 552 40" stroke="#00A7D8" stroke-width="45" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                        </g>
+                      </svg></div>
+                     <div>{feature}</div>
+                    </li>
+                  ))}
+                </ul>
               </div>
             </div>
           </div>

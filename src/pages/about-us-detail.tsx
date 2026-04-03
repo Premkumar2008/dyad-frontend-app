@@ -342,7 +342,7 @@ const AboutUsDetail: React.FC = () => {
             {/* Action Buttons */}
             <div className="dyad-actions">
               <button className="btn btn-primary" onClick={handleLogin}>
-                <span>Login / Register</span>
+                <span>Login/Register</span>
               </button>
               <button className="btn btn-primary" onClick={handleContactRequest}>
                 <span>Contact Us</span>
@@ -559,6 +559,7 @@ const AboutUsDetail: React.FC = () => {
                 <li><a href="#surgical-specialties">Surgical & Procedural Specialties</a></li>
                 <li><a href="#interventional-care">Interventional & Diagnostic Care</a></li>
                 <li><a href="#perioperative-services">Perioperative & Supportive Services</a></li>
+                <li><a href="#outpatient-facilities">Outpatient & Specialty Facilities</a></li>
               </ul>
             </div>
 
@@ -572,7 +573,7 @@ const AboutUsDetail: React.FC = () => {
                 </div>
                 <div className="contact-item">
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="lucide lucide-map-pin w-6 h-6 mr-3"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-                  <span>2573 Pacific Coast Hwy, Ste A277 Torrance, CA 90505</span>
+                  <span>2573 Pacific Coast Hwy, Suite A277 Torrance, CA 90505</span>
                 </div>
               </div>
             </div>

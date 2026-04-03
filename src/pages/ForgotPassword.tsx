@@ -112,7 +112,7 @@ const ForgotPassword: React.FC = () => {
             <div className="mx-auto h-12 w-12 bg-primary-100 rounded-full flex items-center justify-center">
               <Mail className="h-6 w-6 text-primary-600" />
             </div>
-            <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
+            <h2 className="mt-2 text-3xl font-extrabold text-gray-900">
               Forgot Your Password?
             </h2>
             <p className="mt-2 text-sm text-gray-600">

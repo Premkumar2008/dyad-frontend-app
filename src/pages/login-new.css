@@ -1,11 +1,53 @@
 /* New Login Page Layout */
 .login-page-container {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: row;
-  background: url('/assets/images/loginbanner1.jpeg') center/cover no-repeat;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  
+  
+}
+.login-page-holder{
+  box-shadow: 1px 2px 5px #8080807a;
+    overflow: hidden;
+    background: white;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    max-width: 68rem;
+    width: 100%;
+    padding: 0rem;
+    display: flex;
+    margin: 0 auto;
+    /* border: 1px solid #80808024; */
+    border-radius: 0.75rem;
 }
 
+.form-container-login{
+  padding: 0.3rem 2rem;
+  max-height: 405px;
+  min-height: 380px;
+  overflow: auto;
+  margin-right:1rem
+}
+
+/* Custom Scrollbar Styling */
+.form-container-login::-webkit-scrollbar {
+  width: 6px;
+}
+
+.form-container-login::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.form-container-login::-webkit-scrollbar-thumb {
+  background: #0063c6;
+  border-radius: 3px;
+}
+
+.form-container-login::-webkit-scrollbar-thumb:hover {
+  background: #0052a3;
+}
 /* Register Page Layout */
 .register-page-container {
   min-height: 100vh;
@@ -20,11 +62,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 2rem;
-  background:white;
-  max-width: 50%;
-  height: 100vh;
-  overflow-y: auto;
+  width: 50%;
+  padding:1.5rem 0;
+  border-right: 1px solid #e5e5e5;
+  min-height: 650px;
+  flex-direction: column;
 }
 .login-form-section.register-box{
 align-items: flex-start !important;
@@ -32,8 +74,6 @@ align-items: flex-start !important;
 
 .login-form-content {
   width: 100%;
-  max-width: 450px;
-  padding-top: 4rem;
   background: white !important;
 }
 
@@ -42,18 +82,21 @@ align-items: flex-start !important;
   flex: 1;
   position: relative;
   overflow: hidden;
-  background: #1a1a1a;
-  max-width: 50%;
-}
-
-.carousel-container {
-  position: relative;
-  width: 100%;
-  height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
+  width: 50%;
+}
+
+.carousel-container {
+ border-radius: 0.75rem;
+    position: relative;
+    width: 83%;
+    min-height: 490px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
 }
 
 /* Carousel Images */
@@ -185,13 +228,14 @@ align-items: flex-start !important;
 .login-form-content .logo-image {
   height: 60px;
   width: auto;
-  margin-bottom: 1rem;
+  
 }
 
 .login-form-content h3 {
   color: #1a202c;
   font-family: 'Prompt', sans-serif;
   font-weight: 600;
+  padding-left: 2rem;
 }
 
 .login-form-content p {
@@ -207,8 +251,46 @@ align-items: flex-start !important;
   font-size: 1rem;
   font-family: 'Prompt', sans-serif;
   transition: all 0.3s ease;
-  background: #f8fafc;
+  background: white;
   width: 100%;
+}
+
+/* Form Row Layout for Register Page */
+.form-row {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  width: 100%;
+}
+
+.form-field {
+  flex: 1;
+}
+
+.form-field.full-width {
+  flex: 1;
+}
+
+/* Responsive Design for Register Form */
+@media (max-width: 768px) {
+  .form-row {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  .form-field {
+    flex: 1;
+  }
+  
+  .form-field.full-width {
+    flex: 1;
+  }
+}
+
+@media (max-width: 480px) {
+  .form-row {
+    gap: 0.5rem;
+  }
 }
 
 .input-field:focus {
@@ -228,12 +310,13 @@ align-items: flex-start !important;
   color: white;
   padding: 0.875rem 1.5rem;
   border: none;
-  border-radius: 2px;
-  font-size: 1rem;
+  border-radius: 0.35rem;
+  font-size: 1.05rem;
   font-weight: 600;
   font-family: 'Prompt', sans-serif;
   cursor: pointer;
   transition: all 0.3s ease;
+  min-width: 160px;
 }
 
 .btn-primary:hover:not(:disabled) {
@@ -252,11 +335,16 @@ align-items: flex-start !important;
 /* Responsive Design */
 @media (max-width: 1024px) {
   .login-form-section {
-    max-width: 60%;
+    max-width: 50%;;
+    padding: 2rem 0;
   }
   
+ .login-page-holder{
+  width : 90%;
+ }
+  
   .login-carousel-section {
-    max-width: 40%;
+    max-width: 50%;
   }
   
   .carousel-text h2 {
@@ -271,26 +359,34 @@ align-items: flex-start !important;
 @media (max-width: 768px) {
   .login-page-container {
     flex-direction: column;
+    padding: 1rem;
   }
+   .login-page-holder{
+  width : 100%;
+      flex-direction: column;
+ }
   
   .login-form-section {
     max-width: 100%;
-    height: 100vh;
-    padding: 1.5rem;
-    overflow-y: auto;
-  }
-  
-  .login-form-content {
-    padding-top: 2rem;
+    height: auto;
+    padding: 0rem;
+    width: 100%;
   }
   
   .login-carousel-section {
     max-width: 100%;
-    height: 30vh;
+    width: 100%;
   }
   
-  .carousel-container {
-    height: 30vh;
+.carousel-container{
+  min-height: 300px;
+}
+.form-container-login{
+  max-height: max-content;
+}
+  
+  .login-form-content {
+    padding: 2rem 0;
   }
   
   .carousel-content {
@@ -332,6 +428,20 @@ align-items: flex-start !important;
 @media (max-width: 480px) {
   .login-form-section {
     padding: 1rem;
+  }
+  .login-form-content h3{
+    padding-left: 0.5rem;
+  }
+  
+  .form-container-login{
+    padding: 0.5rem;
+  }
+  .carousel-container {
+    min-height: 250px;
+  }
+  
+  .login-page-container {
+    padding: 0.5rem;
   }
   
   .login-form-content {
@@ -389,6 +499,33 @@ align-items: flex-start !important;
 
 .carousel-slide.active {
   animation: slideInRight 0.6s ease-out;
+}
+
+/* Password field icon styling */
+.input-field-pr-10 {
+  padding-right: 3rem !important;
+}
+
+.password-toggle-button {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  padding-right: 0.75rem;
+  display: flex;
+  align-items: center;
+}
+
+.password-toggle-button img {
+ width: 1.2rem;
+  height: 0.7rem !important;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.password-toggle-button img:hover {
+  opacity: 0.7;
+ 
 }
 
 /* Additional form styling */

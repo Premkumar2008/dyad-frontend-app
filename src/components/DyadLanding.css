@@ -8,6 +8,11 @@ html {
   color :red !important
 }
 
+video::-webkit-media-controls-start-playback-button {
+  display: none !important;
+  -webkit-appearance: none;
+}
+
 
 
     
@@ -102,6 +107,22 @@ div.stickytrustlogos.active .logo-item img{
   text-align: justify !important;
 }
 
+.about-popup-features .feature-item{
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.servicecard-subtitle-holder{
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+.servicecard-subtitle{
+  width: 85%;
+}
+
 /* Mobile styles for active sticky div */
 @media (max-width: 768px) {
   div.stickytrustlogos.active {
@@ -142,7 +163,7 @@ header.dyad-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1rem 1rem;
+  padding: 1rem;
   width: 80%;
   max-width: 1440px;
   margin: 0 auto;
@@ -241,36 +262,7 @@ header.dyad-header {
   margin-left: auto;
 }
 
-.arrow-circle {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  
-  border: 2px solid rgb(29 109 216);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  cursor: pointer;
-}
 
-.arrow-circle:hover {
-  background: rgba(29, 109, 216, 0.2);
-  border-color: rgba(29, 109, 216, 0.5);
-  transform: scale(1.1);
-}
-
-.arrow-circle:active {
-  border-color: #1D6DD8;
-  background: rgba(29, 109, 216, 0.3);
-  transform: scale(0.95);
-}
-
-.arrow-circle svg {
-  width: 16px;
-  height: 16px;
-  transition: transform 0.3s ease;
-}
 
 /* Red text styling for ONC Integration FHIR content only */
 .red-text {
@@ -281,9 +273,6 @@ header.dyad-header {
   stroke: rgb(29 109 216);
 }
 
-.arrow-circle:hover svg {
-  transform: translateX(2px);
-}
 
  .desktop-about-us{
     display:block
@@ -330,20 +319,9 @@ header.dyad-header {
   border-bottom: 3px solid #00a7d8;
 }
 
-.dropdown-container a{
-  font-size: 18px !important;
-}
 
-.dropdown-arrow {
-  transition: transform 0.3s ease;
-}
 
-.dropdown-arrow.open {
-  transform: translateY(2px);
-}
-.dropdown-menu.open a{
-font-size: 17px !important;
-}
+
 .dropdown-menu {
   position: absolute;
   top: 100%;
@@ -355,44 +333,33 @@ font-size: 17px !important;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
   opacity: 0;
   visibility: hidden;
-  transform: translateY(-10px);
-  transition: all 0.3s ease;
   z-index: 1000;
-  margin-top: 0.5rem;
+  margin-top: 12px;
 }
 
 .dropdown-menu.open {
   opacity: 1;
   visibility: visible;
-  transform: translateY(0);
 }
 
 /* Ensure dropdown stays open when hovering over it */
 .dropdown-container:hover .dropdown-menu {
   opacity: 1;
   visibility: visible;
-  transform: translateY(0);
 }
 
-.dropdown-container:hover .dropdown-arrow {
-  transform: translateY(2px);
-}
 
 .dropdown-item {
   border-bottom: none;
-  transition: all 0.3s ease;
   color: rgb(55 65 81 / var(--tw-text-opacity));
   border-radius: 2px;
   padding: 0.5rem 1rem;
 }
 
 .dropdown-item:hover {
-  color: #1D6DD8 !important;
-  padding-left: 1.5rem;
+  color: #00a3e0 !important;
   background: transparent !important;
   border-radius: 2px !important;
-  text-decoration: none !important;
-  text-underline-offset: 4px;
 }
 
 .nav-list li a:hover {
@@ -417,7 +384,7 @@ font-size: 17px !important;
 }
 
 .logo-image {
-  width: 200px;
+ height:60px;
   object-fit: contain;
 }
 
@@ -507,28 +474,27 @@ header.dyad-header .dyad-nav-actions .dyad-nav .nav-list .dyad-nav .nav-link.act
 
 /* Combined right side navigation and actions */
 .dyad-nav-actions {
-  padding-top:33px;
+  height: 65px;
+  padding-top:28px;
   display: flex;
   align-items: center;
   gap: 1rem;
 }
 
 .dyad-nav-actions .nav-list {
-  gap: 1.5rem;
+  gap: 1rem !important;
+ 
 }
 
 .dropdown-container a{
  padding : 0.5rem 1rem 0rem 0.5rem !important;
 }
 .dropdown-menu.open a{
- padding : 0.5rem 1rem !important;
+ padding : 0.75rem 1rem !important;
 }
 
 .dropdown-menu a{
- padding : 0.5rem 1rem !important;
-}
-.nav-item-container a{
-padding : 0.5rem 1rem 0rem 0.5rem !important;
+ padding : 0.75rem 1rem !important;
 }
 
 /* Button Styles - Match Contact Us Page */
@@ -552,7 +518,7 @@ padding : 0.5rem 1rem 0rem 0.5rem !important;
   background: #0066cc;
   color: white;
   border: none;
-  padding: 0.5rem 1rem !important;
+  padding: 0.7rem 1rem !important;
   border-radius: 2px !important;
   font-weight: 500 !important;
   font-family: 'Prompt', sans-serif;
@@ -736,72 +702,37 @@ padding : 0.5rem 1rem 0rem 0.5rem !important;
 }
 
 .mobile-dropdown-arrow {
-  transition: transform 0.3s ease;
   margin-left: 0.5rem;
 }
 
-.mobile-dropdown-arrow.open {
-  transform: rotate(180deg);
-}
 
 .mobile-dropdown-menu {
   max-height: 0;
   overflow: hidden;
-  transition: max-height 0.4s ease, opacity 0.3s ease, transform 0.3s ease;
-  background: rgba(248, 250, 252, 0.5);
   opacity: 0;
-  transform: translateY(-10px);
+  visibility: hidden;
+  background: rgba(248, 250, 252, 0.5);
 }
 
 .mobile-dropdown-menu.open {
   max-height: none;
   height: auto;
   opacity: 1;
-  transform: translateY(0);
+  visibility: visible;
 }
 
 .mobile-dropdown-item {
   display: block;
-  padding: 0.75rem 2rem 0.75rem 3rem;
+  padding: 0.75rem 1rem 0.75rem 2rem;
   text-decoration: none;
   color: #374151;
   font-weight: 400;
   font-size: 1rem;
   font-family: 'Prompt', sans-serif;
-  transition: all 0.3s ease;
   cursor: pointer;
   border-bottom: 1px solid rgba(243, 244, 246, 0.5);
-  opacity: 0;
-  transform: translateX(-20px);
-  animation: slideInLeft 0.3s ease forwards;
 }
 
-.mobile-dropdown-menu.open .mobile-dropdown-item:nth-child(1) {
-  animation-delay: 0.1s;
-}
-
-.mobile-dropdown-menu.open .mobile-dropdown-item:nth-child(2) {
-  animation-delay: 0.15s;
-}
-
-.mobile-dropdown-menu.open .mobile-dropdown-item:nth-child(3) {
-  animation-delay: 0.2s;
-}
-
-.mobile-dropdown-menu.open .mobile-dropdown-item:nth-child(4) {
-  animation-delay: 0.25s;
-}
-
-@keyframes slideInLeft {
-  from {
-    opacity: 0;
-    transform: translateX(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
 
 .mobile-dropdown-item:hover {
   color: #1D6DD8;
@@ -846,6 +777,9 @@ padding : 0.5rem 1rem 0rem 0.5rem !important;
   height: 100%;
   object-fit: cover;
   z-index: 1;
+  /* Prevent mobile play button */
+  -webkit-appearance: none;
+  appearance: none;
 }
 
 .video-overlay {
@@ -887,8 +821,8 @@ padding : 0.5rem 1rem 0rem 0.5rem !important;
 }
 
 .video-title {
-  font-size: 52px;
-  max-width: 900px;
+  font-size: 62px;
+  transition: transform 0.3s ease;
   font-weight: 600;
   color: white;
   margin: 0;
@@ -941,7 +875,11 @@ padding : 0.5rem 1rem 0rem 0.5rem !important;
 }
 
 .video-subtitle:hover {
-  transform: scale(1.05);
+  transform: scale(1.1);
+  cursor: default;
+}
+.video-title:hover {
+  transform: scale(1.1);
   cursor: default;
 }
 
@@ -1015,7 +953,7 @@ padding : 0.5rem 1rem 0rem 0.5rem !important;
     width: 100% !important;
 }
  .video-title {
-    font-size: 25px !important;
+    font-size: 22px !important;
   }
   
   .video-subtitle {
@@ -1346,7 +1284,7 @@ padding : 0.5rem 1rem 0rem 0.5rem !important;
   }
   
   .dyad-logo img {
-    height: 45px !important;
+    height: 55px !important;
     width: auto !important;
   }
 
@@ -1474,7 +1412,17 @@ padding : 0.5rem 0.5rem 0.rem 0rem !important
   .dyad-landing-container {
     min-height: 100vh;
   }
+.video-subtitle{
+width: 94%;
+}
+  .mobile-actions
 
+ {
+    padding: 1rem 1rem !important;
+ }
+ .mobile-nav-link{
+   padding: 1rem 1rem !important;
+ }
   .mobile-cards-container.services{
     padding:0rem !important
   }
@@ -1494,7 +1442,7 @@ padding : 0.5rem 0.5rem 0.rem 0rem !important
   }
   
   .dyad-header-content {
-    padding: 0.75rem 1rem;
+    padding: 0.3rem 1rem;
     width: 100%;
     max-width: none;
     margin: 0;
@@ -1507,6 +1455,11 @@ padding : 0.5rem 0.5rem 0.rem 0rem !important
   .mobile-menu-toggle {
     right: 0.75rem;
   }
+  .dyad-nav-actions
+
+ {
+    height: 65px !important;
+ }
 
   .logo-placeholder {
     font-size: 1.25rem;
@@ -2169,8 +2122,8 @@ padding : 0.5rem 0.5rem 0.rem 0rem !important
 .about-popup-content {
   background: white;
   border-radius: 1rem;
-  max-width: 800px;
-  width: 100%;
+  max-width: 1000px;
+  width: max-content;
   max-height: 90vh;
   overflow-y: auto;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
@@ -2206,7 +2159,7 @@ padding : 0.5rem 0.5rem 0.rem 0rem !important
   padding: 0.5rem;
   border-radius: 0.5rem;
   cursor: pointer;
-  color: #6b7280;
+  color: #1D6DD8;
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
@@ -2276,15 +2229,7 @@ padding : 0.5rem 0.5rem 0.rem 0rem !important
     padding: 1.5rem;
   }
   
-  .arrow-circle {
-    width: 32px;
-    height: 32px;
-  }
-  
-  .arrow-circle svg {
-    width: 16px;
-    height: 16px;
-  }
+
 }
 
 /* .about-card:hover .about-card-paragraph {
@@ -2926,6 +2871,7 @@ padding : 0.5rem 0.5rem 0.rem 0rem !important
 }
 
 .service-card {
+  padding-bottom: 4px;
   background: white;
   border-radius: 1rem;
   overflow: hidden;
@@ -2937,6 +2883,15 @@ padding : 0.5rem 0.5rem 0.rem 0rem !important
   position: relative;
   cursor: pointer;
   
+}
+
+.aboutcard-subtitle-holder{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.aboutcard-subtitle{
+  width: 85%;
 }
 
 .service-card:hover {
@@ -3586,8 +3541,8 @@ padding : 0.5rem 0.5rem 0.rem 0rem !important
 
 .footer-content {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr 1fr;
-  gap: 3rem;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap: 2rem;
   margin-bottom: 3rem;
 }
 
@@ -3601,11 +3556,12 @@ padding : 0.5rem 0.5rem 0.rem 0rem !important
 }
 
 .footer-logo img {
-  height: 40px;
+  height: 60px;
   width: auto;
 }
 
 .footer-description {
+  width:90%;
   font-size: 15px;
   line-height: 1.6;
   color: #c8c9cb;
@@ -3650,6 +3606,7 @@ padding : 0.5rem 0.5rem 0.rem 0rem !important
 }
 
 .contact-item {
+  min-width: 268px;
   display: flex;
   align-items: flex-start;
   gap: 0rem;
@@ -4104,42 +4061,9 @@ padding : 0.5rem 0.5rem 0.rem 0rem !important
 
 .mobile-card-arrow {
   flex-shrink: 0;
-  margin-left: auto;
+  margin-left: 0;
 }
 
-.mobile-arrow-circle {
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  background: transparent;
-  border: 2px solid rgb(29 109 216);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s ease;
-  cursor: pointer;
-}
-
-.mobile-arrow-circle:hover {
-  background: rgba(29, 109, 216, 0.2);
-  border-color: rgba(29, 109, 216, 0.5);
-  transform: scale(1.1);
-}
-
-.mobile-arrow-circle svg {
-  width: 14px;
-  height: 14px;
-  transition: transform 0.3s ease;
-}
-
-.mobile-arrow-circle:hover svg {
-  transform: translateX(2px);
-}
-
-/* Arrow rotation when card is expanded */
-.mobile-card.expanded .mobile-arrow-circle svg {
-  transform: rotate(90deg);
-}
 
 .mobile-card-title {
   font-size: 1.1rem;

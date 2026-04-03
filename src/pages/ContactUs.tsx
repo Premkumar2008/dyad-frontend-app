@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef  } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
@@ -6,9 +6,10 @@ import * as yup from 'yup';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import './ContactUs.css';
+import ReCAPTCHA from 'react-google-recaptcha';
 
 // Validation schema
-const contactSchema = yup.object().shape({
+const contactSchema = yup.object({
   name: yup.string().required('Name is required'),
   phoneNumber: yup.string()
     .matches(/^[0-9]{10}$/, 'Phone number must be exactly 10 digits')
@@ -22,16 +23,6 @@ const contactSchema = yup.object().shape({
   recaptcha: yup.boolean().oneOf([true], 'Please verify you are not a robot').required()
 });
 
-interface ContactFormData {
-  name: string;
-  phoneNumber: string;
-  email: string;
-  organization: string;
-  message: string;
-  scheduledTime: string;
-  recaptcha: boolean;
-}
-
 const ContactUs: React.FC = () => {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -41,11 +32,33 @@ const ContactUs: React.FC = () => {
   const [hoveredMenu, setHoveredMenu] = useState<string | null>(null);
   const [isAboutDropdownOpen, setIsAboutDropdownOpen] = useState(false);
   const [isWhoWeServeDropdownOpen, setIsWhoWeServeDropdownOpen] = useState(false);
+  const [isWhatWeDoDropdownOpen, setIsWhatWeDoDropdownOpen] = useState(false);
+ const captchaRef = useRef(null);
 
+ const handleRecaptchaChange = (token: string | null) => {
+    console.log('reCAPTCHA changed:', token);
+    if (token) {
+      setValue('recaptcha', true);
+      setRecaptchaVerified(true);
+    } else {
+      setValue('recaptcha', false);
+      setRecaptchaVerified(false);
+    }
+  };
+
+
+ const whatWeDoDropdownItems = [
+    { name: 'Practice Foundations', href: '#services', cardId: 0 },
+    { name: 'Technology Driven Capabilities', href: '#services', cardId: 1 },
+    { name: 'Pre & Post Encounter', href: '#services', cardId: 2 },
+    { name: 'Claims Management', href: '#services', cardId: 3 },
+    { name: 'Specialty Billing', href: '#services', cardId: 4 },
+    { name: 'Real Time Insights', href: '#services', cardId: 5 }
+  ];
 
  const contactNavigationItems = [
     { name: 'About Us', href: '#about', hasDropdown: true },
-    { name: 'What We Do', href: '#services' },
+    { name: 'What We Do', href: '#services', hasDropdown: true },
     { name: 'Who We Serve', href: '#who-we-serve', hasDropdown: true }
   ];
 
@@ -86,9 +99,19 @@ const ContactUs: React.FC = () => {
     setIsWhoWeServeDropdownOpen(isOpen);
   };
 
+  const handleWhatWeDoDropdownHover = (isOpen: boolean) => {
+    setIsWhatWeDoDropdownOpen(isOpen);
+  };
+
   const handleAboutDropdownItemClick = (href: string) => {
     navigate('/', { state: { scrollTo: href } });
     setIsAboutDropdownOpen(false);
+    setIsMobileMenuOpen(false);
+  };
+
+  const handleWhatWeDoDropdownItemClick = (dropdownItem: any) => {
+    navigate('/', { state: { scrollTo: dropdownItem.href, cardId: dropdownItem.cardId } });
+    setIsWhatWeDoDropdownOpen(false);
     setIsMobileMenuOpen(false);
   };
 
@@ -120,22 +143,38 @@ const ContactUs: React.FC = () => {
     formState: { errors },
     setValue,
     trigger
-  } = useForm<ContactFormData>({
+  } = useForm({
     resolver: yupResolver(contactSchema),
     mode: 'onChange'
   });
 
-  const onSubmit = async (data: ContactFormData) => {
+  const onSubmit = async (data: any) => {
+    console.log('Form submitted with data:', data);
     setIsSubmitting(true);
+
+    const token = captchaRef.current?.getValue();
+    console.log('reCAPTCHA token:', token);
+
+    if (!token) {
+      alert('Please complete the CAPTCHA.');
+      setIsSubmitting(false);
+      return;
+    }
     
     try {
       const payload = {
         ...data,
-        scheduledTime: new Date().toISOString()
+        scheduledTime: data.scheduledTime || new Date().toISOString()
       };
+      
+      console.log('API payload:', payload);
 
       const apiUrl = import.meta.env.VITE_API_URL || '';
+      console.log('API URL:', apiUrl);
+      console.log('Full endpoint:', `${apiUrl}/api/contact-requests`);
+      
       const response = await axios.post(`${apiUrl}/api/contact-requests`, payload);
+      console.log('API response:', response);
       
       if (response.data.success) {
         toast.success('Your request has been submitted successfully!');
@@ -170,12 +209,6 @@ const ContactUs: React.FC = () => {
     }
   };
 
-  const handleRecaptchaVerify = () => {
-    // Simulate reCAPTCHA verification
-    setRecaptchaVerified(true);
-    setValue('recaptcha', true);
-    trigger('recaptcha');
-  };
 
   // Get minimum date as today for datetime input
   const getMinDateTime = () => {
@@ -186,8 +219,12 @@ const ContactUs: React.FC = () => {
 
   return (
     <div className="contact-us-container">
+      {/* Contact Banner */}
+      
       {/* Header */}
       <header className="dyad-header">
+       
+         
         <div className="dyad-header-content">
           {/* Left - Logo */}
           <div className="dyad-logo" onClick={handleLogoClick} style={{ cursor: 'pointer' }}>
@@ -206,27 +243,34 @@ const ContactUs: React.FC = () => {
                 {contactNavigationItems.map((item) => {
                   const isActive = activeMenu === item.name;
                   return (
-                    <li key={item.name} className="nav-item-container">
+                    <li key={item.name} className="nav-item-container"
+                      onMouseEnter={() => {
+                        handleMenuHover(item.name);
+                        if (item.hasDropdown) {
+                          if (item.name === 'About Us') {
+                            handleAboutDropdownHover(true);
+                          } else if (item.name === 'Who We Serve') {
+                            handleWhoWeServeDropdownHover(true);
+                          } else if (item.name === 'What We Do') {
+                            handleWhatWeDoDropdownHover(true);
+                          }
+                        }
+                      }}
+                      onMouseLeave={() => {
+                        handleMenuHover(null);
+                        if (item.hasDropdown) {
+                          if (item.name === 'About Us') {
+                            handleAboutDropdownHover(false);
+                          } else if (item.name === 'Who We Serve') {
+                            handleWhoWeServeDropdownHover(false);
+                          } else if (item.name === 'What We Do') {
+                            handleWhatWeDoDropdownHover(false);
+                          }
+                        }
+                      }}
+                    >
                       {item.hasDropdown ? (
-                        <div 
-                          className="dropdown-container"
-                          onMouseEnter={() => {
-                            handleMenuHover(item.name);
-                            if (item.name === 'About Us') {
-                              handleAboutDropdownHover(true);
-                            } else if (item.name === 'Who We Serve') {
-                              handleWhoWeServeDropdownHover(true);
-                            }
-                          }}
-                          onMouseLeave={() => {
-                            handleMenuHover(null);
-                            if (item.name === 'About Us') {
-                              handleAboutDropdownHover(false);
-                            } else if (item.name === 'Who We Serve') {
-                              handleWhoWeServeDropdownHover(false);
-                            }
-                          }}
-                        >
+                        <div className="dropdown-container">
                           <a 
                             style={{ 
                               color: hoveredMenu === item.name ? '#1D6DD8' : '#374151',
@@ -239,7 +283,8 @@ const ContactUs: React.FC = () => {
                               borderRadius: '6px',
                               transition: 'all 0.3s ease',
                               display: 'flex',
-                              alignItems: 'center'
+                              alignItems: 'center',
+                              gap: '0.5rem'
                             }}
                           >
                             {item.name}
@@ -261,7 +306,8 @@ const ContactUs: React.FC = () => {
                           </a>
                           <div className={`dropdown-menu ${
                             (item.name === 'About Us' && isAboutDropdownOpen) || 
-                            (item.name === 'Who We Serve' && isWhoWeServeDropdownOpen) 
+                            (item.name === 'Who We Serve' && isWhoWeServeDropdownOpen) ||
+                            (item.name === 'What We Do' && isWhatWeDoDropdownOpen)
                               ? 'open' : ''
                           }`}>
                             {item.name === 'About Us' && aboutDropdownItems2.map((dropdownItem) => (
@@ -292,6 +338,28 @@ const ContactUs: React.FC = () => {
                                 onClick={(e) => {
                                   e.preventDefault();
                                  
+                                }}
+                                className="dropdown-item"
+                                style={{
+                                  display: 'block',
+                                  padding: '0.75rem 1rem',
+                                  color: '#374151',
+                                  textDecoration: 'none',
+                                  fontSize: '0.95rem',
+                                  fontFamily: 'Prompt, sans-serif',
+                                  transition: 'all 0.3s ease',
+                                  cursor: 'pointer'
+                                }}
+                              >
+                                {dropdownItem.name}
+                              </a>
+                            ))}
+                            {item.name === 'What We Do' && whatWeDoDropdownItems.map((dropdownItem) => (
+                              <a
+                                key={dropdownItem.name}
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  handleWhatWeDoDropdownItemClick(dropdownItem);
                                 }}
                                 className="dropdown-item"
                                 style={{
@@ -341,7 +409,7 @@ const ContactUs: React.FC = () => {
             {/* Action Buttons */}
             <div className="dyad-actions">
               <button className="btn btn-primary" onClick={handleLogin}>
-                <span>Login / Register</span>
+                <span>Login/Register</span>
               </button>
               <button className="btn btn-primary" onClick={handleContactRequest}>
                 <span>Contact Us</span>
@@ -377,6 +445,8 @@ const ContactUs: React.FC = () => {
                                 handleAboutDropdownHover(!isAboutDropdownOpen);
                               } else if (item.name === 'Who We Serve') {
                                 handleWhoWeServeDropdownHover(!isWhoWeServeDropdownOpen);
+                              } else if (item.name === 'What We Do') {
+                                handleWhatWeDoDropdownHover(!isWhatWeDoDropdownOpen);
                               }
                             }}
                             className={`mobile-nav-link ${isActive ? 'active' : ''}`}
@@ -412,7 +482,8 @@ const ContactUs: React.FC = () => {
                           </a>
                           <div className={`mobile-dropdown-menu ${
                             (item.name === 'About Us' && isAboutDropdownOpen) || 
-                            (item.name === 'Who We Serve' && isWhoWeServeDropdownOpen) 
+                            (item.name === 'Who We Serve' && isWhoWeServeDropdownOpen) ||
+                            (item.name === 'What We Do' && isWhatWeDoDropdownOpen)
                               ? 'open' : ''
                           }`}>
                             {item.name === 'About Us' && aboutDropdownItems2.map((dropdownItem) => (
@@ -443,6 +514,28 @@ const ContactUs: React.FC = () => {
                                 onClick={(e) => {
                                   e.preventDefault();
                                  
+                                }}
+                                className="mobile-dropdown-item"
+                                style={{
+                                  display: 'block',
+                                  padding: '0.75rem 1rem 0.75rem 2rem',
+                                  color: '#374151',
+                                  textDecoration: 'none',
+                                  fontSize: '0.9rem',
+                                  fontFamily: 'Prompt, sans-serif',
+                                  transition: 'all 0.3s ease',
+                                  cursor: 'pointer'
+                                }}
+                              >
+                                {dropdownItem.name}
+                              </a>
+                            ))}
+                            {item.name === 'What We Do' && whatWeDoDropdownItems.map((dropdownItem) => (
+                              <a
+                                key={dropdownItem.name}
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  handleWhatWeDoDropdownItemClick(dropdownItem);
                                 }}
                                 className="mobile-dropdown-item"
                                 style={{
@@ -494,17 +587,18 @@ const ContactUs: React.FC = () => {
         </div>
       </header>
 
+       <div className="contact-banner">
+        <img 
+          src="/assets/images/contactbanner.png" 
+          alt="Contact Us Banner" 
+          className="contact-banner-image"
+        />
+      </div>
+
       {/* Main Content */}
       <main className="contact-main">
         {/* Banner Section */}
-        <section className="contact-banner">
-          <div className="banner-content">
-            <h1 className="banner-title">Contact Us</h1>
-          </div>
-          <div className="banner-image">
-            <img src="/assets/images/contact-us.png" alt="Contact Us" />
-          </div>
-        </section>
+      
 
         {/* Form Section */}
         <section className="contact-form-section mb-8">
@@ -512,135 +606,134 @@ const ContactUs: React.FC = () => {
             {/* Left Side - Form */}
             <div className="form-left-section">
               <div className="form-header-content">
-                <h2 className="form-title">Providers or Administrators:</h2>
-                <p className="form-subtitle">Please Fill Out The Form Below</p>
-              </div>
+                <h2 className="form-title">To be filled out by Providers or Administrators:</h2>
               
-              <form onSubmit={handleSubmit(onSubmit)} className="contact-form">
-              {/* Name Field */}
-              <div className="form-group">
-                <label htmlFor="name" className="form-label">
-                  Your Name
-                </label>
-                <input
-                  type="text"
-                  id="name"
-                  className={`form-input ${errors.name ? 'error' : ''}`}
-                  placeholder="Enter your full name"
-                  {...register('name')}
-                />
-                {errors.name && (
-                  <span className="error-message">{errors.name.message}</span>
-                )}
               </div>
-
-              {/* Phone Number Field */}
-              <div className="form-group">
-                <label htmlFor="phoneNumber" className="form-label">
-                  Phone Number
-                </label>
-                <input
-                  type="tel"
-                  id="phoneNumber"
-                  className={`form-input ${errors.phoneNumber ? 'error' : ''}`}
-                  placeholder="Enter your 10-digit phone number"
-                  maxLength={10}
-                  {...register('phoneNumber')}
-                />
-                {errors.phoneNumber && (
-                  <span className="error-message">{errors.phoneNumber.message}</span>
-                )}
-              </div>
-
-              {/* Email Field */}
-              <div className="form-group">
-                <label htmlFor="email" className="form-label">
-                  Your Email
-                </label>
-                <input
-                  type="email"
-                  id="email"
-                  className={`form-input ${errors.email ? 'error' : ''}`}
-                  placeholder="Enter your email address"
-                  {...register('email')}
-                />
-                {errors.email && (
-                  <span className="error-message">{errors.email.message}</span>
-                )}
-              </div>
-
-              {/* Organization Field */}
-              <div className="form-group">
-                <label htmlFor="organization" className="form-label">
-                  Organization / Facility Name
-                </label>
-                <input
-                  type="text"
-                  id="organization"
-                  className={`form-input ${errors.organization ? 'error' : ''}`}
-                  placeholder="Enter your organization or facility name"
-                  {...register('organization')}
-                />
-                {errors.organization && (
-                  <span className="error-message">{errors.organization.message}</span>
-                )}
-              </div>
-
-              {/* Message Field */}
-              <div className="form-group full-width">
-                <label htmlFor="message" className="form-label">
-                  Enter a brief Message
-                </label>
-                <textarea
-                  id="message"
-                  rows={4}
-                  className={`form-textarea ${errors.message ? 'error' : ''}`}
-                  placeholder="Tell us how we can help you..."
-                  {...register('message')}
-                />
-                {errors.message && (
-                  <span className="error-message">{errors.message.message}</span>
-                )}
-              </div>
-
-              {/* Schedule Time Field */}
-              <div className="form-group">
-                <label htmlFor="scheduledTime" className="form-label">
-                  Schedule a time to connect
-                </label>
-                <input
-                  type="datetime-local"
-                  id="scheduledTime"
-                  className={`form-input ${errors.scheduledTime ? 'error' : ''}`}
-                  min={getMinDateTime()}
-                  {...register('scheduledTime')}
-                />
-                {errors.scheduledTime && (
-                  <span className="error-message">{errors.scheduledTime.message}</span>
-                )}
-              </div>
-
-              {/* reCAPTCHA */}
-              <div className="form-group full-width">
-                <div className="recaptcha-container">
-                  <div 
-                    className={`recaptcha-box ${recaptchaVerified ? 'verified' : ''} ${errors.recaptcha ? 'error' : ''}`}
-                    onClick={handleRecaptchaVerify}
-                  >
-                    <div className="recaptcha-checkbox">
-                      {recaptchaVerified && <span className="checkmark">✓</span>}
-                    </div>
-                    <span className="recaptcha-text">I'm not a robot</span>
-                    <div className="recaptcha-logo">
-                      <span className="recaptcha-icon">🔒</span>
-                    </div>
+              <br />
+     
+    <form onSubmit={handleSubmit(onSubmit)} className="contact-form" id="demo-form">
+                {/* Name Field */}
+                <div className="form-row">
+                  <div className="form-field">
+                    <label htmlFor="name" className="form-label">
+                      Your Name*
+                    </label>
+                    <input
+                      type="text"
+                      id="name"
+                      className={`form-input ${errors.name ? 'error' : ''}`}
+                      {...register('name')}
+                    />
+                    {errors.name && (
+                      <span className="error-message">{errors.name.message}</span>
+                    )}
                   </div>
-                  {errors.recaptcha && (
-                    <span className="error-message">{errors.recaptcha.message}</span>
-                  )}
-                </div>
-              </div>
 
+                  {/* Phone Number Field */}
+                 
+                </div>
+                <div className='form-row'>
+                   <div className="form-field">
+                    <label htmlFor="phoneNumber" className="form-label">
+                      Phone Number*
+                    </label>
+                    <input
+                      type="tel"
+                      id="phoneNumber"
+                      className={`form-input ${errors.phoneNumber ? 'error' : ''}`}
+                      maxLength={10}
+                      {...register('phoneNumber')}
+                    />
+                    {errors.phoneNumber && (
+                      <span className="error-message">{errors.phoneNumber.message}</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Email Field */}
+                <div className="form-row">
+                  <div className="form-field">
+                    <label htmlFor="email" className="form-label">
+                      Your Email*
+                    </label>
+                    <input
+                      type="email"
+                      id="email"
+                      className={`form-input ${errors.email ? 'error' : ''}`}
+                      {...register('email')}
+                    />
+                    {errors.email && (
+                      <span className="error-message">{errors.email.message}</span>
+                    )}
+                  </div>
+
+                 
+                </div>
+
+                <div className='form-row'>
+                   {/* Organization Field */}
+                  <div className="form-field">
+                    <label htmlFor="organization" className="form-label">
+                      Practice Name/Facility Name*
+                    </label>
+                    <input
+                      type="text"
+                      id="organization"
+                      className={`form-input ${errors.organization ? 'error' : ''}`}
+                      {...register('organization')}
+                    />
+                    {errors.organization && (
+                      <span className="error-message">{errors.organization.message}</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Message Field */}
+                <div className="form-row">
+                  <div className="form-field full-width">
+                    <label htmlFor="message" className="form-label">
+                      Enter a brief Message*
+                    </label>
+                    <textarea
+                      id="message"
+                      rows={4}
+                      placeholder='Do not leave information protected under HIPAA. This form is intended for providers and administrators only.'
+                      className={`form-textarea ${errors.message ? 'error' : ''}`}
+                      {...register('message')}
+                    />
+                    {errors.message && (
+                      <span className="error-message">{errors.message.message}</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Schedule Time & reCAPTCHA Row */}
+                <div className="form-row">
+                  <div className="form-field">
+                    <label htmlFor="scheduledTime" className="form-label">
+                      Schedule a time to connect*
+                    </label>
+                    <input
+                      type="datetime-local"
+                      id="scheduledTime"
+                      className={`form-input ${errors.scheduledTime ? 'error' : ''}`}
+                      min={getMinDateTime()}
+                      {...register('scheduledTime')}
+                    />
+                    {errors.scheduledTime && (
+                      <span className="error-message">{errors.scheduledTime.message}</span>
+                    )}
+                  </div>
+
+               
+                </div>
+  <ReCAPTCHA 
+    sitekey="6LfUvKQsAAAAAEYzVOsF2PJv7EzW-JGTQOQK4-Jw" 
+    ref={captchaRef} 
+    onChange={handleRecaptchaChange}
+  />
+  <input type="hidden" {...register('recaptcha')} /> 
+              
               {/* Submit Button */}
               <div className="form-group full-width">
                 <button
@@ -696,6 +789,7 @@ const ContactUs: React.FC = () => {
                 <li><a href="#surgical-specialties">Surgical & Procedural Specialties</a></li>
                 <li><a href="#interventional-care">Interventional & Diagnostic Care</a></li>
                 <li><a href="#perioperative-services">Perioperative & Supportive Services</a></li>
+                <li><a href="#outpatient-facilities">Outpatient & Specialty Facilities</a></li>
               </ul>
             </div>
 
@@ -709,7 +803,7 @@ const ContactUs: React.FC = () => {
                 </div>
                 <div className="contact-item">
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="lucide lucide-map-pin w-6 h-6 mr-3"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-                  <span>2573 Pacific Coast Hwy, Ste A277 Torrance, CA 90505</span>
+                  <span>2573 Pacific Coast Hwy, Suite A277<br />Torrance, CA 90505</span>
                 </div>
               </div>
             </div>

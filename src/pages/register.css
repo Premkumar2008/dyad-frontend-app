@@ -9,14 +9,14 @@
 /* Apply Contact Us page styling */
 .register-container {
     min-height: 100vh;
-    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    background: linear-gradient(135deg, #eff6ff 0%, #eff6ff00 100%);
     display: flex;
     flex-direction: column;
 }
 
 .register-form-box {
     border: 1px solid #80808021;
-    border-radius: 16px;
+    border-radius: 0.75rem;
     background-color: white;
     padding: 2rem;
     max-width: 600px !important;
@@ -41,7 +41,7 @@
     font-size: 1rem;
     font-family: 'Prompt', sans-serif;
     transition: all 0.3s ease;
-    background: #f8fafc;
+    background: white;
     width: 100%;
 }
 
@@ -65,7 +65,7 @@
     font-size: 1rem;
     font-family: 'Prompt', sans-serif;
     transition: all 0.3s ease;
-    background: #f8fafc;
+    background: white;
     width: 100%;
 }
 
@@ -83,6 +83,20 @@
 
 /* Button styling from Contact Us */
 
+
+.btn-primary {
+    background: #1D6DD8;
+    color: white;
+    padding: 0.875rem 1.5rem;
+    border: none;
+    border-radius: 0.35rem;
+    font-size: 1.05rem;
+    font-weight: 600;
+    font-family: 'Prompt', sans-serif;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 160px;
+}
 
 .btn-primary:hover:not(:disabled) {
     transform: translateY(-2px);

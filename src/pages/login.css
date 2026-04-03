@@ -11,7 +11,7 @@
 
 .login-form-container {
     min-height: 100vh;
-    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    background: linear-gradient(135deg, #eff6ff 0%, #eff6ff00 100%);
     display: flex;
     flex-direction: column;
 }
@@ -66,7 +66,19 @@
     background: #fff5f5;
 }
 
-
+.btn-primary {
+    background: #1D6DD8;
+    color: white;
+    padding: 0.875rem 1.5rem;
+    border: none;
+    border-radius: 0.35rem;
+    font-size: 1.05rem;
+    font-weight: 600;
+    font-family: 'Prompt', sans-serif;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 160px;
+}
 
 .btn-primary:hover:not(:disabled) {
     transform: translateY(-2px);

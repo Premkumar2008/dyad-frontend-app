@@ -14,17 +14,15 @@ interface RegisterFormData {
   firstName: string;
   lastName: string;
   phone: string;
-  countryCode: string;
   email: string;
   password: string;
 }
 
-const registerSchema = yup.object({
+const registerSchema = yup.object().shape({
   npi: yup.string().required('NPI is required'),
   firstName: yup.string().required('First name is required'),
   lastName: yup.string().required('Last name is required'),
   phone: yup.string().required('Phone number is required'),
-  countryCode: yup.string().required('Country code is required'),
   email: yup.string().email('Invalid email address').required('Email is required'),
   password: yup.string().min(8, 'Password must be at least 8 characters').required('Password is required'),
 });
@@ -82,7 +80,6 @@ const Register: React.FC = () => {
       firstName: '',
       lastName: '',
       phone: '',
-      countryCode: '+1',
       npi: '',
       password: '',
     }
@@ -158,25 +155,14 @@ const Register: React.FC = () => {
 
   return (
     <div className="login-page-container">
-      
+      <div className='login-page-holder'>
       {/* Left Side - Register Form */}
       <div className="login-form-section register-box">
         <div className="login-form-content">
-          {/* Logo */}
-          <div className="text-center mb-8">
-            <div className="flex items-center justify-center gap-2 mb-4">
-              <div className="dyad-logo" onClick={handleLogoClick} style={{ cursor: 'pointer' }}>
-                <img 
-                  src="/assets/images/dyadmain-ogo.svg" 
-                  alt="Dyad Logo" 
-                  className="logo-image"
-                />
-              </div>
-            </div>
-          </div>
 
-          <h3 className="text-2xl font-medium text-gray-900 mb-6">Register</h3>
-          <p className="text-gray-600 mb-8">Join our network of surgical specialists, proceduralists, and outpatient facilities. Register today to explore how Dyad can support your practice with integrated services, operational expertise, and technology-driven solutions.</p>
+          <h3 className="text-2xl font-medium text-gray-900 mb-2">Register</h3>
+ <div className='form-container-login'>
+            <p className="text-gray-600 mb-8">Join our network of surgical specialists, proceduralists, and outpatient facilities. Register today to explore how Dyad can support your practice with integrated services, operational expertise, and technology-driven solutions.</p>
 
           {/* Registration Form */}
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -198,80 +184,64 @@ const Register: React.FC = () => {
               </div>
             )}
             
-            {/* NPI Field */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                NPI
-              </label>
-              <input
-                {...register('npi')}
-                type="text"
-                placeholder="Enter NPI"
-                className="input-field"
-                disabled={isLoading}
-              />
-              {errors.npi && (
-                <p className="mt-1 text-sm text-red-600">{errors.npi.message}</p>
-              )}
+            {/* NPI and First Name in one row */}
+            <div className="form-row">
+              <div className="form-field">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  NPI
+                </label>
+                <input
+                  {...register('npi')}
+                  type="text"
+                  placeholder="Enter NPI"
+                  className="input-field"
+                  disabled={isLoading}
+                />
+                {errors.npi && (
+                  <p className="mt-1 text-sm text-red-600">{errors.npi.message}</p>
+                )}
+              </div>
+
+              <div className="form-field">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  First Name
+                </label>
+                <input
+                  {...register('firstName')}
+                  type="text"
+                  placeholder="First name"
+                  className="input-field"
+                  disabled={isLoading}
+                />
+                {errors.firstName && (
+                  <p className="mt-1 text-sm text-red-600">{errors.firstName.message}</p>
+                )}
+              </div>
             </div>
 
-            {/* First Name Field */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                First Name
-              </label>
-              <input
-                {...register('firstName')}
-                type="text"
-                placeholder="First name"
-                className="input-field"
-                disabled={isLoading}
-              />
-              {errors.firstName && (
-                <p className="mt-1 text-sm text-red-600">{errors.firstName.message}</p>
-              )}
-            </div>
+            {/* Last Name and Phone in one row */}
+            <div className="form-row">
+              <div className="form-field">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Last Name
+                </label>
+                <input
+                  {...register('lastName')}
+                  type="text"
+                  placeholder="Last name"
+                  className="input-field"
+                  disabled={isLoading}
+                />
+                {errors.lastName && (
+                  <p className="mt-1 text-sm text-red-600">{errors.lastName.message}</p>
+                )}
+              </div>
 
-            {/* Last Name Field */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Last Name
-              </label>
-              <input
-                {...register('lastName')}
-                type="text"
-                placeholder="Last name"
-                className="input-field"
-                disabled={isLoading}
-              />
-              {errors.lastName && (
-                <p className="mt-1 text-sm text-red-600">{errors.lastName.message}</p>
-              )}
-            </div>
-
-            {/* Phone Field */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Phone
-              </label>
-              <div className="flex space-x-2">
+              <div className="form-field">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Phone
+                </label>
                 <div className="relative">
-                  <select
-                    {...register('countryCode')}
-                    className="input-field appearance-none pr-8"
-                    disabled={isLoading}
-                    defaultValue="+1"
-                  >
-                    <option value="+1">🇺🇸 +1</option>
-                    <option value="+91">🇮🇳 +91</option>
-                  </select>
-                  <div className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
-                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </div>
-                </div>
-                <div className="relative flex-1">
                   <input
                     {...register('phone')}
                     type="tel"
@@ -280,60 +250,64 @@ const Register: React.FC = () => {
                     disabled={isLoading}
                   />
                 </div>
+                {errors.phone && (
+                  <p className="mt-1 text-sm text-red-600">{errors.phone.message}</p>
+                )}
               </div>
-              {errors.phone && (
-                <p className="mt-1 text-sm text-red-600">{errors.phone.message}</p>
-              )}
             </div>
 
-            {/* Email Field */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Email
-              </label>
-              <div className="relative">
-                <input
-                  {...register('email')}
-                  type="email"
-                  placeholder="Enter email"
-                  className="input-field"
-                  disabled={isLoading}
-                />
+            {/* Email in one row */}
+            <div className="form-row">
+              <div className="form-field full-width">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Email
+                </label>
+                <div className="relative">
+                  <input
+                    {...register('email')}
+                    type="email"
+                    placeholder="Enter email"
+                    className="input-field"
+                    disabled={isLoading}
+                  />
+                </div>
+                {errors.email && (
+                  <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
+                )}
               </div>
-              {errors.email && (
-                <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
-              )}
             </div>
 
-            {/* Password Field */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Password
-              </label>
-              <div className="relative">
-                <input
-                  {...register('password')}
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder="Enter password"
-                  className="input-field pr-10"
-                  disabled={isLoading}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                  disabled={isLoading}
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
-                  ) : (
-                    <Eye className="h-5 w-5 text-gray-400 hover:text-gray-600" />
-                  )}
-                </button>
+            {/* Password in one row */}
+            <div className="form-row">
+              <div className="form-field full-width">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Password
+                </label>
+                <div className="relative">
+                  <input
+                    {...register('password')}
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="Enter password"
+                    className="input-field pr-10"
+                    disabled={isLoading}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                    disabled={isLoading}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                    ) : (
+                      <Eye className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                    )}
+                  </button>
+                </div>
+                {errors.password && (
+                  <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
+                )}
               </div>
-              {errors.password && (
-                <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
-              )}
             </div>
 
             {/* Register Button */}
@@ -375,6 +349,7 @@ const Register: React.FC = () => {
               </Link>
             </div>
           </form>
+          </div>
         </div>
       </div>
 
@@ -401,22 +376,6 @@ const Register: React.FC = () => {
             {/* Content removed as requested */}
           </div>
 
-          {/* Carousel Controls */}
-          <button
-            className="carousel-control carousel-control-prev"
-            onClick={goToPreviousSlide}
-            aria-label="Previous slide"
-          >
-            <ChevronLeft size={24} />
-          </button>
-          <button
-            className="carousel-control carousel-control-next"
-            onClick={goToNextSlide}
-            aria-label="Next slide"
-          >
-            <ChevronRight size={24} />
-          </button>
-
           {/* Carousel Indicators */}
           <div className="carousel-indicators">
             {carouselImages.map((_, index) => (
@@ -429,6 +388,7 @@ const Register: React.FC = () => {
             ))}
           </div>
         </div>
+      </div>
       </div>
     </div>
   );

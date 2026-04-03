@@ -83,10 +83,7 @@
   transform: scale(1.05);
 }
 
-.dyad-logo img {
-  height: 40px;
-  width: auto;
-}
+
 
 .nav-list {
   display: flex;

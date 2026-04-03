@@ -1,38 +1,78 @@
 <!doctype html>
+
 <html lang="en">
+
   <head>
+
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" href="/assets/images/favicon.png" />
+
+    <link rel="icon" type="image/png" href="/assets/images/favicon-new.png" />
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' http: https: ws: wss: localhost 127.0.0.1 http://localhost:5000 https://dyad-backend-server-dev.up.railway.app;">
+
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com https://www.gstatic.com; img-src 'self' data: https:; connect-src 'self' http: https: ws: wss: localhost 127.0.0.1 http://localhost:5000 https://dyad-backend-server-dev.up.railway.app; frame-src https://www.google.com/">
+
     <title>Dyad Practice Solutions - Healthcare Portal</title>
+
     
+
     <!-- Preload Prompt font for better performance -->
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
+
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
     
+
     <style>
+
       /* Ensure right-click context menu is enabled */
+
       * {
+
         -webkit-user-select: text !important;
+
         -moz-user-select: text !important;
+
         -ms-user-select: text !important;
+
         user-select: text !important;
+
       }
+
       
+
       body {
+
         -webkit-touch-callout: default !important;
+
         -webkit-user-select: text !important;
+
         -khtml-user-select: text !important;
+
         -moz-user-select: text !important;
+
         -ms-user-select: text !important;
+
         user-select: text !important;
+
       }
+
     </style>
+
+     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+
   </head>
+
   <body>
+
     <div id="root"></div>
+
     <script type="module" src="/src/main.tsx"></script>
+
   </body>
+
 </html>
+
