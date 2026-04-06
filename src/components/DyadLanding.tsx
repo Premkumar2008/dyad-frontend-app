@@ -350,8 +350,8 @@ const DyadLanding: React.FC = () => {
     },
     {
       id: 2,
-      title: 'Pre & Post Encounter',
-      subtitle: 'Eligibility verifications, prior-authorizations, patient estimates, Precision driven charge capture, Specialty Coding',
+      title: 'Revenue Intregrity',
+      subtitle: 'Eligibility, patient estimates, speciality coding',
       image: '/assets/images/ourservices3.jpg',
       icon: 'icon-clipboard',
       description: '',
@@ -366,7 +366,7 @@ const DyadLanding: React.FC = () => {
     {
       id: 3,
       title: 'Claims Management',
-      subtitle: 'Expedited submissions, resolutions & real-time tracking',
+      subtitle: 'From expedited submissions to auto-routing to NSA IDR/Arbitration',
       image: '/assets/images/ourservices4.png',
       icon: 'icon-document',
       description: '',
@@ -375,7 +375,8 @@ const DyadLanding: React.FC = () => {
         'Accounts Receivable (AR)',
         'Payment posting & Reconciliation',
         'Re-bill processing',
-        'Underpayments detection & recovery'
+        'Underpayments detection & recovery',
+        'Auto-routing of qualified claims to NSA Federal IDR/Arbitration'
       ]
     },
     {
@@ -393,7 +394,7 @@ const DyadLanding: React.FC = () => {
     {
       id: 5,
       title: 'Real Time Insights',
-      subtitle: 'Credentials alert, reporting & strategic insights',
+      subtitle: 'Benchmark contracted rates, robust reporting, and real time claims tracking',
       image: '/assets/images/ourservices6.jpg',
       icon: 'icon-chart',
       description: '',

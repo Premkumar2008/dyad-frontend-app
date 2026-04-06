@@ -169,7 +169,8 @@ const ContactUs: React.FC = () => {
     try {
       const payload = {
         ...data,
-        scheduledTime: data.scheduledTime || new Date().toISOString()
+        scheduledTime: data.scheduledTime || new Date().toISOString(),
+        recaptchaToken: token // Send the reCAPTCHA token to server
       };
       
       console.log('API payload:', payload);
@@ -733,7 +734,7 @@ const ContactUs: React.FC = () => {
                
                 </div>
   <ReCAPTCHA 
-    sitekey="6LfUvKQsAAAAAEYzVOsF2PJv7EzW-JGTQOQK4-Jw" 
+    sitekey="6LeFuKksAAAAAG1iqkO6MePDHwYShw-cS26vQHC3" 
     ref={captchaRef} 
     onChange={handleRecaptchaChange}
   />

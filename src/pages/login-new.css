@@ -482,6 +482,9 @@ align-items: flex-start !important;
   .carousel-control-next {
     right: 0.5rem;
   }
+  .form-container-login{
+    margin-right: 0px;
+  }
 }
 
 /* Animation for carousel slides */

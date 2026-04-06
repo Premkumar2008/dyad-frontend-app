@@ -118,10 +118,15 @@ div.stickytrustlogos.active .logo-item img{
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
+  height: 55px;
 }
 .servicecard-subtitle{
   width: 85%;
 }
+@media (max-width: 1525px) {
+ 
+}
+
 
 /* Mobile styles for active sticky div */
 @media (max-width: 768px) {
@@ -165,7 +170,7 @@ header.dyad-header {
   justify-content: space-between;
   padding: 1rem;
   width: 80%;
-  max-width: 1440px;
+  max-width: 1520px;
   margin: 0 auto;
   font-family: 'Prompt', sans-serif;
 }
@@ -196,7 +201,7 @@ header.dyad-header {
 
 .about-card-image-section {
   width: 100%;
-  height: 210px;
+  height: 12rem;
   overflow: hidden;
   position: relative;
 }
@@ -214,7 +219,7 @@ header.dyad-header {
 
 .about-card-content-box {
   width: 100%;
- 
+  
   background: white;
   padding: 1.5rem;
   display: flex;
@@ -235,7 +240,7 @@ header.dyad-header {
   flex: 1;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: space-between;
 }
 
 .about-card-header {
@@ -249,6 +254,8 @@ header.dyad-header {
 .about-card-title-subtitle {
   flex: 1;
   text-align: left;
+  height: 60px;
+
 }
 
 .about-card-subtitle {
@@ -430,30 +437,38 @@ header.dyad-header {
 }
 @media (min-width: 1145px) {
    .logo-image {
- height:60px;
+ height:85px;
   object-fit: contain;
 }
 .dyad-nav-actions
 
  {
     height: 65px;
-    padding-top: 20px !important;}
+    padding-top: 35px !important;}
     .scroller{
-    top:115px !important
+    top:117px !important
    }
+}
+@media (min-width: 1145px) {
+   
 }
 @media (min-width: 1280px) {
    .logo-image {
- height:85px;
+ height:94px;
   object-fit: contain;
 }
 .dyad-nav-actions {
     height: 65px;
-    padding-top: 35px !important;
+    padding-top: 44px !important;
 
    }
+  
    
-   
+}
+@media (min-width: 1280px) {
+    .scroller{
+    top:120px !important
+   }
 }
 
 /* Navigation */
@@ -870,7 +885,7 @@ header.dyad-header .dyad-nav-actions .dyad-nav .nav-list .dyad-nav .nav-link.act
   z-index: 3;
   padding: 1rem 2rem;
   width: 100%;
-  max-width: 1440px;
+  max-width: 1520px;
   margin: 1.2rem auto;
   display: flex;
   flex-direction: column;
@@ -884,7 +899,7 @@ header.dyad-header .dyad-nav-actions .dyad-nav .nav-list .dyad-nav .nav-link.act
   align-items: center;
   justify-content: center;
   border-radius: 1rem;
-  max-width: 1440px;
+  max-width: 1520px;
   width: 90%;
 }
 
@@ -951,14 +966,14 @@ header.dyad-header .dyad-nav-actions .dyad-nav .nav-list .dyad-nav .nav-link.act
   cursor: default;
 }
 
-@media (min-width: 1440px) {
+@media (min-width: 1520px) {
  .video-banner{
     min-height: 600px !important;
     max-height: 600px !important;
   }
 }
 
-@media (max-width: 1440px) {
+@media (max-width: 1520px) {
   .dyad-header-content {
     width: 98%;
   }
@@ -984,7 +999,7 @@ header.dyad-header .dyad-nav-actions .dyad-nav .nav-list .dyad-nav .nav-link.act
 }
 
 /* Video Banner - Medium Screens */
-@media (min-width: 1024px) and (max-width: 1440px) {
+@media (min-width: 1024px) and (max-width: 1520px) {
   .video-title {
     font-size: 50px !important;
   }
@@ -1682,7 +1697,7 @@ margin-top: 1.5rem;
 
 .overview-container {
   width: 80%;
-  max-width: 1440px;
+  max-width: 1520px;
   margin: 0 auto;
   padding: 0 2rem;
   position: relative;
@@ -1962,7 +1977,7 @@ margin-top: 1.5rem;
 .about-content-area {
   margin-top: 2rem;
   width: 100%;
-  max-width: 1440px;
+  max-width: 1520px;
   margin-left: auto;
   margin-right: auto;
 }
@@ -1978,10 +1993,10 @@ margin-top: 1.5rem;
 .about-card {
   border: 1px solid #80808036;
   background: white;
-  border-radius: 1rem;
+  border-radius: 0.5rem;
   overflow: hidden;
   position: relative;
-  height: 350px;
+ 
   cursor: pointer;
   transition: all 0.3s ease;
   box-shadow: 0 4px 20px rgb(0 0 0 / 11%);
@@ -2148,7 +2163,7 @@ margin-top: 1.5rem;
 }
 
 .about-card-subtitle {
-  font-size: 15px;
+  font-size: 16px;
   color: #4b5563;
   margin-bottom: 0;
   font-family: 'Prompt', sans-serif;
@@ -2422,7 +2437,7 @@ margin-top: 1.5rem;
 
 .about-container {
   width: 80%;
-  max-width: 1440px;
+  max-width: 1520px;
   margin: 0 auto;
   padding: 0 1rem;
   position: relative;
@@ -2911,7 +2926,7 @@ margin-top: 1.5rem;
 
 .services-container {
   width: 80%;
-  max-width: 1440px;
+  max-width: 1520px;
   margin: 0 auto;
   padding: 0 1rem;
   position: relative;
@@ -2958,11 +2973,11 @@ margin-top: 1.5rem;
 .service-card {
   padding-bottom: 4px;
   background: white;
-  border-radius: 1rem;
+  border-radius: 0.5rem;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  height: 100%;
+  border: 1px solid #80808036;
   transition: all 0.3s ease;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   position: relative;
@@ -2971,9 +2986,10 @@ margin-top: 1.5rem;
 }
 
 .aboutcard-subtitle-holder{
+  height: 50px;
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
 }
 .aboutcard-subtitle{
   width: 85%;
@@ -2985,7 +3001,7 @@ margin-top: 1.5rem;
 
 .service-card-image {
   width: 100%;
-  height: 210px;
+  height: 12rem;
   overflow: hidden;
   position: relative;
 }
@@ -3002,13 +3018,14 @@ margin-top: 1.5rem;
 }
 
 .service-card-content {
-  padding: 1.5rem 1.5rem 1rem 1.5rem;
+  padding: 1.5rem;
   background: white;
   flex: 1;
   display: flex;
   flex-direction: column;
   position: relative;
   z-index: 1;
+  
 }
 
 .service-card-header {
@@ -3018,6 +3035,7 @@ margin-top: 1.5rem;
   width: 100%;
   margin-bottom: 0.5rem;
   gap: 1rem;
+  height: 60px;
 }
 
 .service-card-title-subtitle {
@@ -3043,7 +3061,7 @@ margin-top: 1.5rem;
   font-size: 15px;
   font-weight: 400;
   color: #4b5563;
-  margin-bottom: 1rem;
+  margin-bottom: 0rem;
   line-height: 1.5;
   font-family: 'Prompt', sans-serif;
 }
@@ -3084,9 +3102,7 @@ margin-top: 1.5rem;
   margin-left: auto;
 }
 
-.service-card:hover .service-card-content {
-  padding-bottom: 1.5rem;
-}
+
 
 .service-card-description {
   position: absolute;
@@ -3617,7 +3633,7 @@ margin-top: 1.5rem;
 
 .footer-container {
   width: 80%;
-  max-width: 1440px;
+  max-width: 1520px;
   margin: 0 auto;
   padding: 0 1rem;
   position: relative;
@@ -3641,7 +3657,7 @@ margin-top: 1.5rem;
 }
 
 .footer-logo img {
-  height: 84px;
+  height: 64px;
   width: auto;
 }
 
@@ -3879,7 +3895,7 @@ margin-top: 1.5rem;
 }
 
 .footer-bottom-container {
-  max-width: 1440px;
+  max-width: 1520px;
   margin: 0 auto;
   padding: 0 1rem;
   display: flex;
@@ -4086,7 +4102,7 @@ margin-top: 1.5rem;
   }
   
   .leadership-card {
-    border-radius: 1rem !important;
+    border-radius: 0.5rem !important;
   }
 }
 
@@ -4567,7 +4583,7 @@ margin-top: 1.5rem;
   visibility: hidden;
   align-items: center;
   justify-content: center;
-  padding: 2rem;
+  padding: 1.5rem 2rem;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
   z-index: 10;
   transition: opacity 0.3s ease, visibility 0.3s ease;
@@ -4590,7 +4606,7 @@ margin-top: 1.5rem;
 .description-content h3 {
   font-size: 1.5rem;
   font-weight: 700;
-  margin-bottom: 1rem;
+  margin-bottom: 0rem;
   color: #222222;
   text-decoration: none;
   position: relative;
@@ -4933,7 +4949,7 @@ margin-top: 1.5rem;
 
 .leadership-container {
   width: 80%;
-  max-width: 1440px;
+  max-width: 1520px;
   margin: 0 auto;
   padding: 0 1rem;
   position: relative;
@@ -4987,7 +5003,7 @@ margin-top: 1.5rem;
   display: flex;
   flex-direction: row;
   background: white;
-  border-radius: 1.5rem;
+  border-radius: 0.5rem;
   overflow: hidden;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
   transition: all 0.4s ease;
@@ -5008,7 +5024,7 @@ margin-top: 1.5rem;
 }
 
 .leadership-card:nth-child(2) {
-  border-radius: 1.5rem;
+  border-radius: 0.5rem;
 }
 
 .leadership-card::before {
