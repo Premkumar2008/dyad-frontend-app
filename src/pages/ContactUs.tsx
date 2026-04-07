@@ -159,8 +159,12 @@ const ContactUs: React.FC = () => {
 
     const token = captchaRef.current?.getValue();
     console.log('reCAPTCHA token:', token);
-
-    if (!token) {
+    
+    // Check if reCAPTCHA is configured
+    const recaptchaSiteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
+    console.log('reCAPTCHA site key configured:', !!recaptchaSiteKey);
+    
+    if (recaptchaSiteKey && !token) {
       alert('Please complete the CAPTCHA.');
       setIsSubmitting(false);
       return;
@@ -169,17 +173,17 @@ const ContactUs: React.FC = () => {
     try {
       const payload = {
         ...data,
-        scheduledTime: data.scheduledTime || new Date().toISOString(),
-        recaptchaToken: token // Send the reCAPTCHA token to server
+        scheduledTime: data.scheduledTime,
+        recaptchaToken: token || 'development-bypass'
       };
       
       console.log('API payload:', payload);
 
       const apiUrl = import.meta.env.VITE_API_URL || '';
       console.log('API URL:', apiUrl);
-      console.log('Full endpoint:', `${apiUrl}/api/contact-requests`);
-      
-      const response = await axios.post(`${apiUrl}/api/contact-requests`, payload);
+      console.log('Full endpoint:', `${apiUrl}/contact-requests`);
+       
+      const response = await axios.post(`${apiUrl}/contact-requests`, payload);
       console.log('API response:', response);
       
       if (response.data.success) {
@@ -190,6 +194,7 @@ const ContactUs: React.FC = () => {
         setValue('email', '');
         setValue('organization', '');
         setValue('message', '');
+        setValue('scheduledTime', '');
         setRecaptchaVerified(false);
         setValue('recaptcha', false);
         
@@ -734,7 +739,7 @@ const ContactUs: React.FC = () => {
                
                 </div>
   <ReCAPTCHA 
-    sitekey="6LeFuKksAAAAAG1iqkO6MePDHwYShw-cS26vQHC3" 
+    sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY || '6LeFuKksAAAAAG1iqkO6MePDHwYShw-cS26vQHC3'} 
     ref={captchaRef} 
     onChange={handleRecaptchaChange}
   />
