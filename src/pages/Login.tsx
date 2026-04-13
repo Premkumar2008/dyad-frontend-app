@@ -402,7 +402,7 @@ const Login: React.FC = () => {
                 <img 
                   src="/assets/images/logo_main.png" 
                   alt="Dyad Logo" 
-                  className="logo-image"
+                  className="logo-image login-logo"
                 />
               </div>
             
@@ -415,7 +415,7 @@ const Login: React.FC = () => {
             {showRegister ? 'Register' : showResetPassword ? 'Reset Your Password' : showForgotPassword ? 'Forgot Your Password?' : 'Login'}
           </h3>
          
-           <div className='form-container-login'>
+           <div className={`form-container-login ${showRegister ? "register-form" : ""}`}>
           {!showForgotPassword && !showResetPassword && !showRegister ? (
             /* Login Form */
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">

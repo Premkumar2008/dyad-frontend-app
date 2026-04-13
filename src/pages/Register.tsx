@@ -161,7 +161,7 @@ const Register: React.FC = () => {
         <div className="login-form-content">
 
           <h3 className="text-2xl font-medium text-gray-900 mb-2">Register</h3>
- <div className='form-container-login'>
+ <div className='form-container-login register' >
             <p className="text-gray-600 mb-8">Join our network of surgical specialists, proceduralists, and outpatient facilities. Register today to explore how Dyad can support your practice with integrated services, operational expertise, and technology-driven solutions.</p>
 
           {/* Registration Form */}

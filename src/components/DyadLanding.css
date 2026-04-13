@@ -3363,12 +3363,13 @@ margin-top: 1.5rem;
   .footer-bottom {
     flex-direction: column !important;
     gap: 1rem !important;
-    text-align: left !important;
+    text-align: center !important;
+    justify-content: center !important;
   }
   
   .footer-bottom-left,
   .footer-bottom-right {
-    text-align: left !important;
+    text-align: center !important;
   }
   
   .footer-legal-menu {
@@ -3975,31 +3976,150 @@ margin-top: 1.5rem;
 
 /* Responsive Design for Footer */
 @media (max-width: 768px) {
-  .footer-container {
-    width: 95% !important;
-    grid-template-columns: 1fr;
-    gap: 2rem;
+  .footer-section .footer-container {
+    width: 98% !important;
     padding: 0 1rem;
+  }
+  
+  .footer-section .footer-content {
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-areas: 
+      "logo logo logo"
+      "services specialties contact";
+    gap: 2rem;
+  }
+  
+  .footer-section .footer-column:nth-child(1) {
+    grid-area: logo;
+    text-align: center;
+    margin-bottom: 1rem;
+  }
+  
+  .footer-section .footer-column:nth-child(2) {
+    grid-area: services;
+  }
+  
+  .footer-section .footer-column:nth-child(3) {
+    grid-area: specialties;
+  }
+  
+  .footer-section .footer-column:nth-child(4) {
+    grid-area: contact;
+  }
+  
+  .footer-section .footer-description {
+    width: 100% !important;
+  }
+  
+  .footer-section .footer-column-title {
+    margin-bottom: 2rem !important;
+  }
+  
+  .footer-section .footer-bottom {
+    flex-direction: column !important;
+    gap: 1rem !important;
+    text-align: center !important;
+    justify-content: center !important;
+  }
+  
+  .footer-section .footer-bottom-left,
+  .footer-section .footer-bottom-right {
+    text-align: center !important;
+  }
+  
+  .footer-section .footer-bottom-container {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+    padding: 0 1rem;
+    flex-wrap: wrap;
+    align-items: center;
   }
   
   .footer-section {
     padding: 3rem 0 2rem 0;
   }
   
-  .footer-logo img {
-    height: 35px;
-  }
-  
-  .footer-bottom-container {
-    flex-direction: column;
-    gap: 1rem;
-    text-align: center;
-    padding: 0 1rem;
-  }
-  
   .footer-policies {
     gap: 1.5rem;
   }
+}
+
+@media (max-width: 700px) {
+  .footer-section .footer-content {
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas: 
+      "logo logo"
+      "services specialties"
+      "contact contact";
+    gap: 1.5rem;
+  }
+  
+  .footer-section .footer-column:nth-child(1) {
+    grid-area: logo;
+    text-align: center;
+    margin-bottom: 1rem;
+  }
+  
+  .footer-section .footer-column:nth-child(2) {
+    grid-area: services;
+  }
+  
+  .footer-section .footer-column:nth-child(3) {
+    grid-area: specialties;
+  }
+  
+  .footer-section .footer-column:nth-child(4) {
+    grid-area: contact;
+    text-align: center;
+  }
+  
+  .footer-section .footer-column-title {
+    text-align: left !important;
+  }
+  
+  .footer-section .contact-item span {
+    text-align: left !important;
+  }
+}
+
+@media (max-width: 470px) {
+  .footer-section .footer-content {
+    grid-template-columns: 1fr;
+    grid-template-areas: 
+      "logo"
+      "services"
+      "specialties"
+      "contact";
+    gap: 2rem;
+  }
+  
+  .footer-section .footer-column:nth-child(1) {
+    grid-area: logo;
+    text-align: center;
+    margin-bottom: 1rem;
+  }
+  
+  .footer-section .footer-column:nth-child(2) {
+    grid-area: services;
+    text-align: center;
+  }
+  
+  .footer-section .footer-column:nth-child(3) {
+    grid-area: specialties;
+    text-align: center;
+  }
+  
+  .footer-section .footer-column:nth-child(4) {
+    grid-area: contact;
+    text-align: center;
+  }
+  
+  .footer-section .footer-column-title {
+    text-align: center !important;
+  }
+  
+
 }
 
 @media (max-width: 480px) {
@@ -4110,7 +4230,6 @@ margin-top: 1.5rem;
 .mobile-cards-section {
   display: none;
  
-  background: #f8fafc;
 }
 
 .mobile-cards-container {
@@ -4211,6 +4330,20 @@ margin-top: 1.5rem;
 @media (max-width: 768px) {
   .mobile-cards-section {
     display: block;
+  }
+  
+  .mobile-card-image {
+    height: 200px;
+  }
+  
+  .mobile-cards-container {
+    padding: 1.1rem;
+  }
+  .leadership-container {
+    padding: 1.1rem;
+  }
+  .services-container{
+    padding: 1rem;
   }
 }
 @media (max-width: 1250px) {
@@ -4785,6 +4918,13 @@ margin-top: 1.5rem;
   .trust-logos-section.sticky-active .logo-item {
     height: 60px;
   }
+   .desktop-about-us{
+    display:none !important
+  }
+  .mobile-about-us{
+    display:block
+  }
+  
 }
 
 @media (max-width: 480px) {
@@ -5321,7 +5461,11 @@ margin-top: 1.5rem;
     }
   .leadership-container {
     width: 100% !important;
-    padding: 0 0.75rem;
+    padding: 1.1rem;
+  }
+  
+  .services-container {
+    padding: 1.1rem;
   }
 
   .leadership-header {

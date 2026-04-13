@@ -1002,7 +1002,7 @@ const DyadLanding: React.FC = () => {
 
          {/* Mobile Cards Section - Mobile Only */}
       <section className="mobile-cards-section">
-        <div className="container">
+        <div className="">
           <div className="mobile-cards-container">
             {aboutContent.map((card) => (
               <div key={card.id} className={`mobile-card ${expandedMobileCard === card.id ? 'expanded' : ''}`} onClick={() => toggleMobileCard(card.id)}>
@@ -1127,7 +1127,7 @@ const DyadLanding: React.FC = () => {
             ))}
           </div>
                <section className="mobile-cards-section">
-        <div className="container">
+        <div className="">
           <div className="mobile-cards-container services">
             {servicesData.map((card) => (
               <div key={card.id} className={`mobile-card ${expandedserviceMobileCard === card.id ? 'expanded' : ''}`} onClick={() => toggleMobileCardService(card.id)}>

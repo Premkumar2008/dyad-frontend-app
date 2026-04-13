@@ -8,9 +8,7 @@
   padding: 0 var(--spacing-md);
 }
 
-.container-sm {
-  max-width: 640px;
-}
+
 
 .container-md {
   max-width: 768px;
@@ -384,6 +382,7 @@
 /* Responsive Layouts */
 @media (max-width: 768px) {
   .container {
+    max-width: 100%;
     padding: 0 var(--spacing-sm);
   }
   

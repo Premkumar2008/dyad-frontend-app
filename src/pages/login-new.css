@@ -24,11 +24,18 @@
 }
 
 .form-container-login{
-  padding: 0.3rem 2rem;
-  max-height: 405px;
-  min-height: 380px;
+  padding: 1rem 2rem 0rem 2rem;
+  min-height: 405px;
   overflow: auto;
   margin-right:1rem
+}
+
+.form-container-login.register-form {
+  max-height: 340px;
+}
+
+.logo-image.login-logo {
+  height: 74px;
 }
 
 /* Custom Scrollbar Styling */
@@ -63,9 +70,9 @@
   align-items: center;
   justify-content: center;
   width: 50%;
-  padding:1.5rem 0;
+  padding:2rem 0;
   border-right: 1px solid #e5e5e5;
-  min-height: 650px;
+  
   flex-direction: column;
 }
 .login-form-section.register-box{
@@ -246,9 +253,9 @@ align-items: flex-start !important;
 }
 
 .input-field {
-  padding: 0.875rem 1rem;
-  border: 2px solid #e2e8f0;
-  border-radius: 8px;
+  padding: 0.65rem 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
   font-size: 1rem;
   font-family: 'Prompt', sans-serif;
   transition: all 0.3s ease;
@@ -374,6 +381,7 @@ align-items: flex-start !important;
    .login-page-holder{
   width : 100%;
       flex-direction: column;
+      padding:2rem 0rem;
  }
   
   .login-form-section {
@@ -381,6 +389,10 @@ align-items: flex-start !important;
     height: auto;
     padding: 0rem;
     width: 100%;
+  }
+  
+  .form-container-login.register-form {
+    max-height: none;
   }
   
   .login-carousel-section {

@@ -533,7 +533,7 @@ input[type="datetime-local"] {
 }
 
 .footer-container {
-  max-width: 1440px;
+  max-width: 1520px;
   margin: 0 auto;
   padding: 0 1rem;
 }
@@ -558,7 +558,7 @@ input[type="datetime-local"] {
   color: white;
   font-size: 1.1rem;
   font-weight: 500;
-  margin-bottom: 3rem;
+  margin-bottom: 4rem;
   font-family: 'Prompt', sans-serif;
 }
 
