@@ -99,8 +99,8 @@ align-items: flex-start !important;
 .carousel-container {
  border-radius: 0.75rem;
     position: relative;
-    width: 83%;
-    min-height: 575px;
+    width: 80%;
+    min-height: 510px;
     display: flex;
     align-items: center;
     justify-content: center;

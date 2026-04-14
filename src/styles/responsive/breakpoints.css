@@ -1,0 +1,138 @@
+/**
+ * Responsive breakpoints and media queries
+ * Centralized responsive design system
+ */
+
+/* Import breakpoint constants */
+@import '../../constants/breakpoints.css';
+
+/* Base responsive styles */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Container responsive styles */
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--spacing-md);
+}
+
+.container-sm {
+  max-width: 640px;
+}
+
+.container-md {
+  max-width: 768px;
+}
+
+.container-lg {
+  max-width: 1024px;
+}
+
+.container-xl {
+  max-width: 1280px;
+}
+
+.container-xxl {
+  max-width: 1536px;
+}
+
+/* Responsive utilities */
+@media (max-width: 480px) {
+  html {
+    font-size: 14px;
+  }
+  
+  .container {
+    padding: 0 var(--spacing-sm);
+  }
+}
+
+@media (max-width: 640px) {
+  .container {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    max-width: 100%;
+    padding: 0 var(--spacing-sm);
+  }
+}
+
+/* Show/hide utilities */
+.hide-mobile {
+  display: block;
+}
+
+.show-mobile {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .hide-mobile {
+    display: none;
+  }
+  
+  .show-mobile {
+    display: block;
+  }
+}
+
+/* Text responsive utilities */
+.text-responsive-xl {
+  font-size: 2.5rem;
+  line-height: 1.2;
+}
+
+.text-responsive-lg {
+  font-size: 2rem;
+  line-height: 1.3;
+}
+
+.text-responsive-md {
+  font-size: 1.5rem;
+  line-height: 1.4;
+}
+
+.text-responsive-sm {
+  font-size: 1.125rem;
+  line-height: 1.5;
+}
+
+@media (max-width: 768px) {
+  .text-responsive-xl {
+    font-size: 2rem;
+    line-height: 1.2;
+  }
+  
+  .text-responsive-lg {
+    font-size: 1.5rem;
+    line-height: 1.3;
+  }
+  
+  .text-responsive-md {
+    font-size: 1.25rem;
+    line-height: 1.4;
+  }
+}
+
+@media (max-width: 480px) {
+  .text-responsive-xl {
+    font-size: 1.5rem;
+    line-height: 1.2;
+  }
+  
+  .text-responsive-lg {
+    font-size: 1.25rem;
+    line-height: 1.3;
+  }
+  
+  .text-responsive-md {
+    font-size: 1.125rem;
+    line-height: 1.4;
+  }
+}

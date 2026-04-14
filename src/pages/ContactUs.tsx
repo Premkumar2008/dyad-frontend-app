@@ -33,12 +33,60 @@ const ContactUs: React.FC = () => {
   const [isAboutDropdownOpen, setIsAboutDropdownOpen] = useState(false);
   const [isWhoWeServeDropdownOpen, setIsWhoWeServeDropdownOpen] = useState(false);
   const [isWhatWeDoDropdownOpen, setIsWhatWeDoDropdownOpen] = useState(false);
+  const [formSubmitted, setFormSubmitted] = useState(false);
+  const [submissionTime, setSubmissionTime] = useState<string | null>(null);
+  const [countdown, setCountdown] = useState<{ minutes: number; seconds: number } | null>(null);
  const captchaRef = useRef(null);
 
  // Scroll to top when component mounts
  useEffect(() => {
    window.scrollTo({ top: 0, behavior: 'smooth' });
  }, []);
+
+ // Check for existing submission and handle cooldown
+ useEffect(() => {
+   const storedSubmissionTime = localStorage.getItem('contactFormSubmission');
+   if (storedSubmissionTime) {
+     const submissionTime = new Date(storedSubmissionTime);
+     const currentTime = new Date();
+     const timeDiff = currentTime.getTime() - submissionTime.getTime();
+     const tenMinutes = 10 * 60 * 1000; // 10 minutes in milliseconds
+     
+     if (timeDiff < tenMinutes) {
+       setFormSubmitted(true);
+       setSubmissionTime(storedSubmissionTime);
+       
+       // Set timer to reset form after cooldown period
+       const remainingTime = tenMinutes - timeDiff;
+       const timer = setTimeout(() => {
+         setFormSubmitted(false);
+         setSubmissionTime(null);
+         localStorage.removeItem('contactFormSubmission');
+       }, remainingTime);
+       
+       return () => clearTimeout(timer);
+     } else {
+       // Clear expired submission
+       localStorage.removeItem('contactFormSubmission');
+     }
+   }
+ }, []);
+
+ // Countdown timer effect
+ useEffect(() => {
+  if (formSubmitted && submissionTime) {
+    const timer = setInterval(() => {
+      const remaining = getRemainingTime();
+      setCountdown(remaining);
+      
+      if (!remaining) {
+        clearInterval(timer);
+      }
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }
+}, [formSubmitted, submissionTime]);
 
  const handleRecaptchaChange = (token: string | null) => {
     console.log('reCAPTCHA changed:', token);
@@ -188,6 +236,25 @@ const ContactUs: React.FC = () => {
       
       if (response.data.success) {
         toast.success('Your request has been submitted successfully!');
+        
+        // Create calendar event
+        try {
+          await axios.post(`${apiUrl}/create-event`, {
+            title: data.name,
+            dateTime: data.scheduledTime,
+          });
+          alert("Submitted & Event Created!");
+        } catch (eventError) {
+          console.error('Calendar event creation failed:', eventError);
+          toast.error('Form submitted but calendar event creation failed');
+        }
+        
+        // Store submission time and set form submitted state
+        const currentSubmissionTime = new Date().toISOString();
+        localStorage.setItem('contactFormSubmission', currentSubmissionTime);
+        setSubmissionTime(currentSubmissionTime);
+        setFormSubmitted(true);
+        
         // Reset form
         setValue('name', '');
         setValue('phoneNumber', '');
@@ -197,6 +264,18 @@ const ContactUs: React.FC = () => {
         setValue('scheduledTime', '');
         setRecaptchaVerified(false);
         setValue('recaptcha', false);
+        
+        // Reset reCAPTCHA component
+        if (captchaRef.current) {
+          captchaRef.current.reset();
+        }
+        
+        // Set timer to reset form after 10 minutes
+        setTimeout(() => {
+          setFormSubmitted(false);
+          setSubmissionTime(null);
+          localStorage.removeItem('contactFormSubmission');
+        }, 10 * 60 * 1000); // 10 minutes
         
         // Scroll to top when form is submitted successfully with a delay
         setTimeout(() => {
@@ -226,6 +305,24 @@ const ContactUs: React.FC = () => {
     const now = new Date();
     now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
     return now.toISOString().slice(0, 16);
+  };
+
+  // Calculate remaining time for cooldown
+  const getRemainingTime = () => {
+    if (!submissionTime) return null;
+    
+    const submission = new Date(submissionTime);
+    const currentTime = new Date();
+    const timeDiff = currentTime.getTime() - submission.getTime();
+    const tenMinutes = 10 * 60 * 1000;
+    const remainingTime = tenMinutes - timeDiff;
+    
+    if (remainingTime <= 0) return null;
+    
+    const minutes = Math.floor(remainingTime / (60 * 1000));
+    const seconds = Math.floor((remainingTime % (60 * 1000)) / 1000);
+    
+    return { minutes, seconds };
   };
 
   return (
@@ -616,13 +713,25 @@ const ContactUs: React.FC = () => {
           <div className="form-container">
             {/* Left Side - Form */}
             <div className="form-left-section">
-              <div className="form-header-content">
-                <h2 className="form-title">To Be Filled Out By Providers Or Administrators:</h2>
-              
-              </div>
-              <br />
-     
-    <form onSubmit={handleSubmit(onSubmit)} className="contact-form" id="demo-form">
+              {formSubmitted ? (
+                <div className="success-container">
+                  <div className="success-icon">
+                    <svg width="80" height="80" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <circle cx="12" cy="12" r="10" stroke="#10B981" strokeWidth="2"/>
+                      <path d="M8 12L11 15L16 9" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </div>
+                  <h2 className="success-title">Contact Request Submitted Successfully!</h2>
+                  <p className="success-message">We will contact you back soon.</p>
+                 
+                </div>
+              ) : (
+                <>
+                  <div className="form-header-content">
+                    <h2 className="form-title">To Be Filled Out By Providers Or Administrators:</h2>
+                  </div>
+                  <br />
+                  <form onSubmit={handleSubmit(onSubmit)} className="contact-form" id="demo-form">
                 {/* Name Field */}
                 <div className="form-row">
                   <div className="form-field">
@@ -756,6 +865,8 @@ const ContactUs: React.FC = () => {
                 </button>
               </div>
               </form>
+                </>
+              )}
             </div>
             
             {/* Right Side - Image */}

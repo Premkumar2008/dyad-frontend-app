@@ -1,0 +1,7 @@
+/**
+ * Refactored main CSS entry point
+ * Clean, organized imports for optimal loading
+ */
+
+/* Import main stylesheet with all components */
+@import './styles/main.css';

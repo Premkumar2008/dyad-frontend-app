@@ -1,0 +1,149 @@
+/**
+ * Main stylesheet entry point
+ * Organized imports for optimal loading and maintainability
+ */
+
+/* Import Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap');
+
+/* Import CSS Variables and Design Tokens */
+@import './base/variables.css';
+
+/* Import Base Styles */
+@import './base/reset.css';
+@import './base/typography.css';
+
+/* Import Component Styles */
+@import './components/forms.css';
+@import './components/landing.css';
+
+/* Import Layout Styles */
+@import './layouts/grid.css';
+@import './layouts/containers.css';
+
+/* Import Responsive Styles */
+@import './responsive/breakpoints.css';
+
+/* Import Utility Classes */
+@import './utilities/animations.css';
+@import './utilities/helpers.css';
+
+/* ==================== */
+/* Global Base Styles    */
+/* ==================== */
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  font-size: 16px;
+}
+
+body {
+  font-family: var(--font-family-primary);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-normal);
+  color: var(--color-text-primary);
+  background: var(--color-background);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ==================== */
+/* Focus Management      */
+/* ==================== */
+
+*:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+*:focus:not(:focus-visible) {
+  outline: none;
+}
+
+*:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* ==================== */
+/* Selection Styles      */
+/* ==================== */
+
+::selection {
+  background: var(--color-primary);
+  color: var(--color-white);
+}
+
+::-moz-selection {
+  background: var(--color-primary);
+  color: var(--color-white);
+}
+
+/* ==================== */
+/* Scrollbar Styles      */
+/* ==================== */
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-gray-100);
+  border-radius: var(--radius-sm);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-gray-300);
+  border-radius: var(--radius-sm);
+  transition: background var(--transition-fast);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-gray-400);
+}
+
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-gray-300) var(--color-gray-100);
+}
+
+/* ==================== */
+/* Video Controls        */
+/* ==================== */
+
+video::-webkit-media-controls-start-playback-button {
+  display: none !important;
+  -webkit-appearance: none;
+}
+
+/* ==================== */
+/* Print Styles          */
+/* ==================== */
+
+@media print {
+  * {
+    background: transparent !important;
+    color: black !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+  
+  .no-print {
+    display: none !important;
+  }
+  
+  a,
+  a:visited {
+    text-decoration: underline;
+  }
+  
+  .page-break {
+    page-break-before: always;
+  }
+}
