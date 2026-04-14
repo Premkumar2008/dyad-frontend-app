@@ -6,6 +6,7 @@ import * as yup from 'yup';
 import { ChevronLeft, ChevronRight, Mail, ArrowLeft, Loader2, Lock, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import toast from 'react-hot-toast';
+import axios from 'axios';
 import "../pages/login-new.css";
 
 // Define the form type directly
@@ -27,6 +28,8 @@ interface ResetPasswordFormData {
 
 interface RegisterFormData {
   npi: string;
+  npiType: string;
+  facilityName: string;
   firstName: string;
   lastName: string;
   phone: string;
@@ -51,9 +54,23 @@ const resetPasswordSchema = yup.object().shape({
 });
 
 const registerSchema = yup.object().shape({
-  npi: yup.string().required('NPI is required'),
-  firstName: yup.string().required('First name is required'),
-  lastName: yup.string().required('Last name is required'),
+  npi: yup.string().required('NPI is required').length(10, 'NPI must be exactly 10 digits'),
+  npiType: yup.string(),
+  facilityName: yup.string().when('npiType', {
+    is: 'Facility/Group',
+    then: (schema) => schema.required('Facility Name is required'),
+    otherwise: (schema) => schema.notRequired(),
+  }),
+  firstName: yup.string().when('npiType', {
+    is: 'Individual',
+    then: (schema) => schema.required('First name is required'),
+    otherwise: (schema) => schema.notRequired(),
+  }),
+  lastName: yup.string().when('npiType', {
+    is: 'Individual',
+    then: (schema) => schema.required('Last name is required'),
+    otherwise: (schema) => schema.notRequired(),
+  }),
   phone: yup.string().required('Phone number is required'),
   email: yup.string().email('Invalid email address').required('Email is required'),
   password: yup.string().min(8, 'Password must be at least 8 characters').required('Password is required'),
@@ -98,6 +115,10 @@ const Login: React.FC = () => {
   const [registerShowPassword, setRegisterShowPassword] = useState(false);
   const [registerError, setRegisterError] = useState<string>('');
   const [registerInfoMessage, setRegisterInfoMessage] = useState<string>('');
+  const [isNpiValidating, setIsNpiValidating] = useState(false);
+  const [npiValidated, setNpiValidated] = useState(false);
+  const [npiEnumerationType, setNpiEnumerationType] = useState<string>('');
+  const [phoneValue, setPhoneValue] = useState('');
   const { login, isLoading, user, sendPasswordResetOTP, resetPasswordWithOTP, register: registerUser } = useAuth();
 
   const handleLogoClick = () => {
@@ -170,6 +191,8 @@ const Login: React.FC = () => {
     resolver: yupResolver(registerSchema) as any,
     defaultValues: {
       email: location.state?.email || '',
+      npiType: '',
+      facilityName: '',
       firstName: '',
       lastName: '',
       phone: '',
@@ -177,6 +200,52 @@ const Login: React.FC = () => {
       password: '',
     }
   });
+
+  const { onChange: npiOnChange, ...npiRest } = registerRegister('npi');
+  const { onChange: phoneOnChange, ...phoneRest } = registerRegister('phone');
+
+  const validateNPI = async (npi: string) => {
+    if (npi.length !== 10) return;
+    setIsNpiValidating(true);
+    try {
+      const response = await axios.post('/api/npi/registry', { npi });
+      if (response.data.success) {
+        const data = response.data.data || response.data;
+        const basic = data.basic || data;
+        const enumType: string = data.enumeration_type || basic.enumeration_type || '';
+        const phone = response.data.telephone_number || basic.telephone_number || data.telephone_number || '';
+
+        if (enumType === 'NPI-2') {
+          const orgName = basic.organization_name || data.organization_name || '';
+          setValueRegister('npiType', 'Facility/Group');
+          setValueRegister('facilityName', orgName);
+          setValueRegister('firstName', '');
+          setValueRegister('lastName', '');
+        } else if (enumType === 'NPI-1') {
+          const fName = basic.first_name || data.first_name || '';
+          const lName = basic.last_name || data.last_name || '';
+          setValueRegister('npiType', 'Individual');
+          setValueRegister('firstName', fName);
+          setValueRegister('lastName', lName);
+          setValueRegister('facilityName', '');
+        }
+
+        setValueRegister('phone', phone);
+        setPhoneValue(phone);
+        setNpiEnumerationType(enumType);
+        toast.success('NPI validation successful!');
+        setNpiValidated(true);
+      } else {
+        toast.error('NPI validation failed. Please check your NPI number.');
+        setNpiValidated(false);
+      }
+    } catch (error) {
+      toast.error('Error validating NPI. Please try again.');
+      setNpiValidated(false);
+    } finally {
+      setIsNpiValidating(false);
+    }
+  };
 
   const otp = watch('otp');
 
@@ -565,34 +634,86 @@ const Login: React.FC = () => {
                 </div>
               )}
               
-              {/* NPI and First Name in one row */}
+              {/* Row 1: NPI | NPI Type */}
               <div className="form-row">
                 <div className="form-field">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    NPI
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">NPI</label>
                   <input
-                    {...registerRegister('npi')}
+                    {...npiRest}
                     type="text"
                     placeholder="Enter NPI"
-                    className="input-field"
-                    disabled={isLoading}
+                    className={`input-field ${npiValidated ? 'border-green-500' : ''} ${isNpiValidating ? 'border-blue-500' : ''}`}
+                    disabled={isLoading || isNpiValidating}
+                    maxLength={10}
+                    onChange={(e) => {
+                      npiOnChange(e);
+                      const val = e.target.value;
+                      if (val.length < 10) {
+                        setNpiValidated(false);
+                        setNpiEnumerationType('');
+                        setValueRegister('npiType', '');
+                        setValueRegister('facilityName', '');
+                      } else if (val.length === 10 && !isNpiValidating) {
+                        validateNPI(val);
+                      }
+                    }}
                   />
+                  {isNpiValidating && (
+                    <div className="mt-2 flex items-center text-sm text-blue-600">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
+                      Validating NPI...
+                    </div>
+                  )}
+                  {npiValidated && (
+                    <div className="mt-2 text-sm text-green-600">✓ NPI validated successfully</div>
+                  )}
                   {registerErrors.npi && (
                     <p className="mt-1 text-sm text-red-600">{registerErrors.npi.message}</p>
                   )}
                 </div>
 
                 <div className="form-field">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">NPI Type</label>
+                  <input
+                    {...registerRegister('npiType')}
+                    type="text"
+                    placeholder="NPI Type"
+                    className="input-field bg-gray-50"
+                    disabled
+                  />
+                </div>
+              </div>
+
+              {/* Row 2: Facility Name | First Name */}
+              <div className="form-row">
+                <div className="form-field">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    First Name
+                    Facility Name {npiEnumerationType === 'NPI-2' && <span className="text-red-500">*</span>}
+                  </label>
+                  <input
+                    {...registerRegister('facilityName')}
+                    type="text"
+                    placeholder="Facility Name"
+                    className="input-field bg-gray-50"
+                    disabled={isLoading || npiEnumerationType !== 'NPI-2'}
+                    readOnly={npiEnumerationType === 'NPI-2'}
+                  />
+                  {registerErrors.facilityName && (
+                    <p className="mt-1 text-sm text-red-600">{registerErrors.facilityName.message}</p>
+                  )}
+                </div>
+
+                <div className="form-field">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    First Name {npiEnumerationType === 'NPI-1' && <span className="text-red-500">*</span>}
                   </label>
                   <input
                     {...registerRegister('firstName')}
                     type="text"
                     placeholder="First name"
-                    className="input-field"
-                    disabled={isLoading}
+                    className={`input-field ${npiEnumerationType === 'NPI-2' ? 'bg-gray-50' : ''}`}
+                    disabled={isLoading || npiEnumerationType === 'NPI-2'}
+                    readOnly={npiEnumerationType === 'NPI-1'}
                   />
                   {registerErrors.firstName && (
                     <p className="mt-1 text-sm text-red-600">{registerErrors.firstName.message}</p>
@@ -600,18 +721,19 @@ const Login: React.FC = () => {
                 </div>
               </div>
 
-              {/* Last Name and Phone in one row */}
+              {/* Row 3: Last Name | Phone */}
               <div className="form-row">
                 <div className="form-field">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Last Name
+                    Last Name {npiEnumerationType === 'NPI-1' && <span className="text-red-500">*</span>}
                   </label>
                   <input
                     {...registerRegister('lastName')}
                     type="text"
                     placeholder="Last name"
-                    className="input-field"
-                    disabled={isLoading}
+                    className={`input-field ${npiEnumerationType === 'NPI-2' ? 'bg-gray-50' : ''}`}
+                    disabled={isLoading || npiEnumerationType === 'NPI-2'}
+                    readOnly={npiEnumerationType === 'NPI-1'}
                   />
                   {registerErrors.lastName && (
                     <p className="mt-1 text-sm text-red-600">{registerErrors.lastName.message}</p>
@@ -619,18 +741,19 @@ const Login: React.FC = () => {
                 </div>
 
                 <div className="form-field">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Phone
-                  </label>
-                  <div className="relative">
-                    <input
-                      {...registerRegister('phone')}
-                      type="tel"
-                      placeholder="Enter phone number"
-                      className="input-field"
-                      disabled={isLoading}
-                    />
-                  </div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
+                  <input
+                    {...phoneRest}
+                    type="tel"
+                    placeholder="Enter phone number"
+                    className="input-field"
+                    disabled={isLoading}
+                    value={phoneValue}
+                    onChange={(e) => {
+                      phoneOnChange(e);
+                      setPhoneValue(e.target.value);
+                    }}
+                  />
                   {registerErrors.phone && (
                     <p className="mt-1 text-sm text-red-600">{registerErrors.phone.message}</p>
                   )}
@@ -694,13 +817,18 @@ const Login: React.FC = () => {
               {/* Register Button */}
               <button
                 type="submit"
-                disabled={isLoading}
+                disabled={isLoading || isNpiValidating || !npiValidated}
                 className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isLoading ? (
                   <div className="flex items-center justify-center">
                     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
                     Registering...
+                  </div>
+                ) : isNpiValidating ? (
+                  <div className="flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                    Validating NPI...
                   </div>
                 ) : (
                   'Register'
