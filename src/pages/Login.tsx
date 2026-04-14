@@ -213,7 +213,8 @@ const Login: React.FC = () => {
         const data = response.data.data || response.data;
         const basic = data.basic || data;
         const enumType: string = data.enumeration_type || basic.enumeration_type || '';
-        const phone = response.data.telephone_number || basic.telephone_number || data.telephone_number || '';
+        const phone = data?.addresses[0]?.telephone_number || '';
+        console.log('phone',  data.addresses[0].telephone_number);
 
         if (enumType === 'NPI-2') {
           const orgName = basic.organization_name || data.organization_name || '';
