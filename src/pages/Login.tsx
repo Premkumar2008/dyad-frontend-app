@@ -3,7 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
-import { ChevronLeft, ChevronRight, Mail, ArrowLeft, Loader2, Lock, Eye, EyeOff } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Mail, ArrowLeft, Loader2, Lock, Eye, EyeOff, RefreshCw } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import toast from 'react-hot-toast';
 import axios from 'axios';
@@ -31,7 +31,6 @@ interface RegisterFormData {
   npiType: string;
   facilityName: string;
   firstName: string;
-  lastName: string;
   phone: string;
   email: string;
   password: string;
@@ -66,11 +65,6 @@ const registerSchema = yup.object().shape({
     then: (schema) => schema.required('First name is required'),
     otherwise: (schema) => schema.notRequired(),
   }),
-  lastName: yup.string().when('npiType', {
-    is: 'Individual',
-    then: (schema) => schema.required('Last name is required'),
-    otherwise: (schema) => schema.notRequired(),
-  }),
   phone: yup.string().required('Phone number is required'),
   email: yup.string().email('Invalid email address').required('Email is required'),
   password: yup.string().min(8, 'Password must be at least 8 characters').required('Password is required'),
@@ -94,6 +88,204 @@ const carouselImages = [
     description: 'Leveraging cutting-edge technology for healthcare efficiency'
   }
 ];
+
+// Inline OTP Verification Component
+interface OTPVerificationInlineProps {
+  email: string;
+  onBack: () => void;
+  onSuccess: () => void;
+}
+
+const OTPVerificationInline: React.FC<OTPVerificationInlineProps> = ({ email, onBack, onSuccess }) => {
+  const [error, setError] = useState<string>('');
+  const [resendDisabled, setResendDisabled] = useState(false);
+  const [countdown, setCountdown] = useState(0);
+  const { verifyOTP, isLoading } = useAuth();
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    setValue,
+    watch,
+  } = useForm({
+    resolver: yupResolver(yup.object({
+      otp: yup.string().length(6, 'OTP must be 6 digits').required('OTP is required'),
+    })) as any,
+  });
+
+  const otpValue = watch('otp');
+
+  // Handle OTP input change
+  const handleOTPChange = (index: number, value: string) => {
+    const newOTP = otpValue ? otpValue.split('') : Array(6).fill('');
+    newOTP[index] = value;
+    const updatedOTP = newOTP.join('');
+    setValue('otp', updatedOTP);
+
+    // Auto-focus next input
+    if (value && index < 5) {
+      const nextInput = document.getElementById(`otp-inline-${index + 1}`) as HTMLInputElement;
+      if (nextInput) {
+        nextInput.focus();
+      }
+    }
+  };
+
+  // Handle key press for backspace
+  const handleKeyPress = (index: number, e: React.KeyboardEvent) => {
+    if (e.key === 'Backspace' && !otpValue?.[index] && index > 0) {
+      const prevInput = document.getElementById(`otp-inline-${index - 1}`) as HTMLInputElement;
+      if (prevInput) {
+        prevInput.focus();
+      }
+    }
+  };
+
+  // Handle paste
+  const handlePaste = (e: React.ClipboardEvent) => {
+    e.preventDefault();
+    const pastedData = e.clipboardData.getData('text').slice(0, 6);
+    if (/^\d+$/.test(pastedData)) {
+      setValue('otp', pastedData.padEnd(6, ''));
+    }
+  };
+
+  const onSubmit = async (data: { otp: string }) => {
+    try {
+      setError('');
+      const result = await verifyOTP(email, data.otp);
+      
+      if (result.success) {
+        toast.success('Email verified successfully!');
+        onSuccess();
+      } else {
+        if (result.error?.toLowerCase().includes('already verified') || result.error?.toLowerCase().includes('account exists')) {
+          toast('Email is already verified.', { icon: 'ℹ️' });
+          onSuccess();
+        } else {
+          setError(result.error || 'OTP verification failed');
+        }
+      }
+    } catch (error) {
+      setError('An unexpected error occurred. Please try again.');
+    }
+  };
+
+  const handleResendOTP = async () => {
+    setResendDisabled(true);
+    setCountdown(60);
+
+    // Countdown timer
+    const timer = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          setResendDisabled(false);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    // API call to resend OTP would go here
+    console.log('Resending OTP to:', email);
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Back Button */}
+      <button
+        type="button"
+        onClick={onBack}
+        className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900"
+      >
+        <ArrowLeft className="w-4 h-4" />
+        Back
+      </button>
+
+      {/* Email Info */}
+      <div className="text-center">
+    
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">Verify Your Email</h2>
+        <p className="text-gray-600">
+          We've sent a 6-digit verification code to
+        </p>
+        <p className="font-medium text-gray-900">{email}</p>
+      </div>
+
+      {/* OTP Form */}
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        {/* OTP Input Fields */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-4">
+            Enter Verification Code
+          </label>
+          <div className="flex justify-center gap-2">
+            {[0, 1, 2, 3, 4, 5].map((index) => (
+              <input
+                key={index}
+                id={`otp-inline-${index}`}
+                type="text"
+                maxLength={1}
+                value={otpValue?.[index] || ''}
+                onChange={(e) => handleOTPChange(index, e.target.value)}
+                onKeyDown={(e) => handleKeyPress(index, e)}
+                onPaste={index === 0 ? handlePaste : undefined}
+                className="w-12 h-12 text-center text-lg font-semibold border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                disabled={isLoading}
+              />
+            ))}
+          </div>
+          {errors.otp && (
+            <p className="mt-2 text-sm text-red-600 text-center">{errors.otp?.message as string}</p>
+          )}
+        </div>
+
+        {/* Hidden input for form validation */}
+        <input type="hidden" {...register('otp')} />
+
+        {/* Error Message */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+            {error}
+          </div>
+        )}
+
+        {/* Verify Button */}
+        <button
+          type="submit"
+          disabled={isLoading || otpValue?.length !== 6}
+          className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {isLoading ? (
+            <div className="flex items-center justify-center">
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+              Verifying...
+            </div>
+          ) : (
+            'Verify Email'
+          )}
+        </button>
+
+        {/* Resend OTP */}
+        {/* <div className="text-center">
+          <button
+            type="button"
+            onClick={handleResendOTP}
+            disabled={resendDisabled}
+            className="text-primary-600 hover:text-primary-500 font-medium disabled:text-gray-400 disabled:cursor-not-allowed inline-flex items-center gap-2"
+          >
+            <RefreshCw className={`w-4 h-4 ${resendDisabled ? '' : 'animate-spin'}`} />
+            {resendDisabled
+              ? `Resend code in ${countdown}s`
+              : "Didn't receive the code? Resend"}
+          </button>
+        </div> */}
+      </form>
+    </div>
+  );
+};
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
@@ -119,6 +311,8 @@ const Login: React.FC = () => {
   const [npiValidated, setNpiValidated] = useState(false);
   const [npiEnumerationType, setNpiEnumerationType] = useState<string>('');
   const [phoneValue, setPhoneValue] = useState('');
+  const [showOTPVerification, setShowOTPVerification] = useState(false);
+  const [otpEmail, setOtpEmail] = useState<string>('');
   const { login, isLoading, user, sendPasswordResetOTP, resetPasswordWithOTP, register: registerUser } = useAuth();
 
   const handleLogoClick = () => {
@@ -187,6 +381,7 @@ const Login: React.FC = () => {
     handleSubmit: handleRegisterSubmit,
     formState: { errors: registerErrors },
     setValue: setValueRegister,
+    reset: resetRegister,
   } = useForm<RegisterFormData>({
     resolver: yupResolver(registerSchema) as any,
     defaultValues: {
@@ -194,7 +389,6 @@ const Login: React.FC = () => {
       npiType: '',
       facilityName: '',
       firstName: '',
-      lastName: '',
       phone: '',
       npi: '',
       password: '',
@@ -216,18 +410,38 @@ const Login: React.FC = () => {
         const phone = data?.addresses[0]?.telephone_number || '';
         console.log('phone',  data.addresses[0].telephone_number);
 
+        // Get contact name based on enumeration type
+        let fullName = '';
+        
+        if (enumType === 'NPI-2') {
+          // For facilities, use authorized official's name
+          const prefix = basic.authorized_official_name_prefix || '';
+          const firstName = basic.authorized_official_first_name || '';
+          const lastName = basic.authorized_official_last_name || '';
+          fullName = [prefix, firstName, lastName].filter(Boolean).join(' ').trim();
+        } else if (enumType === 'NPI-1') {
+          // For individuals, use their own name
+          const prefix = basic.name_prefix && basic.name_prefix !== '--' ? basic.name_prefix : '';
+          const firstName = basic.first_name || '';
+          const middleName = basic.middle_name || '';
+          const lastName = basic.last_name || '';
+          const suffix = basic.name_suffix && basic.name_suffix !== '--' ? basic.name_suffix : '';
+          const credential = basic.credential || '';
+          
+          // Combine name parts: prefix first middle last suffix, credential
+          const nameParts = [prefix, firstName, middleName, lastName, suffix].filter(Boolean);
+          const nameString = nameParts.join(' ').trim();
+          fullName = credential ? `${nameString}, ${credential}` : nameString;
+        }
+
         if (enumType === 'NPI-2') {
           const orgName = basic.organization_name || data.organization_name || '';
           setValueRegister('npiType', 'Facility/Group');
           setValueRegister('facilityName', orgName);
-          setValueRegister('firstName', '');
-          setValueRegister('lastName', '');
+          setValueRegister('firstName', fullName || 'N/A');
         } else if (enumType === 'NPI-1') {
-          const fName = basic.first_name || data.first_name || '';
-          const lName = basic.last_name || data.last_name || '';
           setValueRegister('npiType', 'Individual');
-          setValueRegister('firstName', fName);
-          setValueRegister('lastName', lName);
+          setValueRegister('firstName', fullName || '');
           setValueRegister('facilityName', '');
         }
 
@@ -308,12 +522,10 @@ const Login: React.FC = () => {
           }
         }, 1000);
       } else if (result.needsVerification) {
-        // Redirect to OTP verification page
-        console.log('Redirecting to OTP verification for:', result.needsVerification.email);
-        navigate('/verify-otp', { 
-          state: { email: result.needsVerification.email },
-          replace: true 
-        });
+        // Show OTP verification inline
+        console.log('Showing OTP verification for:', result.needsVerification.email);
+        setOtpEmail(result.needsVerification.email);
+        setShowOTPVerification(true);
       } else if (result.needsRegistration) {
         // Redirect to register page with pre-filled data
         console.log('Redirecting to register with pre-filled data for:', result.needsRegistration.email);
@@ -432,11 +644,13 @@ const Login: React.FC = () => {
       const result = await registerUser(data);
       
       if (result.success) {
-        // Redirect to OTP verification page
-        navigate('/verify-otp', { state: { email: data.email } });
+        // Show OTP verification inline
+        setOtpEmail(data.email);
+        setShowOTPVerification(true);
       } else if (result.needsVerification) {
-        // Redirect to OTP verification page for existing unverified user
-        navigate('/verify-otp', { state: { email: result.needsVerification.email } });
+        // Show OTP verification inline for existing unverified user
+        setOtpEmail(result.needsVerification.email);
+        setShowOTPVerification(true);
       } else {
         setRegisterError(result.error || 'Registration failed');
       }
@@ -482,11 +696,11 @@ const Login: React.FC = () => {
         
 
           <h3 className="text-xl font-medium text-gray-900">
-            {showRegister ? 'Register' : showResetPassword ? 'Reset Your Password' : showForgotPassword ? 'Forgot Your Password?' : 'Login'}
+            {showOTPVerification ? '' : showRegister ? 'Register' : showResetPassword ? 'Reset Your Password' : showForgotPassword ? 'Forgot Your Password?' : 'Login'}
           </h3>
          
            <div className={`form-container-login ${showRegister ? "register-form" : ""}`}>
-          {!showForgotPassword && !showResetPassword && !showRegister ? (
+          {!showOTPVerification && !showForgotPassword && !showResetPassword && !showRegister ? (
             /* Login Form */
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
               {/* Email Field */}
@@ -612,10 +826,33 @@ const Login: React.FC = () => {
                 </Link>
               </div>
             </form>
+          ) : showOTPVerification ? (
+            /* OTP Verification Form */
+            <OTPVerificationInline 
+              email={otpEmail}
+              onBack={() => {
+                setShowOTPVerification(false);
+                setOtpEmail('');
+                setShowRegister(false);
+              }}
+              onSuccess={() => {
+                setShowOTPVerification(false);
+                setOtpEmail('');
+                setShowRegister(false);
+                // Clear registration form and state
+                resetRegister();
+                setRegisterError('');
+                setRegisterInfoMessage('');
+                setNpiValidated(false);
+                setNpiEnumerationType('');
+                setPhoneValue('');
+                // Show login form after successful verification
+              }}
+            />
           ) : showRegister ? (
             /* Register Form */
             <form onSubmit={handleRegisterSubmit(onRegisterSubmit)} className="space-y-6">
-              <p className="text-gray-600 mb-8">Join our network of surgical specialists, proceduralists, and outpatient facilities. Register today to explore how Dyad can support your practice with integrated services, operational expertise, and technology-driven solutions.</p>
+           
 
               {/* Info Message */}
               {registerInfoMessage && (
@@ -635,9 +872,9 @@ const Login: React.FC = () => {
                 </div>
               )}
               
-              {/* Row 1: NPI | NPI Type */}
+              {/* NPI Field - Full Width */}
               <div className="form-row">
-                <div className="form-field">
+                <div className="form-field full-width">
                   <label className="block text-sm font-medium text-gray-700 mb-2">NPI</label>
                   <input
                     {...npiRest}
@@ -669,79 +906,59 @@ const Login: React.FC = () => {
                     <div className="mt-2 text-sm text-green-600">✓ NPI validated successfully</div>
                   )}
                   {registerErrors.npi && (
-                    <p className="mt-1 text-sm text-red-600">{registerErrors.npi.message}</p>
-                  )}
-                </div>
-
-                <div className="form-field">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">NPI Type</label>
-                  <input
-                    {...registerRegister('npiType')}
-                    type="text"
-                    placeholder="NPI Type"
-                    className="input-field bg-gray-50"
-                    disabled
-                  />
-                </div>
-              </div>
-
-              {/* Row 2: Facility Name | First Name */}
-              <div className="form-row">
-                <div className="form-field">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Facility Name {npiEnumerationType === 'NPI-2' && <span className="text-red-500">*</span>}
-                  </label>
-                  <input
-                    {...registerRegister('facilityName')}
-                    type="text"
-                    placeholder="Facility Name"
-                    className="input-field bg-gray-50"
-                    disabled={isLoading || npiEnumerationType !== 'NPI-2'}
-                    readOnly={npiEnumerationType === 'NPI-2'}
-                  />
-                  {registerErrors.facilityName && (
-                    <p className="mt-1 text-sm text-red-600">{registerErrors.facilityName.message}</p>
-                  )}
-                </div>
-
-                <div className="form-field">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    First Name {npiEnumerationType === 'NPI-1' && <span className="text-red-500">*</span>}
-                  </label>
-                  <input
-                    {...registerRegister('firstName')}
-                    type="text"
-                    placeholder="First name"
-                    className={`input-field ${npiEnumerationType === 'NPI-2' ? 'bg-gray-50' : ''}`}
-                    disabled={isLoading || npiEnumerationType === 'NPI-2'}
-                    readOnly={npiEnumerationType === 'NPI-1'}
-                  />
-                  {registerErrors.firstName && (
-                    <p className="mt-1 text-sm text-red-600">{registerErrors.firstName.message}</p>
+                    <p className="mt-1 text-sm text-red-600">{registerErrors.npi.message as string}</p>
                   )}
                 </div>
               </div>
 
-              {/* Row 3: Last Name | Phone */}
-              <div className="form-row">
-                <div className="form-field">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Last Name {npiEnumerationType === 'NPI-1' && <span className="text-red-500">*</span>}
-                  </label>
-                  <input
-                    {...registerRegister('lastName')}
-                    type="text"
-                    placeholder="Last name"
-                    className={`input-field ${npiEnumerationType === 'NPI-2' ? 'bg-gray-50' : ''}`}
-                    disabled={isLoading || npiEnumerationType === 'NPI-2'}
-                    readOnly={npiEnumerationType === 'NPI-1'}
-                  />
-                  {registerErrors.lastName && (
-                    <p className="mt-1 text-sm text-red-600">{registerErrors.lastName.message}</p>
-                  )}
+              {/* Facility Name Field - Full Width - Only show for NPI-2 */}
+              {npiEnumerationType === 'NPI-2' && (
+                <div className="form-row">
+                  <div className="form-field full-width">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                     Verify Facility/Group/Practice Name <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      {...registerRegister('facilityName')}
+                      type="text"
+                      placeholder="Facility/Group/Practice Name"
+                      className="input-field bg-gray-50"
+                      disabled={isLoading}
+                      readOnly={true}
+                    />
+                    {registerErrors.facilityName && (
+                      <p className="mt-1 text-sm text-red-600">{registerErrors.facilityName.message as string}</p>
+                    )}
+                  </div>
                 </div>
+              )}
 
-                <div className="form-field">
+              {/* First Name Field - Full Width - Show only after NPI verification */}
+              {npiValidated && (
+                <div className="form-row">
+                  <div className="form-field full-width">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Verify Contact Name {npiEnumerationType === 'NPI-1' && <span className="text-red-500">*</span>}
+                    </label>
+                    <input
+                      {...registerRegister('firstName')}
+                      type="text"
+                      placeholder="Contact name"
+                      className="input-field bg-gray-50"
+                      disabled={true}
+                      readOnly={true}
+                    />
+                    {registerErrors.firstName && (
+                      <p className="mt-1 text-sm text-red-600">{registerErrors.firstName.message as string}</p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              
+              {/* Phone Field - Full Width */}
+              <div className="form-row">
+                <div className="form-field full-width">
                   <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
                   <input
                     {...phoneRest}
@@ -756,12 +973,12 @@ const Login: React.FC = () => {
                     }}
                   />
                   {registerErrors.phone && (
-                    <p className="mt-1 text-sm text-red-600">{registerErrors.phone.message}</p>
+                    <p className="mt-1 text-sm text-red-600">{registerErrors.phone.message as string}</p>
                   )}
                 </div>
               </div>
 
-              {/* Email in one row */}
+              {/* Email Field - Full Width */}
               <div className="form-row">
                 <div className="form-field full-width">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -777,12 +994,12 @@ const Login: React.FC = () => {
                     />
                   </div>
                   {registerErrors.email && (
-                    <p className="mt-1 text-sm text-red-600">{registerErrors.email.message}</p>
+                    <p className="mt-1 text-sm text-red-600">{registerErrors.email.message as string}</p>
                   )}
                 </div>
               </div>
 
-              {/* Password in one row */}
+              {/* Password Field - Full Width */}
               <div className="form-row">
                 <div className="form-field full-width">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -810,7 +1027,7 @@ const Login: React.FC = () => {
                     </button>
                   </div>
                   {registerErrors.password && (
-                    <p className="mt-1 text-sm text-red-600">{registerErrors.password.message}</p>
+                    <p className="mt-1 text-sm text-red-600">{registerErrors.password.message as string}</p>
                   )}
                 </div>
               </div>
@@ -918,7 +1135,7 @@ const Login: React.FC = () => {
                       />
                     </div>
                     {forgotErrors.email && (
-                      <p className="mt-1 text-sm text-red-600">{forgotErrors.email.message}</p>
+                      <p className="mt-1 text-sm text-red-600">{forgotErrors.email.message as string}</p>
                     )}
                   </div>
 
@@ -1012,7 +1229,7 @@ const Login: React.FC = () => {
                       ))}
                     </div>
                     {resetErrors.otp && (
-                      <p className="mt-2 text-sm text-red-600 text-center">{resetErrors.otp.message}</p>
+                      <p className="mt-2 text-sm text-red-600 text-center">{resetErrors.otp.message as string}</p>
                     )}
                   </div>
 
@@ -1045,7 +1262,7 @@ const Login: React.FC = () => {
                       </button>
                     </div>
                     {resetErrors.newPassword && (
-                      <p className="mt-1 text-sm text-red-600">{resetErrors.newPassword.message}</p>
+                      <p className="mt-1 text-sm text-red-600">{resetErrors.newPassword.message as string}</p>
                     )}
                   </div>
 
@@ -1078,7 +1295,7 @@ const Login: React.FC = () => {
                       </button>
                     </div>
                     {resetErrors.confirmPassword && (
-                      <p className="mt-1 text-sm text-red-600">{resetErrors.confirmPassword.message}</p>
+                      <p className="mt-1 text-sm text-red-600">{resetErrors.confirmPassword.message as string}</p>
                     )}
                   </div>
 

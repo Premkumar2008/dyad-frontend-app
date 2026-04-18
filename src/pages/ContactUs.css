@@ -1026,3 +1026,425 @@ input[type="datetime-local"] {
   font-family: 'Courier New', monospace;
   letter-spacing: 2px;
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   DateTimePicker  (dtp-*)
+═══════════════════════════════════════════════════════════════ */
+
+/* Outer wrapper */
+.dtp-container {
+  width: 100%;
+  font-family: 'Prompt', sans-serif;
+}
+
+/* Error border */
+.dtp-has-error .dtp-inner {
+  border-color: #ef4444 !important;
+}
+
+/* Main card */
+.dtp-inner {
+  display: flex;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.07);
+  min-height: 360px;
+}
+
+/* ── Calendar Panel ──────────────────────────────────────────── */
+.dtp-cal-panel {
+  flex: 0 0 290px;
+  padding: 20px 18px;
+  background: #f9fafb;
+  border-right: 1.5px solid #f0f2f5;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* Month navigation row */
+.dtp-month-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.dtp-month-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #111827;
+  letter-spacing: 0.01em;
+}
+
+.dtp-arrow {
+  width: 30px;
+  height: 30px;
+  border-radius: 7px;
+  border: 1.5px solid #e5e7eb;
+  background: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #374151;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  padding: 0;
+}
+
+.dtp-arrow:hover:not(:disabled) {
+  background: #1D6DD8;
+  border-color: #1D6DD8;
+  color: #fff;
+}
+
+.dtp-arrow:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* Weekday headers */
+.dtp-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  margin-bottom: 4px;
+}
+
+.dtp-weekday {
+  text-align: center;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 5px 0;
+}
+
+/* Days grid */
+.dtp-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.dtp-day-empty {
+  display: block;
+  aspect-ratio: 1;
+}
+
+.dtp-day {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  font-size: 0.82rem;
+  font-family: 'Prompt', sans-serif;
+  cursor: pointer;
+  background: transparent;
+  color: #1f2937;
+  transition: background 0.14s, color 0.14s, border-color 0.14s;
+  line-height: 1;
+  padding: 0;
+}
+
+.dtp-day--future:hover {
+  background: #dbeafe;
+  color: #1D6DD8;
+}
+
+.dtp-day--today {
+  font-weight: 700;
+  color: #1D6DD8;
+  border-color: #1D6DD8 !important;
+}
+
+.dtp-day--past {
+  color: #d1d5db;
+  cursor: not-allowed;
+}
+
+.dtp-day--selected {
+  background: #1D6DD8 !important;
+  color: #fff !important;
+  font-weight: 700;
+  border-color: #1D6DD8 !important;
+}
+
+/* Calendar legend */
+.dtp-cal-legend {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
+
+.dtp-cal-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.7rem;
+  color: #6b7280;
+}
+
+.dtp-cal-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.dtp-cal-dot--today  { border: 2px solid #1D6DD8; background: transparent; }
+.dtp-cal-dot--sel    { background: #1D6DD8; }
+.dtp-cal-dot--past   { background: #d1d5db; }
+
+/* ── Vertical Divider ─────────────────────────────────────────── */
+.dtp-vdivider {
+  width: 1.5px;
+  background: #f0f2f5;
+  flex-shrink: 0;
+}
+
+/* ── Slots Panel ─────────────────────────────────────────────── */
+.dtp-slots-panel {
+  flex: 1;
+  padding: 20px 18px;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* Empty placeholder */
+.dtp-slots-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  color: #9ca3af;
+  text-align: center;
+}
+
+.dtp-slots-empty p {
+  font-size: 0.88rem;
+  line-height: 1.6;
+  color: #9ca3af;
+  margin: 0;
+}
+
+/* Date heading */
+.dtp-slots-date {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1.5px solid #f0f2f5;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Loading spinner row */
+.dtp-slots-loading {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #6b7280;
+  font-size: 0.88rem;
+}
+
+.dtp-spin {
+  width: 18px;
+  height: 18px;
+  border: 2px solid #e5e7eb;
+  border-top-color: #1D6DD8;
+  border-radius: 50%;
+  animation: dtpSpin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes dtpSpin {
+  to { transform: rotate(360deg); }
+}
+
+/* Scrollable slot list */
+.dtp-slots-list {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  max-height: 252px;
+  padding-right: 4px;
+}
+
+.dtp-slots-list::-webkit-scrollbar       { width: 4px; }
+.dtp-slots-list::-webkit-scrollbar-track { background: #f3f4f6; border-radius: 4px; }
+.dtp-slots-list::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 4px; }
+
+/* Individual slot button */
+.dtp-slot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 13px;
+  border-radius: 9px;
+  border: 1.5px solid #e5e7eb;
+  background: #fff;
+  font-family: 'Prompt', sans-serif;
+  font-size: 0.83rem;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.14s, border-color 0.14s, color 0.14s;
+  width: 100%;
+  gap: 8px;
+}
+
+.dtp-slot-time {
+  font-weight: 500;
+  flex: 1;
+}
+
+/* Available */
+.dtp-slot--free {
+  color: #1f2937;
+}
+
+.dtp-slot--free:hover {
+  background: #eff6ff;
+  border-color: #1D6DD8;
+  color: #1D6DD8;
+}
+
+/* Selected */
+.dtp-slot--sel {
+  background: #1D6DD8 !important;
+  border-color: #1D6DD8 !important;
+  color: #fff !important;
+  font-weight: 600;
+}
+
+/* Booked / busy — with strikethrough */
+.dtp-slot--busy {
+  background: #fff5f5;
+  border-color: #fecaca;
+  color: #b91c1c;
+  cursor: not-allowed;
+}
+
+.dtp-slot--busy .dtp-slot-time {
+  text-decoration: line-through;
+  text-decoration-color: #f87171;
+  text-decoration-thickness: 2px;
+}
+
+/* Past */
+.dtp-slot--past {
+  background: #f9fafb;
+  border-color: #f3f4f6;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+/* Badge labels */
+.dtp-slot-tag {
+  font-size: 0.67rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 20px;
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
+}
+
+.dtp-slot-tag--busy { background: #fecaca; color: #b91c1c; }
+.dtp-slot-tag--past { background: #e5e7eb; color: #9ca3af; }
+
+/* Slot legend */
+.dtp-slot-legend {
+  display: flex;
+  gap: 14px;
+  margin-top: 11px;
+  flex-wrap: wrap;
+}
+
+.dtp-slot-legend span {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.7rem;
+  color: #6b7280;
+}
+
+.dtp-sleg {
+  display: inline-block;
+  width: 11px;
+  height: 11px;
+  border-radius: 3px;
+  flex-shrink: 0;
+  font-style: normal;
+}
+
+.dtp-sleg--free { background: #fff; border: 1.5px solid #1D6DD8; }
+.dtp-sleg--busy { background: #fecaca; }
+.dtp-sleg--past { background: #e5e7eb; }
+
+/* ── Confirmation bar ────────────────────────────────────────── */
+.dtp-confirm {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 11px 14px;
+  background: #f0fdf4;
+  border: 1.5px solid #86efac;
+  border-radius: 9px;
+  font-size: 0.85rem;
+  color: #166534;
+  line-height: 1.4;
+}
+
+.dtp-confirm svg { flex-shrink: 0; margin-top: 2px; }
+
+.dtp-confirm strong {
+  font-weight: 700;
+}
+
+/* ── Responsive ─────────────────────────────────────────────── */
+@media (max-width: 700px) {
+  .dtp-inner {
+    flex-direction: column;
+    min-height: auto;
+  }
+
+  .dtp-cal-panel {
+    flex: none;
+    border-right: none;
+    border-bottom: 1.5px solid #f0f2f5;
+  }
+
+  .dtp-vdivider { display: none; }
+
+  .dtp-slots-list {
+    max-height: none;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .dtp-slots-date { white-space: normal; }
+}
+
+@media (max-width: 400px) {
+  .dtp-slots-list {
+    grid-template-columns: 1fr;
+  }
+
+  .dtp-cal-panel { padding: 14px 12px; }
+  .dtp-slots-panel { padding: 14px 12px; }
+}

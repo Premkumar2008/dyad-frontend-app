@@ -337,7 +337,7 @@ const DyadLanding: React.FC = () => {
     {
       id: 1,
       title: 'Technology Driven Capabilities',
-      subtitle: 'Mobile supported work flows, ONC Integration FHIR, governance and compliance',
+      subtitle: 'IOS workflows and FHIR Integrations, built on governance and compliance',
       image: '/assets/images/ourservices2.jpg',
       icon: 'icon-laptop',
       description: '',

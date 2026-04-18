@@ -8,6 +8,281 @@ import toast from 'react-hot-toast';
 import './ContactUs.css';
 import ReCAPTCHA from 'react-google-recaptcha';
 
+// ── DateTimePicker ────────────────────────────────────────────────────────────
+interface CalendarEvent { start: string; end: string; }
+
+const BUSINESS_START = 9;   // 9 AM
+const BUSINESS_END   = 17;  // last slot ends at 5 PM
+
+function generateTimeSlots() {
+  const slots: { hour: number; min: number }[] = [];
+  for (let h = BUSINESS_START; h < BUSINESS_END; h++) {
+    slots.push({ hour: h, min: 0 });
+    slots.push({ hour: h, min: 30 });
+  }
+  return slots;
+}
+
+function formatSlotLabel(hour: number, min: number): string {
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const toAmPm = (h: number, m: number) => {
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    const h12  = h % 12 === 0 ? 12 : h % 12;
+    return `${h12}:${pad(m)} ${ampm}`;
+  };
+  const endTotal = hour * 60 + min + 30;
+  return `${toAmPm(hour, min)} – ${toAmPm(Math.floor(endTotal / 60), endTotal % 60)}`;
+}
+
+const MONTH_NAMES = [
+  'January','February','March','April','May','June',
+  'July','August','September','October','November','December',
+];
+const DAY_LABELS = ['Su','Mo','Tu','We','Th','Fr','Sa'];
+const TIME_SLOTS = generateTimeSlots();
+
+const DateTimePicker: React.FC<{
+  value: string;
+  onChange: (v: string) => void;
+  hasError?: boolean;
+}> = ({ value, onChange, hasError }) => {
+  const todayMidnight = (() => { const d = new Date(); d.setHours(0, 0, 0, 0); return d; })();
+
+  const [currentMonth, setCurrentMonth] = useState(() => {
+    const d = new Date();
+    return new Date(d.getFullYear(), d.getMonth(), 1);
+  });
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [busyEvents, setBusyEvents]     = useState<CalendarEvent[]>([]);
+  const [loadingSlots, setLoadingSlots] = useState(false);
+
+  // ── helpers ──────────────────────────────────────────────────────────────
+  const isSlotBusy = (date: Date, hour: number, min: number): boolean => {
+    const slotStart = new Date(date.getFullYear(), date.getMonth(), date.getDate(), hour, min);
+    const slotEnd   = new Date(slotStart.getTime() + 30 * 60_000);
+    return busyEvents.some(ev => slotStart < new Date(ev.end) && slotEnd > new Date(ev.start));
+  };
+
+  const isSlotPast = (date: Date, hour: number, min: number): boolean =>
+    new Date(date.getFullYear(), date.getMonth(), date.getDate(), hour, min) <= new Date();
+
+  const getSelectedSlotKey = (): string => {
+    if (!value || !selectedDate) return '';
+    const tPart = value.split('T')[1];
+    if (!tPart) return '';
+    const [h, m] = tPart.split(':');
+    return `${parseInt(h)}-${parseInt(m)}`;
+  };
+
+  // ── fetch calendar events ─────────────────────────────────────────────────
+  const fetchBusySlots = async (date: Date) => {
+    setLoadingSlots(true);
+    try {
+      const pad = (n: number) => String(n).padStart(2, '0');
+      const dateStr = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+      const apiUrl  = import.meta.env.VITE_API_URL || '';
+      const res = await axios.get(`${apiUrl}/calendar-events?date=${dateStr}`);
+      setBusyEvents(res.data.events ?? []);
+    } catch {
+      setBusyEvents([]);
+    } finally {
+      setLoadingSlots(false);
+    }
+  };
+
+  // ── calendar navigation ───────────────────────────────────────────────────
+  const canGoPrev = () => {
+    const now = new Date();
+    return currentMonth.getFullYear() > now.getFullYear() ||
+           currentMonth.getMonth()    > now.getMonth();
+  };
+  const prevMonth = () => setCurrentMonth(p => new Date(p.getFullYear(), p.getMonth() - 1, 1));
+  const nextMonth = () => setCurrentMonth(p => new Date(p.getFullYear(), p.getMonth() + 1, 1));
+
+  // ── days grid ─────────────────────────────────────────────────────────────
+  const getDaysGrid = (): (Date | null)[] => {
+    const yr = currentMonth.getFullYear(), mo = currentMonth.getMonth();
+    const grid: (Date | null)[] = Array(new Date(yr, mo, 1).getDay()).fill(null);
+    for (let d = 1; d <= new Date(yr, mo + 1, 0).getDate(); d++) grid.push(new Date(yr, mo, d));
+    return grid;
+  };
+
+  // ── handlers ──────────────────────────────────────────────────────────────
+  const handleDateClick = (day: Date) => {
+    const mid = new Date(day.getFullYear(), day.getMonth(), day.getDate());
+    if (mid < todayMidnight) return;
+    setSelectedDate(day);
+    onChange('');
+    fetchBusySlots(day);
+  };
+
+  const handleSlotClick = (hour: number, min: number) => {
+    if (!selectedDate) return;
+    const pad = (n: number) => String(n).padStart(2, '0');
+    onChange(
+      `${selectedDate.getFullYear()}-${pad(selectedDate.getMonth()+1)}-${pad(selectedDate.getDate())}T${pad(hour)}:${pad(min)}:00`
+    );
+  };
+
+  // ── render ────────────────────────────────────────────────────────────────
+  const days            = getDaysGrid();
+  const selectedSlotKey = getSelectedSlotKey();
+
+  return (
+    <div className={`dtp-container${hasError ? ' dtp-has-error' : ''}`}>
+      <div className="dtp-inner">
+
+        {/* ── Left: Calendar ── */}
+        <div className="dtp-cal-panel">
+
+          {/* Month navigation */}
+          <div className="dtp-month-nav">
+            <button type="button" className="dtp-arrow" onClick={prevMonth} disabled={!canGoPrev()}>
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M10 12L6 8L10 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
+            <span className="dtp-month-title">
+              {MONTH_NAMES[currentMonth.getMonth()]} {currentMonth.getFullYear()}
+            </span>
+            <button type="button" className="dtp-arrow" onClick={nextMonth}>
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M6 4L10 8L6 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
+          </div>
+
+          {/* Weekday headers */}
+          <div className="dtp-weekdays">
+            {DAY_LABELS.map(d => <span key={d} className="dtp-weekday">{d}</span>)}
+          </div>
+
+          {/* Days */}
+          <div className="dtp-days">
+            {days.map((day, i) => {
+              if (!day) return <span key={`e-${i}`} className="dtp-day-empty" />;
+              const mid     = new Date(day.getFullYear(), day.getMonth(), day.getDate());
+              const isPast  = mid < todayMidnight;
+              const isToday = mid.getTime() === todayMidnight.getTime();
+              const isSel   = !!selectedDate && selectedDate.toDateString() === day.toDateString();
+              return (
+                <button
+                  key={day.getDate()}
+                  type="button"
+                  disabled={isPast}
+                  className={`dtp-day${isPast ? ' dtp-day--past' : ' dtp-day--future'}${isToday ? ' dtp-day--today' : ''}${isSel ? ' dtp-day--selected' : ''}`}
+                  onClick={() => !isPast && handleDateClick(day)}
+                >
+                  {day.getDate()}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Calendar legend */}
+          <div className="dtp-cal-legend">
+            <span className="dtp-cal-legend-item">
+              <span className="dtp-cal-dot dtp-cal-dot--today" /> Today
+            </span>
+            <span className="dtp-cal-legend-item">
+              <span className="dtp-cal-dot dtp-cal-dot--sel" /> Selected
+            </span>
+            <span className="dtp-cal-legend-item">
+              <span className="dtp-cal-dot dtp-cal-dot--past" /> Past
+            </span>
+          </div>
+        </div>
+
+        {/* ── Divider ── */}
+        <div className="dtp-vdivider" />
+
+        {/* ── Right: Time Slots ── */}
+        <div className="dtp-slots-panel">
+          {!selectedDate ? (
+            <div className="dtp-slots-empty">
+              <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#c7cdd6" strokeWidth="1.4">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
+              </svg>
+              <p>Pick a date on the left<br/>to see available slots</p>
+            </div>
+          ) : (
+            <>
+              <div className="dtp-slots-date">
+                {selectedDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
+              </div>
+
+              {loadingSlots ? (
+                <div className="dtp-slots-loading">
+                  <div className="dtp-spin" />
+                  <span>Checking availability…</span>
+                </div>
+              ) : (
+                <>
+                  <div className="dtp-slots-list">
+                    {TIME_SLOTS.map(({ hour, min }) => {
+                      const busy     = isSlotBusy(selectedDate, hour, min);
+                      const past     = isSlotPast(selectedDate, hour, min);
+                      const disabled = busy || past;
+                      const key      = `${hour}-${min}`;
+                      const isSel    = selectedSlotKey === key;
+                      return (
+                        <button
+                          key={key}
+                          type="button"
+                          disabled={disabled}
+                          className={`dtp-slot${isSel ? ' dtp-slot--sel' : ''}${busy ? ' dtp-slot--busy' : past ? ' dtp-slot--past' : ' dtp-slot--free'}`}
+                          onClick={() => !disabled && handleSlotClick(hour, min)}
+                        >
+                          <span className="dtp-slot-time">{formatSlotLabel(hour, min)}</span>
+                          {busy && <span className="dtp-slot-tag dtp-slot-tag--busy">Booked</span>}
+                          {past && !busy && <span className="dtp-slot-tag dtp-slot-tag--past">Past</span>}
+                          {isSel && (
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
+                              <path d="M5 13l4 4L19 7"/>
+                            </svg>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Slot legend */}
+                  <div className="dtp-slot-legend">
+                    <span><i className="dtp-sleg dtp-sleg--free" />Available</span>
+                    <span><i className="dtp-sleg dtp-sleg--busy" />Booked</span>
+                    <span><i className="dtp-sleg dtp-sleg--past" />Past</span>
+                  </div>
+                </>
+              )}
+            </>
+          )}
+        </div>
+
+      </div>
+
+      {/* ── Confirmation bar ── */}
+      {value && (
+        <div className="dtp-confirm">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2.5">
+            <path d="M5 13l4 4L19 7"/>
+          </svg>
+          <span>
+            Scheduled for&nbsp;
+            <strong>
+              {new Date(value).toLocaleString('en-US', {
+                weekday: 'long', month: 'long', day: 'numeric',
+                year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true,
+              })}
+            </strong>
+          </span>
+        </div>
+      )}
+    </div>
+  );
+};
+// ── End DateTimePicker ────────────────────────────────────────────────────────
+
 // Validation schema
 const contactSchema = yup.object({
   name: yup.string().required('Name is required'),
@@ -195,11 +470,14 @@ const ContactUs: React.FC = () => {
     handleSubmit,
     formState: { errors },
     setValue,
-    trigger
+    trigger,
+    watch,
   } = useForm({
     resolver: yupResolver(contactSchema),
     mode: 'onChange'
   });
+
+  const scheduledTimeValue = watch('scheduledTime') as string | undefined;
 
   const onSubmit = async (data: any) => {
     console.log('Form submitted with data:', data);
@@ -299,13 +577,6 @@ const ContactUs: React.FC = () => {
     }
   };
 
-
-  // Get minimum date as today for datetime input
-  const getMinDateTime = () => {
-    const now = new Date();
-    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-    return now.toISOString().slice(0, 16);
-  };
 
   // Calculate remaining time for cooldown
   const getRemainingTime = () => {
@@ -827,25 +1098,22 @@ const ContactUs: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Schedule Time & reCAPTCHA Row */}
+                {/* Schedule Time */}
                 <div className="form-row">
-                  <div className="form-field">
-                    <label htmlFor="scheduledTime" className="form-label">
+                  <div className="form-field full-width">
+                    <label className="form-label">
                       Schedule a time to connect*
                     </label>
-                    <input
-                      type="datetime-local"
-                      id="scheduledTime"
-                      className={`form-input ${errors.scheduledTime ? 'error' : ''}`}
-                      min={getMinDateTime()}
-                      {...register('scheduledTime')}
+                    <input type="hidden" {...register('scheduledTime')} />
+                    <DateTimePicker
+                      value={scheduledTimeValue || ''}
+                      onChange={(val) => setValue('scheduledTime', val, { shouldValidate: true })}
+                      hasError={!!errors.scheduledTime}
                     />
                     {errors.scheduledTime && (
                       <span className="error-message">{errors.scheduledTime.message}</span>
                     )}
                   </div>
-
-               
                 </div>
   <ReCAPTCHA 
     sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY || '6LeFuKksAAAAAG1iqkO6MePDHwYShw-cS26vQHC3'} 

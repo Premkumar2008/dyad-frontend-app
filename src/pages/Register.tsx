@@ -295,7 +295,7 @@ const Register: React.FC = () => {
                 <input
                   {...register('npiType')}
                   type="text"
-                  placeholder="Auto-filled after NPI validation"
+                  placeholder=""
                   className="input-field bg-gray-50"
                   disabled
                 />
@@ -311,7 +311,7 @@ const Register: React.FC = () => {
                 <input
                   {...register('facilityName')}
                   type="text"
-                  placeholder="Auto-filled for Facility/Group"
+                  placeholder=""
                   className="input-field bg-gray-50"
                   disabled={isLoading || npiEnumerationType !== 'NPI-2'}
                   readOnly={npiEnumerationType === 'NPI-2'}

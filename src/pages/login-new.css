@@ -35,7 +35,7 @@
 }
 
 .logo-image.login-logo {
-  height: 74px;
+  height: 94px;
 }
 
 /* Custom Scrollbar Styling */
@@ -381,7 +381,7 @@ align-items: flex-start !important;
    .login-page-holder{
   width : 100%;
       flex-direction: column;
-      padding:2rem 0rem;
+      padding:1rem 0rem;
  }
   
   .login-form-section {
