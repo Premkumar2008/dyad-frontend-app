@@ -1,3 +1,50 @@
+/* Time Slot Picker */
+.time-picker-container { padding: 8px 0; }
+
+/* Calendly Widget */
+.calendly-widget-container {
+  min-height: 600px;
+  position: relative;
+}
+
+.calendly-widget-container iframe {
+  border: none !important;
+}
+
+/* Fallback for Calendly loading issues */
+.calendly-widget-container:empty::before {
+  content: "Loading calendar...";
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 600px;
+  color: #6b7280;
+  font-size: 1rem;
+}
+.date-picker-section { margin-bottom: 20px; }
+.picker-label { display: block; font-weight: 500; margin-bottom: 8px; color: #374151; font-size: 0.95rem; }
+.date-input { max-width: 260px; }
+.time-section { margin-top: 4px; }
+.time-slots-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-top: 8px;
+}
+.time-slot-btn {
+  padding: 8px 4px;
+  border: 1.5px solid #d1d5db;
+  border-radius: 6px;
+  background: white;
+  color: #374151;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: 'Prompt', sans-serif;
+}
+.time-slot-btn:hover { border-color: #1D6DD8; color: #1D6DD8; background: #eff6ff; }
+.time-slot-selected { border-color: #1D6DD8 !important; background: #1D6DD8 !important; color: white !important; }
+
 /* Contact Us Page Styles */
 .contact-us-container {
   min-height: 100vh;
@@ -973,9 +1020,9 @@ input[type="datetime-local"] {
   justify-content: center;
   text-align: center;
   padding: 3rem 2rem;
-  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+ 
   border-radius: 12px;
-  border: 2px solid #10b981;
+  border: 1px solid #10b981;
   min-height: 400px;
 }
 
@@ -1020,6 +1067,113 @@ input[type="datetime-local"] {
 }
 
 .countdown {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #059669;
+}
+
+/* Calendly Widget Custom Styles */
+.calendly-widget-container {
+  position: relative;
+}
+
+.calendly-widget-container iframe {
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Style unavailable/booked time slots in Calendly */
+.calendly-widget-container iframe body .calendly-event.unavailable,
+.calendly-widget-container iframe body .calendly-time-slot.unavailable {
+  background-color: #f3f4f6 !important;
+  border-color: #d1d5db !important;
+  color: #9ca3af !important;
+  cursor: not-allowed !important;
+  text-decoration: line-through !important;
+  opacity: 0.7 !important;
+  position: relative;
+}
+
+/* Style available slots for better contrast */
+.calendly-widget-container iframe body .calendly-event.available,
+.calendly-widget-container iframe body .calendly-time-slot.available {
+  background-color: #10b981 !important;
+  border-color: #059669 !important;
+  color: white !important;
+  transition: all 0.2s ease !important;
+}
+
+.calendly-widget-container iframe body .calendly-event.available:hover,
+.calendly-widget-container iframe body .calendly-time-slot.available:hover {
+  transform: scale(1.02) !important;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15) !important;
+}
+
+/* Enhance calendar day headers */
+.calendly-widget-container iframe body .calendly-day-header {
+  background-color: #f8fafc !important;
+  border-bottom: 1px solid #e5e7eb !important;
+  font-weight: 600 !important;
+  color: #374151 !important;
+}
+
+/* Style past dates */
+.calendly-widget-container iframe body .calendly-day.past {
+  opacity: 0.4 !important;
+  pointer-events: none !important;
+}
+
+/* Style selected slot */
+.calendly-widget-container iframe body .calendly-event.selected,
+.calendly-widget-container iframe body .calendly-time-slot.selected {
+  background-color: #3b82f6 !important;
+  border-color: #1d4ed8 !important;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15) !important;
+}
+
+/* Enhance calendar grid */
+.calendly-widget-container iframe body .calendly-schedule {
+  background: white !important;
+}
+
+/* Make time slots more readable */
+.calendly-widget-container iframe body .calendly-time {
+  font-weight: 500 !important;
+  font-size: 14px !important;
+}
+
+/* Enhance calendar day headers */
+.calendly-widget-container iframe body .calendly-day-header {
+  background-color: #f8fafc !important;
+  border-bottom: 1px solid #e5e7eb !important;
+  font-weight: 600 !important;
+  color: #374151 !important;
+}
+
+/* Style past dates */
+.calendly-widget-container iframe body .calendly-day.past {
+  opacity: 0.4 !important;
+  pointer-events: none !important;
+}
+
+/* Style selected slot */
+.calendly-widget-container iframe body .calendly-event.selected,
+.calendly-widget-container iframe body .calendly-time-slot.selected {
+  background-color: #3b82f6 !important;
+  border-color: #1d4ed8 !important;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15) !important;
+}
+
+/* Enhance calendar grid */
+.calendly-widget-container iframe body .calendly-schedule {
+  background: white !important;
+}
+
+/* Make time slots more readable */
+.calendly-widget-container iframe body .calendly-time {
+  font-weight: 500 !important;
+  font-size: 14px !important;
+
   font-size: 2rem;
   font-weight: 700;
   color: #dc2626;

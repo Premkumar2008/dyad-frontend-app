@@ -6,281 +6,11 @@ import * as yup from 'yup';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import './ContactUs.css';
-import ReCAPTCHA from 'react-google-recaptcha';
+import { InlineWidget } from 'react-calendly';
 
 // ── DateTimePicker ────────────────────────────────────────────────────────────
-interface CalendarEvent { start: string; end: string; }
-
-const BUSINESS_START = 9;   // 9 AM
-const BUSINESS_END   = 17;  // last slot ends at 5 PM
-
-function generateTimeSlots() {
-  const slots: { hour: number; min: number }[] = [];
-  for (let h = BUSINESS_START; h < BUSINESS_END; h++) {
-    slots.push({ hour: h, min: 0 });
-    slots.push({ hour: h, min: 30 });
-  }
-  return slots;
-}
-
-function formatSlotLabel(hour: number, min: number): string {
-  const pad = (n: number) => String(n).padStart(2, '0');
-  const toAmPm = (h: number, m: number) => {
-    const ampm = h >= 12 ? 'PM' : 'AM';
-    const h12  = h % 12 === 0 ? 12 : h % 12;
-    return `${h12}:${pad(m)} ${ampm}`;
-  };
-  const endTotal = hour * 60 + min + 30;
-  return `${toAmPm(hour, min)} – ${toAmPm(Math.floor(endTotal / 60), endTotal % 60)}`;
-}
-
-const MONTH_NAMES = [
-  'January','February','March','April','May','June',
-  'July','August','September','October','November','December',
-];
-const DAY_LABELS = ['Su','Mo','Tu','We','Th','Fr','Sa'];
-const TIME_SLOTS = generateTimeSlots();
-
-const DateTimePicker: React.FC<{
-  value: string;
-  onChange: (v: string) => void;
-  hasError?: boolean;
-}> = ({ value, onChange, hasError }) => {
-  const todayMidnight = (() => { const d = new Date(); d.setHours(0, 0, 0, 0); return d; })();
-
-  const [currentMonth, setCurrentMonth] = useState(() => {
-    const d = new Date();
-    return new Date(d.getFullYear(), d.getMonth(), 1);
-  });
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [busyEvents, setBusyEvents]     = useState<CalendarEvent[]>([]);
-  const [loadingSlots, setLoadingSlots] = useState(false);
-
-  // ── helpers ──────────────────────────────────────────────────────────────
-  const isSlotBusy = (date: Date, hour: number, min: number): boolean => {
-    const slotStart = new Date(date.getFullYear(), date.getMonth(), date.getDate(), hour, min);
-    const slotEnd   = new Date(slotStart.getTime() + 30 * 60_000);
-    return busyEvents.some(ev => slotStart < new Date(ev.end) && slotEnd > new Date(ev.start));
-  };
-
-  const isSlotPast = (date: Date, hour: number, min: number): boolean =>
-    new Date(date.getFullYear(), date.getMonth(), date.getDate(), hour, min) <= new Date();
-
-  const getSelectedSlotKey = (): string => {
-    if (!value || !selectedDate) return '';
-    const tPart = value.split('T')[1];
-    if (!tPart) return '';
-    const [h, m] = tPart.split(':');
-    return `${parseInt(h)}-${parseInt(m)}`;
-  };
-
-  // ── fetch calendar events ─────────────────────────────────────────────────
-  const fetchBusySlots = async (date: Date) => {
-    setLoadingSlots(true);
-    try {
-      const pad = (n: number) => String(n).padStart(2, '0');
-      const dateStr = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
-      const apiUrl  = import.meta.env.VITE_API_URL || '';
-      const res = await axios.get(`${apiUrl}/calendar-events?date=${dateStr}`);
-      setBusyEvents(res.data.events ?? []);
-    } catch {
-      setBusyEvents([]);
-    } finally {
-      setLoadingSlots(false);
-    }
-  };
-
-  // ── calendar navigation ───────────────────────────────────────────────────
-  const canGoPrev = () => {
-    const now = new Date();
-    return currentMonth.getFullYear() > now.getFullYear() ||
-           currentMonth.getMonth()    > now.getMonth();
-  };
-  const prevMonth = () => setCurrentMonth(p => new Date(p.getFullYear(), p.getMonth() - 1, 1));
-  const nextMonth = () => setCurrentMonth(p => new Date(p.getFullYear(), p.getMonth() + 1, 1));
-
-  // ── days grid ─────────────────────────────────────────────────────────────
-  const getDaysGrid = (): (Date | null)[] => {
-    const yr = currentMonth.getFullYear(), mo = currentMonth.getMonth();
-    const grid: (Date | null)[] = Array(new Date(yr, mo, 1).getDay()).fill(null);
-    for (let d = 1; d <= new Date(yr, mo + 1, 0).getDate(); d++) grid.push(new Date(yr, mo, d));
-    return grid;
-  };
-
-  // ── handlers ──────────────────────────────────────────────────────────────
-  const handleDateClick = (day: Date) => {
-    const mid = new Date(day.getFullYear(), day.getMonth(), day.getDate());
-    if (mid < todayMidnight) return;
-    setSelectedDate(day);
-    onChange('');
-    fetchBusySlots(day);
-  };
-
-  const handleSlotClick = (hour: number, min: number) => {
-    if (!selectedDate) return;
-    const pad = (n: number) => String(n).padStart(2, '0');
-    onChange(
-      `${selectedDate.getFullYear()}-${pad(selectedDate.getMonth()+1)}-${pad(selectedDate.getDate())}T${pad(hour)}:${pad(min)}:00`
-    );
-  };
-
-  // ── render ────────────────────────────────────────────────────────────────
-  const days            = getDaysGrid();
-  const selectedSlotKey = getSelectedSlotKey();
-
-  return (
-    <div className={`dtp-container${hasError ? ' dtp-has-error' : ''}`}>
-      <div className="dtp-inner">
-
-        {/* ── Left: Calendar ── */}
-        <div className="dtp-cal-panel">
-
-          {/* Month navigation */}
-          <div className="dtp-month-nav">
-            <button type="button" className="dtp-arrow" onClick={prevMonth} disabled={!canGoPrev()}>
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M10 12L6 8L10 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </button>
-            <span className="dtp-month-title">
-              {MONTH_NAMES[currentMonth.getMonth()]} {currentMonth.getFullYear()}
-            </span>
-            <button type="button" className="dtp-arrow" onClick={nextMonth}>
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M6 4L10 8L6 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </button>
-          </div>
-
-          {/* Weekday headers */}
-          <div className="dtp-weekdays">
-            {DAY_LABELS.map(d => <span key={d} className="dtp-weekday">{d}</span>)}
-          </div>
-
-          {/* Days */}
-          <div className="dtp-days">
-            {days.map((day, i) => {
-              if (!day) return <span key={`e-${i}`} className="dtp-day-empty" />;
-              const mid     = new Date(day.getFullYear(), day.getMonth(), day.getDate());
-              const isPast  = mid < todayMidnight;
-              const isToday = mid.getTime() === todayMidnight.getTime();
-              const isSel   = !!selectedDate && selectedDate.toDateString() === day.toDateString();
-              return (
-                <button
-                  key={day.getDate()}
-                  type="button"
-                  disabled={isPast}
-                  className={`dtp-day${isPast ? ' dtp-day--past' : ' dtp-day--future'}${isToday ? ' dtp-day--today' : ''}${isSel ? ' dtp-day--selected' : ''}`}
-                  onClick={() => !isPast && handleDateClick(day)}
-                >
-                  {day.getDate()}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Calendar legend */}
-          <div className="dtp-cal-legend">
-            <span className="dtp-cal-legend-item">
-              <span className="dtp-cal-dot dtp-cal-dot--today" /> Today
-            </span>
-            <span className="dtp-cal-legend-item">
-              <span className="dtp-cal-dot dtp-cal-dot--sel" /> Selected
-            </span>
-            <span className="dtp-cal-legend-item">
-              <span className="dtp-cal-dot dtp-cal-dot--past" /> Past
-            </span>
-          </div>
-        </div>
-
-        {/* ── Divider ── */}
-        <div className="dtp-vdivider" />
-
-        {/* ── Right: Time Slots ── */}
-        <div className="dtp-slots-panel">
-          {!selectedDate ? (
-            <div className="dtp-slots-empty">
-              <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#c7cdd6" strokeWidth="1.4">
-                <circle cx="12" cy="12" r="10"/>
-                <polyline points="12 6 12 12 16 14"/>
-              </svg>
-              <p>Pick a date on the left<br/>to see available slots</p>
-            </div>
-          ) : (
-            <>
-              <div className="dtp-slots-date">
-                {selectedDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
-              </div>
-
-              {loadingSlots ? (
-                <div className="dtp-slots-loading">
-                  <div className="dtp-spin" />
-                  <span>Checking availability…</span>
-                </div>
-              ) : (
-                <>
-                  <div className="dtp-slots-list">
-                    {TIME_SLOTS.map(({ hour, min }) => {
-                      const busy     = isSlotBusy(selectedDate, hour, min);
-                      const past     = isSlotPast(selectedDate, hour, min);
-                      const disabled = busy || past;
-                      const key      = `${hour}-${min}`;
-                      const isSel    = selectedSlotKey === key;
-                      return (
-                        <button
-                          key={key}
-                          type="button"
-                          disabled={disabled}
-                          className={`dtp-slot${isSel ? ' dtp-slot--sel' : ''}${busy ? ' dtp-slot--busy' : past ? ' dtp-slot--past' : ' dtp-slot--free'}`}
-                          onClick={() => !disabled && handleSlotClick(hour, min)}
-                        >
-                          <span className="dtp-slot-time">{formatSlotLabel(hour, min)}</span>
-                          {busy && <span className="dtp-slot-tag dtp-slot-tag--busy">Booked</span>}
-                          {past && !busy && <span className="dtp-slot-tag dtp-slot-tag--past">Past</span>}
-                          {isSel && (
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
-                              <path d="M5 13l4 4L19 7"/>
-                            </svg>
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-
-                  {/* Slot legend */}
-                  <div className="dtp-slot-legend">
-                    <span><i className="dtp-sleg dtp-sleg--free" />Available</span>
-                    <span><i className="dtp-sleg dtp-sleg--busy" />Booked</span>
-                    <span><i className="dtp-sleg dtp-sleg--past" />Past</span>
-                  </div>
-                </>
-              )}
-            </>
-          )}
-        </div>
-
-      </div>
-
-      {/* ── Confirmation bar ── */}
-      {value && (
-        <div className="dtp-confirm">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2.5">
-            <path d="M5 13l4 4L19 7"/>
-          </svg>
-          <span>
-            Scheduled for&nbsp;
-            <strong>
-              {new Date(value).toLocaleString('en-US', {
-                weekday: 'long', month: 'long', day: 'numeric',
-                year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true,
-              })}
-            </strong>
-          </span>
-        </div>
-      )}
-    </div>
-  );
-};
+// OLD MANUAL DATE/TIME PICKER - REMOVED - NOW USING CALENDLY ONLY
+// The manual DateTimePicker component has been removed to use only Calendly scheduling
 // ── End DateTimePicker ────────────────────────────────────────────────────────
 
 // Validation schema
@@ -291,17 +21,16 @@ const contactSchema = yup.object({
     .required('Phone number is required'),
   email: yup.string()
     .email('Invalid email format')
-    .required('Email is required'),
+    .required('Email is required')
+    .matches(/^[\w-\.]+@([\w-]+\.)+(com|org|net|edu|gov|mil)$/, 'Please enter a valid email address'),
   organization: yup.string().required('Organization/Facility name is required'),
   message: yup.string().required('Message is required'),
   scheduledTime: yup.string().required('Schedule time is required'),
-  recaptcha: yup.boolean().oneOf([true], 'Please verify you are not a robot').required()
 });
 
 const ContactUs: React.FC = () => {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [recaptchaVerified, setRecaptchaVerified] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeMenu, setActiveMenu] = useState('Contact');
   const [hoveredMenu, setHoveredMenu] = useState<string | null>(null);
@@ -311,12 +40,16 @@ const ContactUs: React.FC = () => {
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [submissionTime, setSubmissionTime] = useState<string | null>(null);
   const [countdown, setCountdown] = useState<{ minutes: number; seconds: number } | null>(null);
- const captchaRef = useRef(null);
+  const [showCalendly, setShowCalendly] = useState(false);
+  const [formStep, setFormStep] = useState<'form' | 'calendar'>('form');
+  const [selectedCalendlyDateTime, setSelectedCalendlyDateTime] = useState<string>('');
+  const [calendlyEventData, setCalendlyEventData] = useState<any>(null);
+  const [calendlyAlreadyBooked, setCalendlyAlreadyBooked] = useState(false);
 
- // Scroll to top when component mounts
- useEffect(() => {
-   window.scrollTo({ top: 0, behavior: 'smooth' });
- }, []);
+  // Scroll to top when component mounts
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, []);
 
  // Check for existing submission and handle cooldown
  useEffect(() => {
@@ -363,17 +96,8 @@ const ContactUs: React.FC = () => {
   }
 }, [formSubmitted, submissionTime]);
 
- const handleRecaptchaChange = (token: string | null) => {
-    console.log('reCAPTCHA changed:', token);
-    if (token) {
-      setValue('recaptcha', true);
-      setRecaptchaVerified(true);
-    } else {
-      setValue('recaptcha', false);
-      setRecaptchaVerified(false);
-    }
-  };
-
+ 
+ 
 
  const whatWeDoDropdownItems = [
     { name: 'Practice Foundations', href: '#services', cardId: 0 },
@@ -479,60 +203,163 @@ const ContactUs: React.FC = () => {
 
   const scheduledTimeValue = watch('scheduledTime') as string | undefined;
 
-  const onSubmit = async (data: any) => {
-    console.log('Form submitted with data:', data);
-    setIsSubmitting(true);
+  const nameValue = watch('name') as string;
+  const emailValue = watch('email') as string;
 
-    const token = captchaRef.current?.getValue();
-    console.log('reCAPTCHA token:', token);
-    
-    // Check if reCAPTCHA is configured
-    const recaptchaSiteKey = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
-    console.log('reCAPTCHA site key configured:', !!recaptchaSiteKey);
-    
-    if (recaptchaSiteKey && !token) {
-      alert('Please complete the CAPTCHA.');
-      setIsSubmitting(false);
+  // Handle Calendly events - always active when calendar step is shown
+  useEffect(() => {
+    const handleCalendlyEvent = (event: any) => {
+      if (!event.data || typeof event.data.event !== 'string') return;
+
+      if (event.data.event === 'calendly.date_and_time_selected') {
+        const payload = event.data.payload || {};
+        const startTime = payload?.event?.start_time || payload?.start_time;
+
+        if (startTime) {
+          setSelectedCalendlyDateTime(startTime);
+          setValue('scheduledTime', startTime, { shouldValidate: true });
+          setCalendlyEventData(payload);
+          setCalendlyAlreadyBooked(false);
+          toast.success('Date and time selected! Complete the form and click Submit to confirm your booking.', { duration: 7000 });
+        }
+      }
+
+      if (event.data.event === 'calendly.event_scheduled') {
+        // User completed Calendly booking - automatically submit the form
+        const payload = event.data.payload;
+        
+        // Extract the URIs from payload
+        const eventUri = payload?.event?.uri;
+        const inviteeUri = payload?.invitee?.uri;
+        
+        // Store the URIs for API calls - we'll fetch full details later
+        const calendlyEventData = {
+          event: {
+            uri: eventUri
+          },
+          invitee: {
+            uri: inviteeUri
+          },
+          // Flag to indicate we need to fetch full details
+          needsFetch: true
+        };
+        
+        // Store the Calendly data for API calls
+        setCalendlyEventData(calendlyEventData);
+        setCalendlyAlreadyBooked(true);
+        
+        // Use the current time as the scheduled time (when user selected the slot)
+        const selectedTime = new Date().toISOString();
+        setSelectedCalendlyDateTime(selectedTime);
+        setValue('scheduledTime', selectedTime, { shouldValidate: true });
+        
+        // Automatically submit the form after Calendly event is created
+        setTimeout(() => {
+          try {
+            handleSubmit(onSubmit)();
+          } catch (error) {
+            // Error in form submission handled silently
+          }
+        }, 1000);
+        
+        toast.success('Consultation scheduled! Submitting your request...', { duration: 7000 });
+      }
+    };
+
+    window.addEventListener('message', handleCalendlyEvent);
+    return () => {
+      window.removeEventListener('message', handleCalendlyEvent);
+    };
+  }, [setValue, handleSubmit]);
+
+  // Validate required fields before opening scheduler
+  const openCalendly = async () => {
+    // Validate all required fields except scheduledTime
+    const fieldsValid = await trigger(['name', 'phoneNumber', 'email', 'organization', 'message']);
+    if (!fieldsValid) {
+      toast.error('Please fill in all required fields before scheduling a time.', { duration: 7000 });
       return;
     }
+    setShowCalendly(true);
+  };
+
+  const closeCalendly = () => {
+    setShowCalendly(false);
+  };
+
+  
+  const handleContinueToSchedule = async () => {
+    // Validate all form fields except scheduledTime
+    const fieldsValid = await trigger(['name', 'phoneNumber', 'email', 'organization', 'message']);
+  
+    if (!fieldsValid) {
+      toast.error('Please fill in all required fields before continuing.', { duration: 7000 });
+      return;
+    }
+  
+    // Move to calendar step
+    setFormStep('calendar');
+    setShowCalendly(true);
+  };
+
+  const onSubmit = async (data: any) => {
+    setIsSubmitting(true);
+
+    // reCAPTCHA removed - no token needed
+    
+    const apiUrl = import.meta.env.VITE_API_URL || '';
     
     try {
-      const payload = {
-        ...data,
-        scheduledTime: data.scheduledTime,
-        recaptchaToken: token || 'development-bypass'
-      };
-      
-      console.log('API payload:', payload);
-
-      const apiUrl = import.meta.env.VITE_API_URL || '';
-      console.log('API URL:', apiUrl);
-      console.log('Full endpoint:', `${apiUrl}/contact-requests`);
-       
-      const response = await axios.post(`${apiUrl}/contact-requests`, payload);
-      console.log('API response:', response);
-      
-      if (response.data.success) {
-        toast.success('Your request has been submitted successfully!');
+      // Step 1: Call Calendly booking API first
+      if (calendlyEventData) {
+        // Step 1: Creating Calendly booking...
         
-        // Create calendar event
         try {
-          await axios.post(`${apiUrl}/create-event`, {
-            title: data.name,
-            dateTime: data.scheduledTime,
-          });
-          alert("Submitted & Event Created!");
-        } catch (eventError) {
-          console.error('Calendar event creation failed:', eventError);
-          toast.error('Form submitted but calendar event creation failed');
+          const calendlyPayload = {
+            calendlyEvent: calendlyEventData,
+            scheduledTime: selectedCalendlyDateTime,
+            contactData: {
+              name: data.name,
+              email: data.email,
+              phoneNumber: data.phoneNumber,
+              organization: data.organization,
+              message: data.message
+            }
+          };
+          
+          
+          const calendlyResponse = await axios.post(`${apiUrl}/api/booking/invitees`, calendlyPayload);
+          
+          if (calendlyResponse.data.success) {
+            toast.success('Consultation booked in Calendly!', { duration: 7000 });
+          } else {
+            throw new Error(calendlyResponse.data.message || 'Calendly booking failed');
+          }
+        } catch (calendlyError: any) {
+          toast.error('Failed to book consultation. Please try again.', { duration: 7000 });
+          setIsSubmitting(false);
+          return;
         }
-        
+      }
+      
+      // Step 2: Call contact request API after successful Calendly booking
+      
+      const contactPayload = {
+        ...data,
+        scheduledTime: data.scheduledTime
+      };
+       
+      const contactResponse = await axios.post(`${apiUrl}/contact-requests`, contactPayload);
+      
+      if (contactResponse.data.success) {
+        toast.success('Your request has been submitted successfully!', { duration: 7000 });
+
         // Store submission time and set form submitted state
         const currentSubmissionTime = new Date().toISOString();
         localStorage.setItem('contactFormSubmission', currentSubmissionTime);
         setSubmissionTime(currentSubmissionTime);
         setFormSubmitted(true);
-        
+
         // Reset form
         setValue('name', '');
         setValue('phoneNumber', '');
@@ -540,13 +367,12 @@ const ContactUs: React.FC = () => {
         setValue('organization', '');
         setValue('message', '');
         setValue('scheduledTime', '');
-        setRecaptchaVerified(false);
-        setValue('recaptcha', false);
+        setSelectedCalendlyDateTime('');
+        setCalendlyEventData(null);
+        setCalendlyAlreadyBooked(false);
         
-        // Reset reCAPTCHA component
-        if (captchaRef.current) {
-          captchaRef.current.reset();
-        }
+        // Reset form step to form
+        setFormStep('form');
         
         // Set timer to reset form after 10 minutes
         setTimeout(() => {
@@ -560,17 +386,16 @@ const ContactUs: React.FC = () => {
           window.scrollTo({ top: 0, behavior: 'smooth' });
         }, 100);
       } else {
-        toast.error(response.data.message || 'Failed to submit request. Please try again.');
+        throw new Error(contactResponse.data.message || 'Failed to submit contact request');
       }
     } catch (error: any) {
-      console.error('Contact form submission error:', error);
       
       if (error.response?.status === 429) {
-        toast.error('Too many requests. Please try again later.');
+        toast.error('Too many requests. Please try again later.', { duration: 7000 });
       } else if (error.response?.status >= 500) {
-        toast.error('Server error. Please try again later.');
+        toast.error('Server error. Please try again later.', { duration: 7000 });
       } else {
-        toast.error('Failed to submit request. Please check your connection and try again.');
+        toast.error(error.message || 'Failed to submit request. Please try again.', { duration: 7000 });
       }
     } finally {
       setIsSubmitting(false);
@@ -597,7 +422,7 @@ const ContactUs: React.FC = () => {
   };
 
   return (
-    <div className="contact-us-container">
+    <div className="contact-us-container" key="contact-form-v2">
       {/* Contact Banner */}
       
       {/* Header */}
@@ -993,8 +818,15 @@ const ContactUs: React.FC = () => {
                     </svg>
                   </div>
                   <h2 className="success-title">Contact Request Submitted Successfully!</h2>
-                  <p className="success-message">We will contact you back soon.</p>
                  
+                  <div className="mt-6">
+                    <a
+                      onClick={() => navigate('/')}
+                      className="text-blue-600 hover:text-blue-800 cursor-pointer underline font-medium"
+                    >
+                      Back to Home
+                    </a>
+                  </div>
                 </div>
               ) : (
                 <>
@@ -1099,40 +931,141 @@ const ContactUs: React.FC = () => {
                 </div>
 
                 {/* Schedule Time */}
-                <div className="form-row">
-                  <div className="form-field full-width">
-                    <label className="form-label">
+                {/* <div className="">
+                  <div className=""> */}
+                    {/* <label className="form-label">
                       Schedule a time to connect*
                     </label>
                     <input type="hidden" {...register('scheduledTime')} />
-                    <DateTimePicker
-                      value={scheduledTimeValue || ''}
-                      onChange={(val) => setValue('scheduledTime', val, { shouldValidate: true })}
-                      hasError={!!errors.scheduledTime}
-                    />
-                    {errors.scheduledTime && (
-                      <span className="error-message">{errors.scheduledTime.message}</span>
+                     */}
+                    {/* 
+                    // OLD MANUAL SCHEDULING - COMMENTED OUT
+                    // Scheduling Method Toggle
+                    <div className="mb-4">
+                      <div className="flex items-center space-x-4">
+                        <label className="flex items-center cursor-pointer">
+                          <input
+                            type="radio"
+                            name="schedulingMethod"
+                            checked={!useCalendly}
+                            onChange={() => toggleSchedulingMethod()}
+                            className="mr-2"
+                          />
+                          <span className="text-sm">Select from available slots</span>
+                        </label>
+                        <label className="flex items-center cursor-pointer">
+                          <input
+                            type="radio"
+                            name="schedulingMethod"
+                            checked={useCalendly}
+                            onChange={() => toggleSchedulingMethod()}
+                            className="mr-2"
+                          />
+                          <span className="text-sm">Schedule with Calendly</span>
+                        </label>
+                      </div>
+                    </div>
+
+                    // Manual DateTimePicker
+                    {!useCalendly && (
+                      <DateTimePicker
+                        value={scheduledTimeValue || ''}
+                        onChange={(val) => setValue('scheduledTime', val, { shouldValidate: true })}
+                        hasError={!!errors.scheduledTime}
+                      />
                     )}
-                  </div>
-                </div>
-  <ReCAPTCHA 
-    sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY || '6LeFuKksAAAAAG1iqkO6MePDHwYShw-cS26vQHC3'} 
-    ref={captchaRef} 
-    onChange={handleRecaptchaChange}
-  />
-  <input type="hidden" {...register('recaptcha')} /> 
+                    */}
+
+                    {/* Date/Time Selection - HIDDEN, WILL SHOW AFTER FORM SUBMIT */}
+                    {/* <div>
+                      <label className="form-label">
+                        Schedule a time to connect*
+                      </label>
+                      <input type="hidden" {...register('scheduledTime')} />
+                      
+                      <div className="text-center py-8 border border-gray-200 rounded-lg bg-gray-50">
+                        <div className="text-gray-600 mb-2">
+                          <svg className="w-12 h-12 mx-auto mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                        </div>
+                        <p className="text-sm text-gray-600">
+                          Complete the form above, then click "Continue to Schedule" to select a time
+                        </p>
+                      </div>
+                    </div> */}
+
+                    {/* {errors.scheduledTime && (
+                      <span className="error-message">{errors.scheduledTime.message}</span>
+                    )} */}
+                  {/* </div>
+                </div> */}
+   
               
               {/* Submit Button */}
               <div className="form-group full-width">
                 <button
-                  type="submit"
-                  className="submit-btn"
+                  type="button"
+                  onClick={handleContinueToSchedule}
+                  className="submit-btn w-full"
                   disabled={isSubmitting}
                 >
-                  {isSubmitting ? 'Submitting...' : 'Submit'}
+                  {isSubmitting ? 'Validating...' : 'Schedule a time to connect'}
                 </button>
               </div>
               </form>
+                
+                {/* Step 2: Calendar Selection */}
+                {formStep === 'calendar' && (
+                  <div className="w-full">
+                    <br />
+                    <div className="mb-6">
+                      <h3 className="text-lg font-semibold text-gray-800 mb-2">Select a Time</h3>
+                      <p className="text-sm text-gray-600">Choose your preferred consultation time from the calendar below</p>
+                    </div>
+                    
+                    <div className="border border-gray-300 rounded-lg overflow-hidden bg-white">
+                      <div className="calendly-widget-container">
+                        <InlineWidget
+                          url="https://calendly.com/dyadpracticesolutions/new-meeting"
+                          styles={{
+                            height: '600px',
+                            width: '100%'
+                          }}
+                          pageSettings={{
+                            backgroundColor: 'ffffff',
+                            hideEventTypeDetails: false,
+                            hideLandingPageDetails: false,
+                            primaryColor: '00a2ff',
+                            textColor: '4d5055'
+                          }}
+                          prefill={{
+                            email: watch('email') || '',
+                            name: watch('name') || '',
+                            customAnswers: {
+                              a1: `Organization: ${watch('organization') || ''}`,
+                              a2: `Phone: ${watch('phoneNumber') || ''}`
+                            }
+                          }}
+                        />
+                      </div>
+                      
+                                          </div>
+                    
+                    {/* Fallback message if Calendly fails to load */}
+                    
+                    
+                    <div className="mt-4 text-center">
+                      <button
+                        type="button"
+                        onClick={() => setFormStep('form')}
+                        className="text-sm text-gray-600 hover:text-gray-800 underline"
+                      >
+                        ← Back to Form
+                      </button>
+                    </div>
+                  </div>
+                )}
                 </>
               )}
             </div>
@@ -1214,7 +1147,8 @@ const ContactUs: React.FC = () => {
           </div>
         </div>
       </footer>
-    </div>
+
+      </div>
   );
 };
 

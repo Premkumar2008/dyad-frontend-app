@@ -6,7 +6,7 @@ import DyadLanding from './components/DyadLanding';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import OTPVerification from './pages/OTPVerification';
-import AdminDashboard from './pages/AdminDashboard';
+import Admin from './pages/Admin';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import ContactUs from './pages/ContactUs';
@@ -37,10 +37,10 @@ function App() {
              <Route path="/about-us-details" element={<AboutUsDetail />} />
              <Route path="/service-details" element={<ServiceDetail />} />
             <Route 
-              path="/admin/*" 
+              path="/admin" 
               element={
                 <ProtectedRoute requiredRole="admin">
-                  <AdminDashboard />
+                  <Admin />
                 </ProtectedRoute>
               } 
             />

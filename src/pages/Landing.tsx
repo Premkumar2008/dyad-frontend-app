@@ -52,7 +52,7 @@ const Landing: React.FC = () => {
   };
 
   const handleDashboardRedirect = () => {
-    const redirectPath = user?.role === 'admin' ? '/admin/dashboard' : '/user/dashboard';
+    const redirectPath = user?.role === 'admin' ? '/admin' : '/user/dashboard';
     navigate(redirectPath);
   };
 

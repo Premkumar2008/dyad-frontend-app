@@ -37,13 +37,19 @@ interface RegisterFormData {
 }
 
 const loginSchema = yup.object({
-  email: yup.string().email('Invalid email address').required('Email is required'),
+  email: yup.string()
+    .email('Invalid email format')
+    .required('Email is required')
+    .matches(/^[\w-\.]+@([\w-]+\.)+(com|org|net|edu|gov|mil)$/, 'Please enter a valid email address'),
   password: yup.string().required('Password is required'),
   rememberMe: yup.boolean(),
 });
 
 const forgotPasswordSchema = yup.object().shape({
-  email: yup.string().email('Invalid email address').required('Email is required'),
+  email: yup.string()
+    .email('Invalid email format')
+    .required('Email is required')
+    .matches(/^[\w-\.]+@([\w-]+\.)+(com|org|net|edu|gov|mil)$/, 'Please enter a valid email address'),
 });
 
 const resetPasswordSchema = yup.object().shape({
@@ -66,7 +72,10 @@ const registerSchema = yup.object().shape({
     otherwise: (schema) => schema.notRequired(),
   }),
   phone: yup.string().required('Phone number is required'),
-  email: yup.string().email('Invalid email address').required('Email is required'),
+  email: yup.string()
+    .email('Invalid email format')
+    .required('Email is required')
+    .matches(/^[\w-\.]+@([\w-]+\.)+(com|org|net|edu|gov|mil)$/, 'Please enter a valid email address'),
   password: yup.string().min(8, 'Password must be at least 8 characters').required('Password is required'),
 });
 
@@ -157,7 +166,7 @@ const OTPVerificationInline: React.FC<OTPVerificationInlineProps> = ({ email, on
       const result = await verifyOTP(email, data.otp);
       
       if (result.success) {
-        toast.success('Email verified successfully!');
+        toast.success('Email verified successfully!', { duration: 7000 });
         onSuccess();
       } else {
         if (result.error?.toLowerCase().includes('already verified') || result.error?.toLowerCase().includes('account exists')) {
@@ -340,7 +349,7 @@ const Login: React.FC = () => {
     console.log('Login useEffect - Should redirect:', !!user);
     
     if (user) {
-      const redirectPath = user.role === 'admin' ? '/admin/dashboard' : '/user/dashboard';
+      const redirectPath = user.role === 'admin' ? '/admin/' : '/user/dashboard';
       console.log('Login useEffect - Redirecting to:', redirectPath);
       
       // Force navigation with a small delay to ensure state is settled
@@ -448,20 +457,21 @@ const Login: React.FC = () => {
         setValueRegister('phone', phone);
         setPhoneValue(phone);
         setNpiEnumerationType(enumType);
-        toast.success('NPI validation successful!');
+        toast.success('NPI validation successful!', { duration: 7000 });
         setNpiValidated(true);
       } else {
-        toast.error('NPI validation failed. Please check your NPI number.');
+        toast.error('NPI validation failed. Please check your NPI number.', { duration: 7000 });
         setNpiValidated(false);
       }
     } catch (error) {
-      toast.error('Error validating NPI. Please try again.');
+      toast.error('Error validating NPI. Please try again.', { duration: 7000 });
       setNpiValidated(false);
     } finally {
       setIsNpiValidating(false);
     }
   };
 
+  
   const otp = watch('otp');
 
   // Check for pre-filled data from login redirect
@@ -512,7 +522,7 @@ const Login: React.FC = () => {
         setTimeout(() => {
           console.log('Manual redirect check - current user:', user);
           if (user) {
-            const redirectPath = user.role === 'admin' ? '/admin/dashboard' : '/user/dashboard';
+            const redirectPath = user.role === 'admin' ? '/admin/' : '/user/dashboard';
             console.log('Manual redirect to:', redirectPath);
             navigate(redirectPath, { replace: true });
           } else {
@@ -544,7 +554,7 @@ const Login: React.FC = () => {
     } catch (error) {
       const errorMessage = 'An unexpected error occurred. Please try again.';
       setError(errorMessage);
-      toast.error(errorMessage);
+      toast.error(errorMessage, { duration: 7000 });
     }
   };
 
@@ -656,7 +666,7 @@ const Login: React.FC = () => {
       }
     } catch (error) {
       setRegisterError('An unexpected error occurred. Please try again.');
-      toast.error('An unexpected error occurred. Please try again.');
+      toast.error('An unexpected error occurred. Please try again.', { duration: 7000 });
     }
   };
 

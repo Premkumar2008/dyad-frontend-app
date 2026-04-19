@@ -22,7 +22,7 @@ const AdminDashboard: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
 
   const menuItems = [
-    { path: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+    { path: '/admin', icon: LayoutDashboard, label: 'Dashboard' },
     { path: '/admin/users', icon: Users, label: 'Users' },
     { path: '/admin/users-list', icon: Users, label: 'Users List' },
     { path: '/admin/claims', icon: FileText, label: 'Claims' },
