@@ -10,6 +10,11 @@ import Admin from './pages/Admin';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import ContactUs from './pages/ContactUs';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsOfService from './pages/TermsOfService';
+import MobileTerms from './pages/MobileTerms';
+import MobilePrivacyPolicy from './pages/MobilePrivacyPolicy';
+import EarlyAccess from './pages/EarlyAccess';
 import { initializeSecurity } from './utils/security';
 import SecurityMonitor from './utils/securityMonitor';
 import AboutUsDetail from './pages/about-us-detail';
@@ -29,6 +34,8 @@ function App() {
             <Route path="/" element={<DyadLanding />} />
             <Route path="/dyadlanding-new" element={<DyadLanding />} />
             <Route path="/contact" element={<ContactUs />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/terms-of-service" element={<TermsOfService />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/verify-otp" element={<OTPVerification />} />
@@ -36,7 +43,10 @@ function App() {
             <Route path="/reset-password" element={<ResetPassword />} />
              <Route path="/about-us-details" element={<AboutUsDetail />} />
              <Route path="/service-details" element={<ServiceDetail />} />
-            <Route 
+            <Route path="/mobile-terms" element={<MobileTerms />} />
+            <Route path="/mobile-privacy-policy" element={<MobilePrivacyPolicy />} />
+            <Route path="/early-access" element={<EarlyAccess />} />
+            <Route
               path="/admin" 
               element={
                 <ProtectedRoute requiredRole="admin">
