@@ -406,7 +406,7 @@ header.dyad-header {
   object-fit: contain;
    }
     .scroller{
-    top:147px !important
+    top:97px !important
    }
    .dyad-nav-actions {
     height: 65px;
@@ -432,7 +432,7 @@ header.dyad-header {
 
    }
     .scroller{
-    top:148px !important
+    top:97px !important
    }
 }
 @media (min-width: 1145px) {
@@ -446,7 +446,7 @@ header.dyad-header {
     height: 65px;
     padding-top: 35px !important;}
     .scroller{
-    top:167px !important
+    top:116px !important
    }
 }
 @media (min-width: 1145px) {
@@ -467,7 +467,7 @@ header.dyad-header {
 }
 @media (min-width: 1280px) {
     .scroller{
-    top:175px !important
+    top:126px !important
    }
 }
 
@@ -549,10 +549,46 @@ header.dyad-header .dyad-nav-actions .dyad-nav .nav-list .dyad-nav .nav-link.act
 
 /* Action Buttons */
 .dyad-actions {
+  margin-top: -2rem;
   display: flex;
   align-items: center;
   gap: 1rem;
   flex-shrink: 0;
+}
+
+/* Minimal shine flash on platform access text */
+.platform-access-shine {
+  position: relative;
+  overflow: hidden;
+}
+
+.platform-access-shine::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.4),
+    transparent
+  );
+  animation: shine-sweep 4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes shine-sweep {
+  0% {
+    left: -100%;
+  }
+  40% {
+    left: 100%;
+  }
+  100% {
+    left: 100%;
+  }
 }
 
 /* Combined right side navigation and actions */
@@ -1092,7 +1128,7 @@ header.dyad-header .dyad-nav-actions .dyad-nav .nav-list .dyad-nav .nav-link.act
     opacity: 1;
   }
   .scroller{
-    top:147px !important
+    top:97px !important
    }
   
   .about-tabs {
@@ -1538,7 +1574,7 @@ padding : 0.5rem 0.5rem 0.rem 0rem !important
 width: 94%;
 }
 .scroller{
-    top:134px !important
+    top:84px !important
    }
 .leadership-image img{
   height: unset !important;

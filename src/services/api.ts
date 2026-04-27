@@ -213,6 +213,23 @@ export const verifyOTP = async (data: VerifyOTPRequest): Promise<AxiosResponse<V
   return api.post('/verify-otp', data);
 };
 
+export interface SendEarlyAccessConfirmationRequest {
+  to: string;
+  contactName: string;
+  subject: string;
+  html: string;
+  text: string;
+}
+
+/**
+ * Send early access confirmation email after successful submission
+ */
+export const sendEarlyAccessConfirmation = async (
+  data: SendEarlyAccessConfirmationRequest
+): Promise<AxiosResponse<{ success: boolean }>> => {
+  return api.post('/send-early-access-confirmation', data);
+};
+
 // Error handling utility
 export const handleApiError = (error: any): string => {
   if (error.response) {

@@ -4,7 +4,7 @@
 .early-access-container {
   min-height: 100vh;
   font-family: 'Prompt', sans-serif;
-  background-color: #f8fafc;
+  background-color: #ffffff;
   display: flex;
   flex-direction: column;
 }
@@ -16,7 +16,7 @@
 }
 
 .early-access-content {
-  max-width: 800px;
+  max-width: 860px;
   margin: 0 auto;
   padding: 0 1.5rem;
 }
@@ -24,16 +24,16 @@
 /* ── Header Section ────────────────────────────────────── */
 .early-access-header {
   text-align: left;
-  margin-bottom: 2.5rem;
+  margin-bottom: 2rem;
   padding-bottom: 1.5rem;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: none;
 }
 
 .early-access-title {
   font-size: 2.25rem;
   font-weight: 700;
   color: #1a202c;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.25rem;
   font-family: 'Prompt', sans-serif;
 }
 
@@ -56,30 +56,342 @@
   color: #2d3748;
 }
 
-/* ── Form ─────────────────────────────────────────────── */
-.early-access-form {
+/* ── Progress Bar ──────────────────────────────────────── */
+.ea-progress {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  font-size: 0.875rem;
+  color: #4a5568;
+  font-family: 'Prompt', sans-serif;
+}
+
+.ea-progress-label {
+  white-space: nowrap;
+  font-weight: 500;
+  color: #1a202c;
+}
+
+.ea-progress-track {
+  flex: 1;
+  height: 8px;
+  background: #dde3ea;
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.ea-progress-fill {
+  height: 100%;
+  background: #1a2e5a;
+  border-radius: 99px;
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ea-progress-pct {
+  white-space: nowrap;
+  color: #6b7280;
+  font-size: 0.85rem;
+}
+
+/* ── Accordion Section ─────────────────────────────────── */
+.ea-section {
   background: white;
   border-radius: 12px;
-  padding: 2rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 4px 20px rgba(0, 0, 0, 0.03);
-  border: 1px solid #e2e8f0;
+ background: #00000000;
+    border-radius: 12px;
+    border: 1px solid #80808036;
+  margin-bottom: 0.75rem;
+  overflow: hidden;
+  transition: box-shadow 0.25s ease;
+ 
 }
 
-/* ── Form Section ──────────────────────────────────────── */
-.form-section {
-  margin-bottom: 2rem;
+.ea-section.ea-section--active {
+ 
 }
 
-.form-section:last-of-type {
-  margin-bottom: 1rem;
+
+
+.ea-section--locked {
+  opacity: 0.75;
 }
 
-.form-section-title {
-  font-size: 1.15rem;
+
+/* ── Section Header ────────────────────────────────────── */
+.ea-section-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+  cursor: default;
+  font-family: 'Prompt', sans-serif;
+}
+
+.ea-section-header--clickable {
+  cursor: pointer;
+}
+
+.ea-section-header--clickable:hover .ea-section-title {
+  color: #1D6DD8;
+}
+
+/* ── Step Icon ─────────────────────────────────────────── */
+.ea-step-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1rem;
+  flex-shrink: 0;
+  font-family: 'Prompt', sans-serif;
+  transition: background 0.25s ease;
+}
+
+.ea-step-icon--completed {
+  background: #1d6dd8;
+  color: white;
+}
+
+.ea-step-icon--active {
+  background: #1d6dd8;
+  color: white;
+}
+
+.ea-step-icon--locked {
+  background: #e2e8f0;
+  color: #9ca3af;
+}
+
+/* ── Section Info ──────────────────────────────────────── */
+.ea-section-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.ea-section-title {
+  display: block;
+  font-size: 1.05rem;
   font-weight: 600;
   color: #1a202c;
-  margin-bottom: 1.25rem;
   font-family: 'Prompt', sans-serif;
+}
+
+.ea-section-status {
+  display: block;
+  font-size: 0.8rem;
+  margin-top: 0.2rem;
+  font-weight: 400;
+}
+
+.ea-section-status--completed {
+  color: #22c55e;
+}
+
+.ea-section-status--active {
+  color: #1D6DD8;
+}
+
+.ea-section-status--locked {
+  color: #9ca3af;
+}
+
+/* ── Chevron ───────────────────────────────────────────── */
+.ea-section-chevron {
+  flex-shrink: 0;
+  transition: transform 0.3s ease;
+}
+
+.ea-section-chevron--open {
+  transform: rotate(180deg);
+}
+
+/* ── Section Body (animated) ───────────────────────────── */
+.ea-section-body {
+  animation: ea-body-open 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  overflow: hidden;
+}
+
+@keyframes ea-body-open {
+  from {
+    opacity: 0;
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    max-height: 2000px;
+  }
+}
+
+.ea-section-body-inner {
+  padding: 0 1.5rem 1.5rem;
+}
+
+/* Locked sections never render their body */
+.ea-section--locked .ea-section-body {
+  display: none;
+}
+
+/* ── Email + OTP ───────────────────────────────────────── */
+.ea-email-row {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+
+.ea-email-row input {
+  flex: 1;
+}
+
+.ea-otp-send-btn {
+  padding: 0.75rem 1.1rem;
+  background: #1a2e5a;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-family: 'Prompt', sans-serif;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: background 0.2s ease;
+  flex-shrink: 0;
+}
+
+.ea-otp-send-btn:hover:not(:disabled) {
+  background: #162548;
+}
+
+.ea-otp-send-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.ea-verified-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background: #f0fdf4;
+  color: #16a34a;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
+  font-family: 'Prompt', sans-serif;
+}
+
+.ea-email-registered {
+  margin-top: 0.6rem;
+  background: #fffbeb;
+  border: 1px solid #fcd34d;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: 0.83rem;
+  color: #92400e;
+  line-height: 1.55;
+  font-family: 'Prompt', sans-serif;
+}
+
+.ea-otp-box {
+  margin-top: 1rem;
+  background: #f8faff;
+  border: 1px solid #dbeafe;
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+}
+
+.ea-otp-hint {
+  font-size: 0.82rem;
+  color: #4a5568;
+  margin-bottom: 0.75rem;
+  font-family: 'Prompt', sans-serif;
+}
+
+.ea-otp-input-row {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.ea-otp-input {
+  width: 130px;
+  padding: 0.65rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 1.15rem;
+  letter-spacing: 0.3em;
+  font-family: 'Prompt', sans-serif;
+  color: #1a202c;
+  text-align: center;
+  outline: none;
+  background: white;
+  transition: border-color 0.2s ease;
+}
+
+.ea-otp-input:focus {
+  border-color: #1D6DD8;
+  box-shadow: 0 0 0 3px rgba(29, 109, 216, 0.1);
+}
+
+.ea-otp-verify-btn {
+  padding: 0.65rem 1.25rem;
+  font-size: 0.9rem;
+}
+
+.ea-otp-resend-row {
+  margin-top: 0.6rem;
+  font-size: 0.8rem;
+  font-family: 'Prompt', sans-serif;
+}
+
+.ea-otp-timer {
+  color: #9ca3af;
+}
+
+.ea-otp-resend-btn {
+  background: none;
+  border: none;
+  color: #1D6DD8;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-family: 'Prompt', sans-serif;
+  padding: 0;
+  text-decoration: underline;
+}
+
+.ea-otp-resend-btn:hover {
+  color: #1557b8;
+}
+
+.ea-spinner-sm {
+  width: 13px;
+  height: 13px;
+  border-width: 2px;
+}
+
+/* ── Section Actions ───────────────────────────────────── */
+.ea-section-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: none;
+}
+
+.ea-continue-btn {
+  min-width: 140px;
 }
 
 /* ── Form Grid ─────────────────────────────────────────── */
@@ -87,20 +399,30 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1.25rem;
+  margin-top: 1rem;
+}
+
+.form-grid--3col {
+  grid-template-columns: 1fr 1fr 1fr;
 }
 
 /* ── Form Field ────────────────────────────────────────── */
 .form-field {
   display: flex;
   flex-direction: column;
+  margin-top: 1rem;
 }
 
-.form-field.full-width {
+.form-field--full {
   grid-column: 1 / -1;
 }
 
+.form-grid .form-field {
+  margin-top: 0;
+}
+
 .form-field label {
-  font-size: 0.9rem;
+  font-size: 0.875rem;
   font-weight: 500;
   color: #374151;
   margin-bottom: 0.5rem;
@@ -112,7 +434,7 @@
   padding: 0.75rem 1rem;
   border: 1px solid #d1d5db;
   border-radius: 8px;
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-family: 'Prompt', sans-serif;
   color: #1a202c;
   background-color: #ffffff;
@@ -143,7 +465,7 @@
 }
 
 .error-message {
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   color: #dc2626;
   margin-top: 0.375rem;
   font-weight: 400;
@@ -166,79 +488,108 @@
   color: #374151;
 }
 
-.form-field select option {
-  padding: 0.5rem;
-}
-
-/* ── Form Actions ──────────────────────────────────────── */
-.form-actions {
-  margin-top: 1.5rem;
-  display: flex;
-  justify-content: center;
-}
-
-.btn-submit {
-  min-width: 220px;
-  padding: 0.875rem 2rem;
-  font-size: 1rem;
-  font-weight: 600;
-  position: relative;
-}
-
-/* ── Spinner ───────────────────────────────────────────── */
-.spinner {
-  display: inline-block;
-  width: 16px;
-  height: 16px;
-  border: 2px solid #ffffff;
-  border-top-color: transparent;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-  margin-right: 0.5rem;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-/* ── Confirmation ──────────────────────────────────────── */
-.submission-confirmation {
-  background: white;
+/* ── What happens next ─────────────────────────────────── */
+.ea-next-info {
+  background: #004bef0a;
   border-radius: 12px;
-  padding: 3rem 2rem;
-  text-align: center;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 4px 20px rgba(0, 0, 0, 0.03);
-  border: 1px solid #e2e8f0;
-  max-width: 600px;
-  margin: 0 auto;
-}
-
-.confirmation-icon {
+  padding: 1.5rem;
+  display: flex;
+  gap: 1.25rem;
+  align-items: flex-start;
+  margin-top: 0.75rem;
   margin-bottom: 1.5rem;
 }
 
-.submission-confirmation h2 {
-  font-size: 1.75rem;
+.ea-next-icon {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgb(29 109 216);
+  border-radius: 8px;
+}
+
+.ea-next-title {
+  font-size: 1rem;
   font-weight: 700;
-  color: #1a202c;
-  margin-bottom: 1rem;
+  color: #000000;
+  margin-bottom: 0.5rem;
   font-family: 'Prompt', sans-serif;
 }
 
-.submission-confirmation p {
-  color: #4a5568;
-  line-height: 1.7;
-  margin-bottom: 2rem;
-  font-size: 1rem;
+.ea-next-body {
+  font-size: 0.9rem;
+  line-height: 1.65;
+  color: #000000;
+  margin: 0;
+  font-family: 'Prompt', sans-serif;
 }
 
-.submission-confirmation .btn {
-  margin-top: 0.5rem;
+/* ── Form Footer ───────────────────────────────────────── */
+.ea-form-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: none;
 }
 
-/* ── Buttons ───────────────────────────────────────────── */
+.ea-consent-text {
+  font-size: 0.78rem;
+  color: #9ca3af;
+  line-height: 1.55;
+  max-width: 400px;
+  margin: 0;
+  font-family: 'Prompt', sans-serif;
+}
+
+.ea-consent-link {
+  color: #1D6DD8;
+}
+
+/* ── Submit Button ─────────────────────────────────────── */
+.ea-submit-btn {
+  padding: 0.875rem 1.75rem;
+  border: none;
+  border-radius: 8px;
+  font-family: 'Prompt', sans-serif;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: not-allowed;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: #d1d5db;
+  color: #6b7280;
+  transition: background 0.25s ease, color 0.25s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.ea-submit-btn--enabled {
+  background: #1d6dd8;
+  color: white;
+  cursor: pointer;
+}
+
+.ea-submit-btn--enabled:hover {
+  background: #162548;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(26, 46, 90, 0.35);
+}
+
+.ea-submit-btn--enabled:active {
+  transform: translateY(0);
+}
+
+.ea-submit-btn:disabled {
+  pointer-events: none;
+}
+
+/* ── General Buttons ───────────────────────────────────── */
 .btn {
   padding: 0.75rem 1.5rem;
   border: none;
@@ -247,11 +598,11 @@
   font-weight: 500;
   font-size: 0.95rem;
   cursor: pointer;
-  transition: all 0.3s ease;
-  text-decoration: none;
+  transition: all 0.25s ease;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 0.5rem;
 }
 
 .btn-primary {
@@ -261,7 +612,7 @@
 
 .btn-primary:hover {
   background: #1557b8;
-  transform: translateY(-2px);
+  transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(29, 109, 216, 0.3);
 }
 
@@ -269,10 +620,154 @@
   transform: translateY(0);
 }
 
-.btn-primary:disabled {
-  opacity: 0.7;
-  cursor: not-allowed;
-  transform: none;
+/* ── Spinner ───────────────────────────────────────────── */
+.spinner {
+  display: inline-block;
+  width: 15px;
+  height: 15px;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.75s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Confirmation Screen ───────────────────────────────── */
+/* ── Submission Confirmation ───────────────────────────── */
+.sc-wrapper {
+  max-width: 600px;
+  margin: 0 auto;
+  text-align: center;
+  padding-bottom: 2rem;
+}
+
+.sc-icon {
+  margin-bottom: 1.5rem;
+  display: flex;
+  justify-content: center;
+}
+
+.sc-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #22c55e;
+  margin-bottom: 0.75rem;
+  font-family: 'Prompt', sans-serif;
+}
+
+.sc-title {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #000000;
+  margin-bottom: 1rem;
+  font-family: 'Prompt', sans-serif;
+  line-height: 1.25;
+}
+
+.sc-subtitle {
+  font-size: 1rem;
+  color: #4a5568;
+  line-height: 1.7;
+  margin-bottom: 2rem;
+  font-family: 'Prompt', sans-serif;
+}
+
+.sc-next-card {
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  padding: 1.75rem 2rem;
+  text-align: left;
+  margin-bottom: 2rem;
+}
+
+.sc-next-heading {
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #000000;
+  margin-bottom: 1.25rem;
+  font-family: 'Prompt', sans-serif;
+}
+
+.sc-steps {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.sc-step {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  padding: 1rem 0;
+  border-bottom: 1px solid #f0f4f8;
+}
+
+.sc-step:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.sc-step:first-child {
+  padding-top: 0;
+}
+
+.sc-step-num {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #1d6dd8;
+  color: white;
+  font-size: 0.8rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+  font-family: 'Prompt', sans-serif;
+}
+
+.sc-step strong {
+  display: block;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #1a202c;
+  margin-bottom: 0.3rem;
+  font-family: 'Prompt', sans-serif;
+}
+
+.sc-step p {
+  font-size: 0.875rem;
+  color: #6b7280;
+  line-height: 1.6;
+  margin: 0;
+  font-family: 'Prompt', sans-serif;
+}
+
+.sc-home-btn {
+ 
+  color: #1d6dd8;
+  padding: 0.875rem 2rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border-radius: 8px;
+  border: 1px solid #1d6dd8;
+  cursor: pointer;
+  font-family: 'Prompt', sans-serif;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.sc-home-btn:hover {
+  background: #162548;
+  transform: translateY(-1px);
 }
 
 /* ── Responsive ──────────────────────────────────────── */
@@ -289,25 +784,45 @@
     font-size: 1.75rem;
   }
 
-  .early-access-form {
-    padding: 1.5rem;
-  }
-
   .form-grid {
     grid-template-columns: 1fr;
+  }
+
+  .form-grid--3col {
+    grid-template-columns: 1fr;
+  }
+
+  .ea-section-header {
+    padding: 1rem 1.25rem;
+  }
+
+  .ea-section-body-inner {
+    padding: 0 1.5rem 1.5rem;
+    
+  }
+
+  .ea-form-footer {
+    flex-direction: column;
+    align-items: flex-start;
     gap: 1rem;
   }
 
-  .form-section-title {
-    font-size: 1.05rem;
+  .ea-submit-btn {
+    width: 100%;
+    justify-content: center;
   }
 
-  .submission-confirmation {
-    padding: 2rem 1.5rem;
+  .ea-progress {
+    gap: 0.75rem;
+    font-size: 0.8rem;
   }
 
-  .submission-confirmation h2 {
-    font-size: 1.5rem;
+  .sc-title {
+    font-size: 1.6rem;
+  }
+
+  .sc-next-card {
+    padding: 1.25rem;
   }
 }
 
@@ -316,11 +831,13 @@
     font-size: 1.5rem;
   }
 
-  .early-access-form {
-    padding: 1.25rem;
+  .ea-step-icon {
+    width: 34px;
+    height: 34px;
+    font-size: 0.875rem;
   }
 
-  .btn-submit {
-    min-width: 100%;
+  .ea-section-title {
+    font-size: 0.95rem;
   }
 }

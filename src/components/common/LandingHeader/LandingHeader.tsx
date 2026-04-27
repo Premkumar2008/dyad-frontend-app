@@ -92,9 +92,6 @@ const LandingHeader: React.FC<LandingHeaderProps> = ({ activePage = 'Home' }) =>
 
   return (
     <header className="dyad-header">
-      <div className='platformaccess-banner'>
-        Platform Access Begins Q3 2026 
-      </div>
       <div className="dyad-header-content">
         <div className="dyad-logo" onClick={handleLogoClick} style={{ cursor: 'pointer' }}>
           <img src="/assets/images/logo_main.png" alt="Dyad Logo" className="logo-image" />
@@ -214,8 +211,11 @@ const LandingHeader: React.FC<LandingHeaderProps> = ({ activePage = 'Home' }) =>
             </ul>
           </nav>
 
-          <div className="dyad-actions">
-              <button className="btn btn-primary" onClick={handleEarlyAccess}>
+          <div className="dyad-actions" style={{ flexDirection: 'column', gap: '0.35rem' }}>
+            <div className="platform-access-shine" style={{ fontSize: '0.8rem', color: 'black', fontWeight: 600, fontFamily: 'Prompt, sans-serif', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+              Platform Access Begins Q3 2026
+            </div>
+            <button className="btn btn-primary" onClick={handleEarlyAccess} style={{width : '260px'}}>
               <span>Request Early Access</span>
             </button>
             {/* <button className="btn btn-primary" onClick={handleLogin}>
