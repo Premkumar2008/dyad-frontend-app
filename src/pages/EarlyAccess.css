@@ -236,11 +236,52 @@
   display: none;
 }
 
+/* ── NPI lookup ────────────────────────────────────────── */
+.ea-npi-optional {
+  font-size: 0.78rem;
+  font-weight: 400;
+  color: #6b7280;
+  margin-left: 0.4rem;
+}
+
+.ea-npi-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.ea-npi-row input {
+  flex: 1;
+  transition: border-color 0.2s;
+}
+
+input.ea-npi-success {
+
+  background: #f0fdf4;
+}
+
+.ea-npi-status {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  color: #6b7280;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.ea-npi-status--ok {
+  color: #1d6dd8;
+  font-weight: 600;
+}
+
+/* OTP verified and NPI verified share the same green badge look */
+
 /* ── Email + OTP ───────────────────────────────────────── */
 .ea-email-row {
   display: flex;
   gap: 0.75rem;
-  align-items: flex-start;
+  align-items: center;
 }
 
 .ea-email-row input {
@@ -249,40 +290,32 @@
 
 .ea-otp-send-btn {
   padding: 0.75rem 1.1rem;
-  background: #1a2e5a;
-  color: white;
-  border: none;
+  background: transparent;
+  color: #1D6DD8;
+  border: 1.5px solid #1D6DD8;
   border-radius: 8px;
   font-family: 'Prompt', sans-serif;
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  transition: background 0.2s ease;
   flex-shrink: 0;
 }
 
-.ea-otp-send-btn:hover:not(:disabled) {
-  background: #162548;
-}
-
 .ea-otp-send-btn:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
 .ea-verified-badge {
   display: inline-flex;
   align-items: center;
-  padding: 0.75rem 1rem;
-  background: #f0fdf4;
-  color: #16a34a;
-  border: 1px solid #bbf7d0;
-  border-radius: 8px;
-  font-size: 0.875rem;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  color: #1d6dd8;
   font-weight: 600;
   white-space: nowrap;
   flex-shrink: 0;
@@ -304,18 +337,14 @@
   font-family: 'Prompt', sans-serif;
 }
 
-.ea-otp-box {
-  margin-top: 1rem;
-  background: #f8faff;
-  border: 1px solid #dbeafe;
-  border-radius: 10px;
-  padding: 1rem 1.25rem;
+.ea-otp-inline {
+  margin-top: 0.85rem;
 }
 
 .ea-otp-hint {
   font-size: 0.82rem;
   color: #4a5568;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.6rem;
   font-family: 'Prompt', sans-serif;
 }
 
@@ -326,11 +355,11 @@
 }
 
 .ea-otp-input {
-  width: 130px;
-  padding: 0.65rem 1rem;
+  width: 140px;
+  padding: 0.75rem 1rem;
   border: 1px solid #d1d5db;
   border-radius: 8px;
-  font-size: 1.15rem;
+  font-size: 1.1rem;
   letter-spacing: 0.3em;
   font-family: 'Prompt', sans-serif;
   color: #1a202c;
@@ -338,6 +367,7 @@
   outline: none;
   background: white;
   transition: border-color 0.2s ease;
+  flex-shrink: 0;
 }
 
 .ea-otp-input:focus {
@@ -346,18 +376,32 @@
 }
 
 .ea-otp-verify-btn {
-  padding: 0.65rem 1.25rem;
-  font-size: 0.9rem;
+  padding: 0.75rem 1.1rem;
+  background: transparent;
+  color: #1D6DD8;
+  border: 1.5px solid #1D6DD8;
+  border-radius: 8px;
+  font-family: 'Prompt', sans-serif;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-shrink: 0;
 }
 
-.ea-otp-resend-row {
-  margin-top: 0.6rem;
-  font-size: 0.8rem;
-  font-family: 'Prompt', sans-serif;
+.ea-otp-verify-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .ea-otp-timer {
+  font-size: 0.8rem;
   color: #9ca3af;
+  font-family: 'Prompt', sans-serif;
+  white-space: nowrap;
 }
 
 .ea-otp-resend-btn {
@@ -369,10 +413,7 @@
   font-family: 'Prompt', sans-serif;
   padding: 0;
   text-decoration: underline;
-}
-
-.ea-otp-resend-btn:hover {
-  color: #1557b8;
+  white-space: nowrap;
 }
 
 .ea-spinner-sm {
@@ -576,7 +617,7 @@
 }
 
 .ea-submit-btn--enabled:hover {
-  background: #162548;
+ 
   transform: translateY(-1px);
   box-shadow: 0 4px 14px rgba(26, 46, 90, 0.35);
 }
@@ -629,6 +670,11 @@
   border-top-color: white;
   border-radius: 50%;
   animation: spin 0.75s linear infinite;
+}
+
+.spinner--blue {
+  border-color: rgba(29, 109, 216, 0.25);
+  border-top-color: #1D6DD8;
 }
 
 @keyframes spin {
@@ -753,27 +799,21 @@
 }
 
 .sc-home-btn {
- 
-  color: #1d6dd8;
+  background: transparent;
+  color: #1D6DD8;
   padding: 0.875rem 2rem;
   font-size: 0.95rem;
   font-weight: 600;
   border-radius: 8px;
-  border: 1px solid #1d6dd8;
+  border: 1.5px solid #1D6DD8;
   cursor: pointer;
   font-family: 'Prompt', sans-serif;
-  transition: background 0.2s ease, transform 0.2s ease;
-}
-
-.sc-home-btn:hover {
-  background: #162548;
-  transform: translateY(-1px);
 }
 
 /* ── Responsive ──────────────────────────────────────── */
 @media (max-width: 768px) {
   .early-access-main {
-    padding: 1.5rem 0 3rem;
+    padding: 1.25rem 0 2.5rem;
   }
 
   .early-access-content {
@@ -781,30 +821,101 @@
   }
 
   .early-access-title {
-    font-size: 1.75rem;
+    font-size: 1.6rem;
   }
 
+  .early-access-intro {
+    font-size: 0.9rem;
+  }
+
+  /* Progress bar */
+  .ea-progress {
+    gap: 0.6rem;
+    font-size: 0.78rem;
+  }
+
+  .ea-progress-label {
+    display: none;
+  }
+
+  /* Accordion sections */
+  .ea-section-header {
+    padding: 1rem 1rem;
+    gap: 0.75rem;
+  }
+
+  .ea-section-body-inner {
+    padding: 0 1rem 1.25rem;
+  }
+
+  /* Form grids → single column */
   .form-grid {
     grid-template-columns: 1fr;
+    gap: 1rem;
   }
 
   .form-grid--3col {
     grid-template-columns: 1fr;
+    gap: 1rem;
   }
 
-  .ea-section-header {
-    padding: 1rem 1.25rem;
+  /* NPI row: wrap on small screens */
+  .ea-npi-row {
+    flex-wrap: wrap;
   }
 
-  .ea-section-body-inner {
-    padding: 0 1.5rem 1.5rem;
-    
+  .ea-npi-row input {
+    min-width: 0;
   }
 
+  /* Email + OTP row: stack */
+  .ea-email-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .ea-otp-send-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .ea-verified-badge {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* OTP input row: wrap */
+  .ea-otp-input-row {
+    flex-wrap: wrap;
+  }
+
+  .ea-otp-input {
+    width: 100%;
+    flex: 1 1 100%;
+  }
+
+  .ea-otp-verify-btn {
+    flex: 1;
+    justify-content: center;
+  }
+
+  /* What happens next */
+  .ea-next-info {
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 1.25rem 1rem;
+  }
+
+  /* Form footer */
   .ea-form-footer {
     flex-direction: column;
-    align-items: flex-start;
-    gap: 1rem;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .ea-consent-text {
+    max-width: 100%;
+    font-size: 0.75rem;
   }
 
   .ea-submit-btn {
@@ -812,32 +923,68 @@
     justify-content: center;
   }
 
-  .ea-progress {
-    gap: 0.75rem;
-    font-size: 0.8rem;
+  /* Success screen */
+  .sc-wrapper {
+    padding: 2rem 1.25rem;
   }
 
   .sc-title {
-    font-size: 1.6rem;
+    font-size: 1.5rem;
+  }
+
+  .sc-subtitle {
+    font-size: 0.9rem;
   }
 
   .sc-next-card {
-    padding: 1.25rem;
+    padding: 1.25rem 1rem;
+  }
+
+  .sc-steps {
+    gap: 1rem;
+  }
+
+  .sc-home-btn {
+    width: 100%;
   }
 }
 
 @media (max-width: 480px) {
   .early-access-title {
-    font-size: 1.5rem;
+    font-size: 1.35rem;
   }
 
   .ea-step-icon {
     width: 34px;
     height: 34px;
-    font-size: 0.875rem;
+    font-size: 0.85rem;
   }
 
   .ea-section-title {
-    font-size: 0.95rem;
+    font-size: 0.92rem;
+  }
+
+  .ea-section-header {
+    padding: 0.875rem 0.875rem;
+  }
+
+  .ea-section-body-inner {
+    padding: 0 0.875rem 1rem;
+  }
+
+  .form-field input,
+  .form-field select {
+    font-size: 0.875rem;
+    padding: 0.65rem 0.875rem;
+  }
+
+  .sc-title {
+    font-size: 1.3rem;
+  }
+
+  .sc-step-num {
+    width: 26px;
+    height: 26px;
+    font-size: 0.8rem;
   }
 }

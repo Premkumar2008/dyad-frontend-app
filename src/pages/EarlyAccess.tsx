@@ -13,6 +13,9 @@ import { createEmailService } from '../services/emailService';
 
 // ── Validation Schema ───────────────────────────────────────────────────────
 const earlyAccessSchema = yup.object({
+  npi: yup.string()
+    .matches(/^\d{10}$/, 'NPI must be exactly 10 digits')
+    .required('NPI is required'),
   practiceName: yup.string().required('Practice/Facility name is required'),
   contactName: yup.string().required('Primary contact name is required'),
   phoneNumber: yup.string()
@@ -135,7 +138,7 @@ const SECTION_TITLES: Record<number, string> = {
 };
 
 const SECTION_FIELDS: Record<number, (keyof EarlyAccessFormData)[]> = {
-  1: ['practiceName', 'contactName', 'phoneNumber', 'email', 'title'],
+  1: ['npi', 'practiceName', 'contactName', 'phoneNumber', 'email', 'title'],
   2: ['practiceType'],
   3: ['providers', 'locations', 'claimVolume'],
 };
@@ -149,6 +152,11 @@ const EarlyAccess: React.FC = () => {
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
   const [expandedCompleted, setExpandedCompleted] = useState<number | null>(null);
 
+  // ── NPI state ──────────────────────────────────────────
+  const [isNpiValidating, setIsNpiValidating] = useState(false);
+  const [npiValidated, setNpiValidated] = useState(false);
+  const [npiEnumerationType, setNpiEnumerationType] = useState('');
+
   // ── OTP state ──────────────────────────────────────────
   const [otpSent, setOtpSent] = useState(false);
   const [otpVerified, setOtpVerified] = useState(false);
@@ -159,7 +167,7 @@ const EarlyAccess: React.FC = () => {
   const [emailRegistered, setEmailRegistered] = useState(false);
   const [emailRegisteredMsg, setEmailRegisteredMsg] = useState('');
 
-  const { register, handleSubmit, trigger, watch, getValues, formState: { errors } } = useForm({
+  const { register, handleSubmit, trigger, watch, getValues, setValue, formState: { errors } } = useForm({
     resolver: yupResolver(earlyAccessSchema),
   });
 
@@ -187,6 +195,59 @@ const EarlyAccess: React.FC = () => {
   }, [watchedEmail]);
 
   const progress = Math.round((completedSteps.size / 3) * 100);
+
+  // ── NPI lookup ─────────────────────────────────────────
+  const validateNPI = async (npi: string) => {
+    if (npi.length !== 10) return;
+    setIsNpiValidating(true);
+    setNpiValidated(false);
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL || '';
+      const response = await axios.post(`${apiUrl}/npi/registry`, { npi });
+      if (response.data.success) {
+        const data = response.data.data || response.data;
+        const basic = data.basic || data;
+        const enumType: string = data.enumeration_type || basic.enumeration_type || '';
+        const rawPhone: string = data?.addresses?.[0]?.telephone_number || basic.telephone_number || '';
+        const phone = rawPhone.replace(/\D/g, '').slice(0, 10);
+
+        if (enumType === 'NPI-2') {
+          const orgName = basic.organization_name || data.organization_name || '';
+          const aoPrefix = basic.authorized_official_name_prefix || '';
+          const aoFirst = basic.authorized_official_first_name || '';
+          const aoLast = basic.authorized_official_last_name || '';
+          const aoTitle = basic.authorized_official_title_or_position || '';
+          const contactName = [aoPrefix, aoFirst, aoLast].filter(Boolean).join(' ').trim();
+          setValue('practiceName' as any, orgName);
+          setValue('contactName' as any, contactName);
+          setValue('title' as any, aoTitle);
+        } else if (enumType === 'NPI-1') {
+          const prefix = basic.name_prefix && basic.name_prefix !== '--' ? basic.name_prefix : '';
+          const first = basic.first_name || '';
+          const middle = basic.middle_name || '';
+          const last = basic.last_name || '';
+          const suffix = basic.name_suffix && basic.name_suffix !== '--' ? basic.name_suffix : '';
+          const credential = basic.credential || '';
+          const nameParts = [prefix, first, middle, last, suffix].filter(Boolean);
+          const fullName = credential ? `${nameParts.join(' ').trim()}, ${credential}` : nameParts.join(' ').trim();
+          setValue('practiceName' as any, fullName);
+          setValue('contactName' as any, fullName);
+          setValue('title' as any, credential);
+        }
+
+        if (phone) setValue('phoneNumber' as any, phone);
+        setNpiEnumerationType(enumType);
+        setNpiValidated(true);
+        toast.success('NPI validated — fields auto-filled!', { duration: 4000 });
+      } else {
+        toast.error('NPI not found. Please check the number and try again.', { duration: 5000 });
+      }
+    } catch {
+      toast.error('Error validating NPI. Please try again.', { duration: 5000 });
+    } finally {
+      setIsNpiValidating(false);
+    }
+  };
 
   const handleSendOTP = async () => {
     const isEmailValid = await trigger('email' as any);
@@ -277,6 +338,7 @@ const EarlyAccess: React.FC = () => {
     const toastId = toast.loading('Submitting intake form...', { duration: 7000 });
 
     const payload = {
+      npi: data.npi || '',
       practiceName: data.practiceName,
       contactName: data.contactName,
       phoneNumber: data.phoneNumber,
@@ -466,6 +528,48 @@ const EarlyAccess: React.FC = () => {
                         {/* Section 1: Practice & Facility Details */}
                         {step === 1 && (
                           <div className="form-grid">
+
+                            {/* NPI Lookup */}
+                            <div className="form-field form-field--full">
+                              <label htmlFor="npi">
+                                Practice or Provider NPI * 
+                              </label>
+                              <div className="ea-npi-row">
+                                <input
+                                  id="npi"
+                                  type="text"
+                                  inputMode="numeric"
+                                  {...register('npi')}
+                                  className={`${errors.npi ? 'error' : ''} ${npiValidated ? 'ea-npi-success' : ''}`}
+                                  placeholder="Enter 10-digit NPI number"
+                                  maxLength={10}
+                                  onChange={e => {
+                                    const val = e.target.value.replace(/\D/g, '');
+                                    e.target.value = val;
+                                    register('npi').onChange(e);
+                                    if (val.length < 10) {
+                                      setNpiValidated(false);
+                                      setNpiEnumerationType('');
+                                    } else if (val.length === 10 && !isNpiValidating) {
+                                      validateNPI(val);
+                                    }
+                                  }}
+                                  disabled={isNpiValidating}
+                                />
+                                {isNpiValidating && (
+                                  <span className="ea-npi-status">
+                                    <span className="spinner spinner--blue ea-spinner-sm" /> Validating…
+                                  </span>
+                                )}
+                                {!isNpiValidating && npiValidated && (
+                                  <span className="ea-npi-status ea-npi-status--ok">✓ NPI validated</span>
+                                )}
+                              </div>
+                              {errors.npi && (
+                                <span className="error-message">{errors.npi.message}</span>
+                              )}
+                            </div>
+
                             <div className="form-field">
                               <label htmlFor="practiceName">Practice/Facility Name *</label>
                               <input
@@ -535,7 +639,7 @@ const EarlyAccess: React.FC = () => {
                                   disabled={otpVerified}
                                 />
                                 {otpVerified ? (
-                                  <span className="ea-verified-badge">✓ Verified</span>
+                                  <span className="ea-verified-badge">✓ Email Verified</span>
                                 ) : (
                                   <button
                                     type="button"
@@ -543,7 +647,7 @@ const EarlyAccess: React.FC = () => {
                                     onClick={handleSendOTP}
                                     disabled={otpLoading}
                                   >
-                                    {otpLoading && !otpSent ? <span className="spinner ea-spinner-sm" /> : null}
+                                    {otpLoading && !otpSent ? <span className="spinner spinner--blue ea-spinner-sm" /> : null}
                                     {otpSent ? 'Resend OTP' : 'Send OTP'}
                                   </button>
                                 )}
@@ -564,7 +668,7 @@ const EarlyAccess: React.FC = () => {
                               )}
 
                               {otpSent && !otpVerified && (
-                                <div className="ea-otp-box">
+                                <div className="ea-otp-inline">
                                   <p className="ea-otp-hint">Enter the 6-digit OTP sent to your email</p>
                                   <div className="ea-otp-input-row">
                                     <input
@@ -578,22 +682,20 @@ const EarlyAccess: React.FC = () => {
                                     />
                                     <button
                                       type="button"
-                                      className="btn btn-primary ea-otp-verify-btn"
+                                      className="ea-otp-verify-btn"
                                       onClick={handleVerifyOTP}
                                       disabled={otpValue.length !== 6 || otpLoading}
                                     >
-                                      {otpLoading ? <span className="spinner ea-spinner-sm" /> : 'Verify'}
+                                      {otpLoading ? <span className="spinner spinner--blue ea-spinner-sm" /> : 'Verify OTP'}
                                     </button>
-                                  </div>
-                                  <p className="ea-otp-resend-row">
                                     {otpTimer > 0 ? (
                                       <span className="ea-otp-timer">Resend in {otpTimer}s</span>
                                     ) : (
                                       <button type="button" className="ea-otp-resend-btn" onClick={handleSendOTP}>
-                                        Resend OTP
+                                        Resend
                                       </button>
                                     )}
-                                  </p>
+                                  </div>
                                 </div>
                               )}
                             </div>
@@ -688,7 +790,9 @@ const EarlyAccess: React.FC = () => {
                             className="btn btn-primary ea-continue-btn"
                             onClick={() => handleContinue(step)}
                           >
-                            {step < 3 ? 'Continue' : 'Confirm'}
+                            {step === 1 && 'Continue to Practice Type'}
+                            {step === 2 && 'Continue to Operational Profile'}
+                            {step === 3 && 'Confirm & Submit'}
                           </button>
                         </div>
                       </div>
@@ -699,7 +803,7 @@ const EarlyAccess: React.FC = () => {
               })}
 
               {/* ── What happens next ── */}
-              <div className="ea-next-info">
+              {/* <div className="ea-next-info">
                 <div className="ea-next-icon" aria-hidden="true">
                   <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
                     <rect x="4" y="20" width="24" height="4" rx="2" fill="rgba(255,255,255,0.9)" />
@@ -713,7 +817,7 @@ const EarlyAccess: React.FC = () => {
                     On submission, you&apos;ll receive a confirmation email. If your practice is selected for the early release cohort, an invitation to schedule onboarding will be extended approximately six weeks before launch.
                   </p>
                 </div>
-              </div>
+              </div> */}
 
               {/* ── Footer: consent + submit ── */}
               <div className="ea-form-footer">
