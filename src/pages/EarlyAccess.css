@@ -107,9 +107,6 @@
  
 }
 
-.ea-section.ea-section--active {
- 
-}
 
 
 
@@ -212,28 +209,27 @@
 
 /* ── Section Body (animated) ───────────────────────────── */
 .ea-section-body {
-  animation: ea-body-open 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-  overflow: hidden;
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  pointer-events: none;
+  transition: grid-template-rows 0.38s cubic-bezier(0.4, 0, 0.2, 1),
+              opacity 0.28s ease;
 }
 
-@keyframes ea-body-open {
-  from {
-    opacity: 0;
-    max-height: 0;
-  }
-  to {
-    opacity: 1;
-    max-height: 2000px;
-  }
+.ea-section-body--open {
+  grid-template-rows: 1fr;
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .ea-section-body-inner {
-  padding: 0 1.5rem 1.5rem;
+  overflow: hidden;
+  min-height: 0;
 }
 
-/* Locked sections never render their body */
-.ea-section--locked .ea-section-body {
-  display: none;
+.ea-section-body-content {
+  padding: 0 1.5rem 1.5rem;
 }
 
 /* ── NPI lookup ────────────────────────────────────────── */
@@ -859,19 +855,30 @@ input.ea-npi-success {
     gap: 1rem;
   }
 
-  /* NPI row: wrap on small screens */
+  /* NPI row: status below input */
   .ea-npi-row {
-    flex-wrap: wrap;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
   }
 
   .ea-npi-row input {
-    min-width: 0;
+    width: 100%;
   }
 
-  /* Email + OTP row: stack */
+  .ea-npi-status {
+    font-size: 0.82rem;
+  }
+
+  /* Email row: button/badge below input */
   .ea-email-row {
     flex-direction: column;
-    align-items: stretch;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .ea-email-row input {
+    width: 100%;
   }
 
   .ea-otp-send-btn {
@@ -880,8 +887,7 @@ input.ea-npi-success {
   }
 
   .ea-verified-badge {
-    width: 100%;
-    justify-content: center;
+    font-size: 0.82rem;
   }
 
   /* OTP input row: wrap */

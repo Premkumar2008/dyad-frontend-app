@@ -49,11 +49,9 @@ const MobileTerms: React.FC<MobileTermsProps> = ({ scrollToSection }) => {
   return (
     <div className="mobile-policy-container">
       <LandingHeader />
-   <header className="mobile-policy-header">
-             
-              <h1 className="mobile-policy-title">Mobile Terms and Mobile Privacy Policy</h1>
-             
-            </header>
+      <header className="mobile-policy-header">
+        <h1 className="mobile-policy-title">Mobile Terms and Mobile Privacy Policy</h1>
+      </header>
       <main className="mobile-policy-main">
         <div className="mobile-policy-layout">
 
@@ -319,7 +317,7 @@ const MobileTerms: React.FC<MobileTermsProps> = ({ scrollToSection }) => {
             </section>
 
             {/* ── SMS CONSENT DISCLOSURE ───────────────────── */}
-            <section id="sms-sign-up-disclosure" className="sms-consent-section">
+            {/* <section id="sms-sign-up-disclosure" className="sms-consent-section">
               <h2>SMS Consent Disclosure for Sign-Up Screens</h2>
               <label className="sms-consent-label">
                 <input type="checkbox" name="sms-consent" />
@@ -334,7 +332,7 @@ const MobileTerms: React.FC<MobileTermsProps> = ({ scrollToSection }) => {
                 <span className="sms-consent-separator">|</span>
                 <Link to="/mobile-privacy-policy">Mobile Privacy Policy</Link>
               </div>
-            </section>
+            </section> */}
 
           </div>
         </div>

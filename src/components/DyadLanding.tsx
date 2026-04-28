@@ -702,7 +702,7 @@ const DyadLanding: React.FC = () => {
       <section className="leadership-section" id="leadership">
         <div className="leadership-container">
           <div className="leadership-header">
-            <h2 className="leadership-title">Leadership</h2>
+            <h2 className="leadership-title">Our Team</h2>
             <p className="leadership-subtitle">
             Dyad was built on the simple conviction that the same financial discipline that governs global financial platforms should apply to healthcare revenue.
             </p>

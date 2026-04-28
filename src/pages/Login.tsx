@@ -59,7 +59,7 @@ const resetPasswordSchema = yup.object().shape({
 });
 
 const registerSchema = yup.object().shape({
-  npi: yup.string().required('NPI is required').length(10, 'NPI must be exactly 10 digits'),
+  npi: yup.string().required('NPI is required').length(10, 'Invalid NPI Number'),
   npiType: yup.string(),
   facilityName: yup.string().when('npiType', {
     is: 'Facility/Group',
@@ -464,7 +464,7 @@ const Login: React.FC = () => {
         setNpiValidated(false);
       }
     } catch (error) {
-      toast.error('Error validating NPI. Please try again.', { duration: 7000 });
+      toast.error('Invalid NPI number/Error validating NPI. Please try again.', { duration: 7000 });
       setNpiValidated(false);
     } finally {
       setIsNpiValidating(false);

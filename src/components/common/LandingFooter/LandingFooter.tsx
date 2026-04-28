@@ -66,9 +66,9 @@ const LandingFooter: React.FC = () => {
           <div className="footer-bottom-right">
             <ul className="footer-legal-menu">
               <li><Link to="/privacy-policy">Privacy Policy</Link></li>
-                 <li><Link to="/terms-of-service">Terms of Service</Link></li>
-              {/* <li><Link to="/mobile-terms">Mobile Terms</Link></li>
-              <li><Link to="/mobile-privacy-policy">Mobile Privacy Policy</Link></li> */}
+              <li><Link to="/terms-of-service">Terms of Service</Link></li>
+              <li><Link to="/mobile-terms">Mobile Terms</Link></li>
+              <li><Link to="/mobile-privacy-policy">Mobile Privacy Policy</Link></li>
             </ul>
           </div>
         </div>

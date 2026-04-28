@@ -18,9 +18,10 @@ export const Footer: React.FC<FooterProps> = ({
   companyName = 'DYAD Practice Solutions',
   copyrightText = 'All rights reserved',
   legalLinks = [
-    { text: 'Privacy policy', href: '#' },
-    { text: 'Terms of service', href: '#' },
-    { text: 'Cookie policy', href: '#' },
+    { text: 'Privacy Policy', href: '/privacy-policy' },
+    { text: 'Terms of Service', href: '/terms-of-service' },
+    { text: 'Mobile Terms', href: '/mobile-terms' },
+    { text: 'Mobile Privacy Policy', href: '/mobile-privacy-policy' },
   ],
 }) => {
   const currentYear = new Date().getFullYear();

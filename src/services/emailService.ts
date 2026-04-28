@@ -51,6 +51,16 @@ export class EmailService {
   }
 
   /**
+   * Resolve dynamic base URL for email links
+   */
+  private getBaseUrl(): string {
+    if (typeof window !== 'undefined') {
+      return window.location.origin;
+    }
+    return 'https://dyadmd.com';
+  }
+
+  /**
    * Send early access confirmation email
    */
   async sendEarlyAccessConfirmation(email: string, contactName: string, logoUrl: string): Promise<{ success: boolean; error?: string }> {
@@ -128,7 +138,7 @@ export class EmailService {
                 </div>
               </div>
               <div class="footer">
-                <p>Dyad Practice Solutions, LLC &middot; <a href="https://dyadmd.com">dyadmd.com</a> &middot; <a href="#">Unsubscribe</a> &middot; <a href="#">Privacy Policy</a></p>
+                <p>Dyad Practice Solutions, LLC &middot; <a href="${this.getBaseUrl()}">dyadmd.com</a> &middot; <a href="#">Unsubscribe</a> &middot; <a href="${this.getBaseUrl()}/privacy-policy">Privacy Policy</a></p>
                 <p>This message confirms receipt of your early access request. No action is required at this time.</p>
               </div>
             </div>
@@ -236,6 +246,7 @@ This message confirms receipt of your early access request. No action is require
             <div class="footer">
               <p>&copy; 2024 DYAD Practice Solutions. All rights reserved.</p>
               <p>This is an automated message, please do not reply to this email.</p>
+              <p><a href="${this.getBaseUrl()}/privacy-policy">Privacy Policy</a></p>
             </div>
           </div>
         </body>

@@ -22,7 +22,7 @@ interface RegisterFormData {
 }
 
 const registerSchema = yup.object().shape({
-  npi: yup.string().required('NPI is required').length(10, 'NPI must be exactly 10 digits'),
+  npi: yup.string().required('NPI is required').length(10, 'Invalid NPI Number'),
   npiType: yup.string(),
   facilityName: yup.string().when('npiType', {
     is: 'Facility/Group',
@@ -183,7 +183,7 @@ const Register: React.FC = () => {
         setNpiValidated(false);
       }
     } catch (error) {
-      toast.error('Error validating NPI. Please try again.');
+      toast.error('Invalid NPI number/Error validating NPI. Please try again.');
       setNpiValidated(false);
     } finally {
       setIsNpiValidating(false);

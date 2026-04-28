@@ -14,7 +14,7 @@ import { createEmailService } from '../services/emailService';
 // ── Validation Schema ───────────────────────────────────────────────────────
 const earlyAccessSchema = yup.object({
   npi: yup.string()
-    .matches(/^\d{10}$/, 'NPI must be exactly 10 digits')
+    .matches(/^\d{10}$/, 'Invalid NPI Number')
     .required('NPI is required'),
   practiceName: yup.string().required('Practice/Facility name is required'),
   contactName: yup.string().required('Primary contact name is required'),
@@ -156,6 +156,7 @@ const EarlyAccess: React.FC = () => {
   const [isNpiValidating, setIsNpiValidating] = useState(false);
   const [npiValidated, setNpiValidated] = useState(false);
   const [npiEnumerationType, setNpiEnumerationType] = useState('');
+  const [npiApiError, setNpiApiError] = useState('');
 
   // ── OTP state ──────────────────────────────────────────
   const [otpSent, setOtpSent] = useState(false);
@@ -167,8 +168,9 @@ const EarlyAccess: React.FC = () => {
   const [emailRegistered, setEmailRegistered] = useState(false);
   const [emailRegisteredMsg, setEmailRegisteredMsg] = useState('');
 
-  const { register, handleSubmit, trigger, watch, getValues, setValue, formState: { errors } } = useForm({
+  const { register, handleSubmit, trigger, watch, getValues, setValue, clearErrors, formState: { errors } } = useForm({
     resolver: yupResolver(earlyAccessSchema),
+    mode: 'onChange',
   });
 
   useEffect(() => {
@@ -201,6 +203,7 @@ const EarlyAccess: React.FC = () => {
     if (npi.length !== 10) return;
     setIsNpiValidating(true);
     setNpiValidated(false);
+    setNpiApiError('');
     try {
       const apiUrl = import.meta.env.VITE_API_URL || '';
       const response = await axios.post(`${apiUrl}/npi/registry`, { npi });
@@ -238,12 +241,13 @@ const EarlyAccess: React.FC = () => {
         if (phone) setValue('phoneNumber' as any, phone);
         setNpiEnumerationType(enumType);
         setNpiValidated(true);
+        clearErrors(['npi', 'practiceName', 'contactName', 'title', 'phoneNumber'] as any);
         toast.success('NPI validated — fields auto-filled!', { duration: 4000 });
       } else {
-        toast.error('NPI not found. Please check the number and try again.', { duration: 5000 });
+        setNpiApiError('Invalid NPI number. Please check and try again.');
       }
     } catch {
-      toast.error('Error validating NPI. Please try again.', { duration: 5000 });
+      setNpiApiError('Invalid NPI number. Please check and try again.');
     } finally {
       setIsNpiValidating(false);
     }
@@ -309,7 +313,7 @@ const EarlyAccess: React.FC = () => {
 
   const handleContinue = async (step: number) => {
     if (step === 1 && !otpVerified) {
-      toast.error('Please verify your email before continuing.');
+      toast.error('Please Fill Required Fields and verify your email before continuing.');
       return;
     }
     const isValid = await trigger(SECTION_FIELDS[step] as any);
@@ -520,10 +524,10 @@ const EarlyAccess: React.FC = () => {
                       </svg>
                     </div>
 
-                    {/* Animated body — only rendered when active */}
-                    {isExpanded && (
-                    <div className="ea-section-body">
+                    {/* Animated body — always in DOM, toggled via CSS */}
+                    <div className={`ea-section-body${isExpanded ? ' ea-section-body--open' : ''}`}>
                       <div className="ea-section-body-inner">
+                      <div className="ea-section-body-content">
 
                         {/* Section 1: Practice & Facility Details */}
                         {step === 1 && (
@@ -550,6 +554,7 @@ const EarlyAccess: React.FC = () => {
                                     if (val.length < 10) {
                                       setNpiValidated(false);
                                       setNpiEnumerationType('');
+                                      setNpiApiError('');
                                     } else if (val.length === 10 && !isNpiValidating) {
                                       validateNPI(val);
                                     }
@@ -567,6 +572,9 @@ const EarlyAccess: React.FC = () => {
                               </div>
                               {errors.npi && (
                                 <span className="error-message">{errors.npi.message}</span>
+                              )}
+                              {!errors.npi && npiApiError && (
+                                <span className="error-message">{npiApiError}</span>
                               )}
                             </div>
 
@@ -796,8 +804,8 @@ const EarlyAccess: React.FC = () => {
                           </button>
                         </div>
                       </div>
+                      </div>
                     </div>
-                    )}
                   </div>
                 );
               })}

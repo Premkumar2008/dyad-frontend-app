@@ -22,11 +22,11 @@ const navigationItems = [
 
 const aboutDropdownItems = [
   { name: 'Our Story & Inspiration', href: '#about', cardId: 0 },
-  { name: 'Our Mission & Vision', href: '#about', cardId: 1 },
-  { name: 'Our Values & Principles', href: '#about', cardId: 2 },
-  { name: 'Our Approach & Methodology', href: '#about', cardId: 3 },
-  { name: 'Our Innovative Technologies', href: '#about', cardId: 4 },
-  { name: 'Our Team & Expertise', href: '#leadership', cardId: 5 },
+  { name: 'Mission & Vision', href: '#about', cardId: 1 },
+  { name: 'Values & Principles', href: '#about', cardId: 2 },
+  { name: 'Approach & Methodology', href: '#about', cardId: 3 },
+  { name: 'Innovative Technologies', href: '#about', cardId: 4 },
+  { name: 'Team & Expertise', href: '#leadership', cardId: 5 },
 ];
 
 const whoWeServeDropdownItems = [
@@ -340,6 +340,9 @@ const LandingHeader: React.FC<LandingHeaderProps> = ({ activePage = 'Home' }) =>
           </ul>
         </nav>
         <div className="mobile-actions">
+            <div className="platform-access-shine" style={{ fontSize: '0.8rem', color: 'black', fontWeight: 600, fontFamily: 'Prompt, sans-serif', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+              Platform Access Begins Q3 2026
+            </div>
             <button className="btn btn-primary" onClick={handleEarlyAccess}>
               <span>Request Early Access</span>
             </button>
