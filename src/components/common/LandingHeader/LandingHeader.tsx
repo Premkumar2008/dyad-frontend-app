@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 
 interface LandingHeaderProps {
   activePage?: string;
+  hideEarlyAccess?: boolean;
 }
 
 const whatWeDoDropdownItems = [
@@ -36,7 +37,7 @@ const whoWeServeDropdownItems = [
   { name: 'Outpatient & Specialty Facilities' },
 ];
 
-const LandingHeader: React.FC<LandingHeaderProps> = ({ activePage = 'Home' }) => {
+const LandingHeader: React.FC<LandingHeaderProps> = ({ activePage = 'Home', hideEarlyAccess = false }) => {
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeMenu, setActiveMenu] = useState(activePage);
@@ -215,9 +216,11 @@ const LandingHeader: React.FC<LandingHeaderProps> = ({ activePage = 'Home' }) =>
             <div className="platform-access-shine" style={{ fontSize: '0.8rem', color: 'black', fontWeight: 600, fontFamily: 'Prompt, sans-serif', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
               Platform Access Begins Q3 2026
             </div>
-            <button className="btn btn-primary" onClick={handleEarlyAccess} style={{width : '260px'}}>
-              <span>Request Early Access</span>
-            </button>
+            {!hideEarlyAccess && (
+              <button className="btn btn-primary" onClick={handleEarlyAccess} style={{width : '260px'}}>
+                <span>Request Early Access</span>
+              </button>
+            )}
             {/* <button className="btn btn-primary" onClick={handleLogin}>
               <span>Login/Register</span>
             </button>
@@ -343,9 +346,11 @@ const LandingHeader: React.FC<LandingHeaderProps> = ({ activePage = 'Home' }) =>
             <div className="platform-access-shine" style={{ fontSize: '0.8rem', color: 'black', fontWeight: 600, fontFamily: 'Prompt, sans-serif', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
               Platform Access Begins Q3 2026
             </div>
-            <button className="btn btn-primary" onClick={handleEarlyAccess}>
-              <span>Request Early Access</span>
-            </button>
+            {!hideEarlyAccess && (
+              <button className="btn btn-primary" onClick={handleEarlyAccess}>
+                <span>Request Early Access</span>
+              </button>
+            )}
           {/* <button className="btn btn-primary btn-full" onClick={handleContactRequest}>
             <span>Contact Us</span>
           </button>

@@ -137,6 +137,12 @@ const SECTION_TITLES: Record<number, string> = {
   3: 'Operational Profile',
 };
 
+const SECTION_DESCRIPTIONS: Record<number, string> = {
+  1: 'Tell us about your practice or facility and the primary point of contact for this request. The NPI and email below will be verified before you proceed.',
+  2: 'Select the option that best describes your organization. Categories are grouped by clinical specialty and facility type.',
+  3: 'Help us understand the scale and footprint of your operations.',
+};
+
 const SECTION_FIELDS: Record<number, (keyof EarlyAccessFormData)[]> = {
   1: ['npi', 'practiceName', 'contactName', 'phoneNumber', 'email', 'title'],
   2: ['practiceType'],
@@ -157,13 +163,18 @@ const EarlyAccess: React.FC = () => {
   const [npiValidated, setNpiValidated] = useState(false);
   const [npiEnumerationType, setNpiEnumerationType] = useState('');
   const [npiApiError, setNpiApiError] = useState('');
+  const [npiApiData, setNpiApiData] = useState<any>(null);
+  const [npiConfirmed, setNpiConfirmed] = useState(false);
+  const [showNpiPanel, setShowNpiPanel] = useState(false);
 
   // ── OTP state ──────────────────────────────────────────
   const [otpSent, setOtpSent] = useState(false);
   const [otpVerified, setOtpVerified] = useState(false);
-  const [otpValue, setOtpValue] = useState('');
+  const [otpDigits, setOtpDigits] = useState(['', '', '', '', '', '']);
+  const otpInputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const [otpLoading, setOtpLoading] = useState(false);
   const [otpTimer, setOtpTimer] = useState(0);
+  const [otpExpireTimer, setOtpExpireTimer] = useState(0);
   const verifiedEmailRef = useRef<string>('');
   const [emailRegistered, setEmailRegistered] = useState(false);
   const [emailRegisteredMsg, setEmailRegisteredMsg] = useState('');
@@ -177,12 +188,18 @@ const EarlyAccess: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
-  // Countdown timer for OTP resend
+  // Countdown timers
   useEffect(() => {
     if (otpTimer <= 0) return;
     const id = setTimeout(() => setOtpTimer(t => t - 1), 1000);
     return () => clearTimeout(id);
   }, [otpTimer]);
+
+  useEffect(() => {
+    if (otpExpireTimer <= 0) return;
+    const id = setTimeout(() => setOtpExpireTimer(t => t - 1), 1000);
+    return () => clearTimeout(id);
+  }, [otpExpireTimer]);
 
   // Reset OTP + email-check state whenever email field changes
   const watchedEmail = watch('email');
@@ -190,7 +207,7 @@ const EarlyAccess: React.FC = () => {
     if (otpVerified && watchedEmail !== verifiedEmailRef.current) {
       setOtpVerified(false);
       setOtpSent(false);
-      setOtpValue('');
+      setOtpDigits(['', '', '', '', '', '']);
     }
     setEmailRegistered(false);
     setEmailRegisteredMsg('');
@@ -204,6 +221,9 @@ const EarlyAccess: React.FC = () => {
     setIsNpiValidating(true);
     setNpiValidated(false);
     setNpiApiError('');
+    setShowNpiPanel(false);
+    setNpiConfirmed(false);
+    setNpiApiData(null);
     try {
       const apiUrl = import.meta.env.VITE_API_URL || '';
       const response = await axios.post(`${apiUrl}/npi/registry`, { npi });
@@ -214,43 +234,126 @@ const EarlyAccess: React.FC = () => {
         const rawPhone: string = data?.addresses?.[0]?.telephone_number || basic.telephone_number || '';
         const phone = rawPhone.replace(/\D/g, '').slice(0, 10);
 
+        const addressParts = data?.addresses?.[0];
+        const addr = addressParts
+          ? [
+              addressParts.address_1,
+              addressParts.address_2,
+              [addressParts.city, addressParts.state, addressParts.postal_code].filter(Boolean).join(', '),
+            ].filter(Boolean).join(', ')
+          : '';
+
+        const taxonomies = data?.taxonomies || [];
+        const primaryTaxonomy = taxonomies.find((t: any) => t.primary) || taxonomies[0];
+        const taxonomyDesc = primaryTaxonomy
+          ? `${primaryTaxonomy.desc || ''}${primaryTaxonomy.code ? ` (${primaryTaxonomy.code})` : ''}`
+          : '';
+
+        const enumerationDate = basic.enumeration_date
+          ? new Date(basic.enumeration_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+          : '';
+        const lastUpdated = basic.last_updated
+          ? new Date(basic.last_updated).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+          : '';
+
+        let displayName = '';
+        let orgName = '';
+        let contactName = '';
+        let title = '';
+        let credential = '';
+        let fullName = '';
+
         if (enumType === 'NPI-2') {
-          const orgName = basic.organization_name || data.organization_name || '';
+          orgName = basic.organization_name || data.organization_name || '';
           const aoPrefix = basic.authorized_official_name_prefix || '';
           const aoFirst = basic.authorized_official_first_name || '';
           const aoLast = basic.authorized_official_last_name || '';
-          const aoTitle = basic.authorized_official_title_or_position || '';
-          const contactName = [aoPrefix, aoFirst, aoLast].filter(Boolean).join(' ').trim();
-          setValue('practiceName' as any, orgName);
-          setValue('contactName' as any, contactName);
-          setValue('title' as any, aoTitle);
+          title = basic.authorized_official_title_or_position || '';
+          contactName = [aoPrefix, aoFirst, aoLast].filter(Boolean).join(' ').trim();
+          displayName = orgName;
         } else if (enumType === 'NPI-1') {
           const prefix = basic.name_prefix && basic.name_prefix !== '--' ? basic.name_prefix : '';
           const first = basic.first_name || '';
           const middle = basic.middle_name || '';
           const last = basic.last_name || '';
           const suffix = basic.name_suffix && basic.name_suffix !== '--' ? basic.name_suffix : '';
-          const credential = basic.credential || '';
+          credential = basic.credential || '';
           const nameParts = [prefix, first, middle, last, suffix].filter(Boolean);
-          const fullName = credential ? `${nameParts.join(' ').trim()}, ${credential}` : nameParts.join(' ').trim();
-          setValue('practiceName' as any, fullName);
-          setValue('contactName' as any, fullName);
-          setValue('title' as any, credential);
+          fullName = credential ? `${nameParts.join(' ').trim()}, ${credential}` : nameParts.join(' ').trim();
+          displayName = fullName;
+          contactName = fullName;
         }
 
-        if (phone) setValue('phoneNumber' as any, phone);
+        setNpiApiData({
+          enumType, orgName, contactName, title, phone, fullName, credential,
+          displayName, taxonomyDesc, enumerationDate, lastUpdated, addr, npi,
+          status: basic.status || 'Active',
+          authorizedOfficial: enumType === 'NPI-2' ? (contactName || '—') : '— (Type 1 NPI)',
+        });
         setNpiEnumerationType(enumType);
-        setNpiValidated(true);
-        clearErrors(['npi', 'practiceName', 'contactName', 'title', 'phoneNumber'] as any);
-        toast.success('NPI validated — fields auto-filled!', { duration: 4000 });
+        setShowNpiPanel(true);
       } else {
-        setNpiApiError('Invalid NPI number. Please check and try again.');
+        setNpiApiError('NPI not found. Please check the number and try again.');
       }
     } catch {
-      setNpiApiError('Invalid NPI number. Please check and try again.');
+      setNpiApiError('NPI not found. Please check the number and try again.');
     } finally {
       setIsNpiValidating(false);
     }
+  };
+
+  const handleNpiVerify = async () => {
+    const isValid = await trigger('npi' as any);
+    if (!isValid) return;
+    const npi = getValues('npi' as any);
+    await validateNPI(npi);
+  };
+
+  const handleNpiConfirm = () => {
+    if (!npiApiData) return;
+    const { enumType, orgName, contactName, title, phone, fullName, credential } = npiApiData;
+    if (enumType === 'NPI-2') {
+      setValue('practiceName' as any, orgName);
+      setValue('contactName' as any, contactName);
+      setValue('title' as any, title);
+    } else if (enumType === 'NPI-1') {
+      setValue('practiceName' as any, fullName);
+      setValue('contactName' as any, fullName);
+      setValue('title' as any, credential);
+    }
+    if (phone) setValue('phoneNumber' as any, phone);
+    clearErrors(['npi', 'practiceName', 'contactName', 'title', 'phoneNumber'] as any);
+    setNpiValidated(true);
+    setNpiConfirmed(true);
+    setShowNpiPanel(false);
+  };
+
+  // ── OTP digit handlers ─────────────────────────────────
+  const handleOtpDigitChange = (index: number, value: string) => {
+    const digit = value.replace(/\D/g, '').slice(-1);
+    const newDigits = [...otpDigits];
+    newDigits[index] = digit;
+    setOtpDigits(newDigits);
+    if (digit && index < 5) {
+      otpInputRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Backspace' && !otpDigits[index] && index > 0) {
+      otpInputRefs.current[index - 1]?.focus();
+    }
+  };
+
+  const handleOtpPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+    if (!pasted) return;
+    const newDigits = [...otpDigits];
+    pasted.split('').forEach((ch, i) => { newDigits[i] = ch; });
+    setOtpDigits(newDigits);
+    const nextEmpty = pasted.length < 6 ? pasted.length : 5;
+    otpInputRefs.current[nextEmpty]?.focus();
   };
 
   const handleSendOTP = async () => {
@@ -263,7 +366,6 @@ const EarlyAccess: React.FC = () => {
     setEmailRegisteredMsg('');
 
     try {
-      // Check if email is already registered for early access
       const apiUrl = import.meta.env.VITE_API_URL || '';
       const checkRes = await axios.post(`${apiUrl}/api-early-access/check-email`, { email });
 
@@ -273,14 +375,13 @@ const EarlyAccess: React.FC = () => {
         return;
       }
 
-      // Email is eligible — send OTP
       await sendEmailOTP(email);
       setOtpSent(true);
       setOtpTimer(60);
+      setOtpExpireTimer(600);
       toast.success('OTP sent to your email!');
     } catch (error: any) {
       const msg = error.response?.data?.message;
-      // If the check-email endpoint itself returns a structured error, surface it
       if (error.response?.data?.exists === null) {
         toast.error(msg || 'Please provide a valid email address.');
       } else {
@@ -292,6 +393,7 @@ const EarlyAccess: React.FC = () => {
   };
 
   const handleVerifyOTP = async () => {
+    const otpValue = otpDigits.join('');
     if (otpValue.length !== 6) return;
     setOtpLoading(true);
     try {
@@ -364,7 +466,6 @@ const EarlyAccess: React.FC = () => {
       setFormSubmitted(true);
       localStorage.setItem('earlyAccessSubmitted', new Date().toISOString());
 
-      // Fire confirmation email (fire-and-forget)
       try {
         const emailService = createEmailService();
         const logoUrl = `${window.location.origin}/assets/images/logo_main.png`;
@@ -412,9 +513,11 @@ const EarlyAccess: React.FC = () => {
     );
   };
 
+  const formatExpireTime = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+
   return (
     <div className="early-access-container">
-      <LandingHeader />
+      <LandingHeader hideEarlyAccess />
 
       <main className="early-access-main">
         <div className="early-access-content">
@@ -430,27 +533,39 @@ const EarlyAccess: React.FC = () => {
               <p className="early-access-note">
                 The intake below is used to assess operational scope, encounter volume, and to ensure strategic alignment.
               </p>
+             <hr className="header-divider" />
+              <div className="protocol-callout">
+                <div className="protocol-callout-icon">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                    <path d="M9 12l2 2 4-4"></path>
+                  </svg>
+                </div>
+                <div>
+                  <div className="protocol-callout-title">Verification Protocol</div>
+                  <div className="protocol-callout-body">
+                    To preserve the integrity of the early release cohort, every intake is verified against the <strong>NPPES National Provider Identifier registry</strong> and authenticated via <strong>email one-time passcode</strong>. This is part of Dyad's standard institutional onboarding — your information is not shared, and verification typically completes in under thirty seconds.
+                  </div>
+                </div>
+              </div>
             </div>
           </div>}
 
           {formSubmitted ? (
             <div className="sc-wrapper">
-              {/* Icon */}
               <div className="sc-icon">
                 <svg width="52" height="52" viewBox="0 0 52 52" fill="none" aria-hidden="true">
-                  <circle cx="26" cy="26" r="24" stroke="#22c55e" strokeWidth="2.5" />
-                  <path d="M16 26l7 7 13-13" stroke="#22c55e" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                  <circle cx="26" cy="26" r="24" fill="#1d6dd8" />
+                  <path d="M16 26l7 7 13-13" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </div>
 
-              {/* Headline */}
               <p className="sc-label">Submission Received</p>
               <h2 className="sc-title">Thank you for your interest in Dyad</h2>
               <p className="sc-subtitle">
                 If selected, early access invitations will be extended via email in advance of platform release.
               </p>
 
-              {/* What happens next card */}
               <div className="sc-next-card">
                 <p className="sc-next-heading">What Happens Next</p>
                 <ol className="sc-steps">
@@ -485,6 +600,14 @@ const EarlyAccess: React.FC = () => {
           ) : (
             <form onSubmit={handleSubmit(onSubmit)} noValidate>
 
+              {/* ── Progress bar ── */}
+              <div className="ea-progress">
+                   <span className="ea-progress-pct">Section {completedSteps.size}/3</span>
+                <div className="ea-progress-track">
+                  <div className="ea-progress-fill" style={{ width: `${progress}%` }} />
+                </div>
+             
+              </div>
 
               {/* ── Accordion sections ── */}
               {([1, 2, 3] as const).map(step => {
@@ -498,7 +621,7 @@ const EarlyAccess: React.FC = () => {
                     className={`ea-section ea-section--${status}`}
                   >
                     <div
-                      className={`ea-section-header${status === 'completed' ? ' ea-section-header--clickable' : ''}`}
+                      className={`ea-section-header${status === 'completed' ? ' ea-section-header--clickable' : ''}${isExpanded ? ' ea-section-header--has-border' : ''}`}
                       onClick={status === 'completed' ? () => toggleCompleted(step) : undefined}
                       aria-expanded={isExpanded}
                     >
@@ -524,312 +647,491 @@ const EarlyAccess: React.FC = () => {
                       </svg>
                     </div>
 
-                    {/* Animated body — always in DOM, toggled via CSS */}
+                    {/* Animated body */}
                     <div className={`ea-section-body${isExpanded ? ' ea-section-body--open' : ''}`}>
                       <div className="ea-section-body-inner">
-                      <div className="ea-section-body-content">
+                        <div className="ea-section-body-content">
 
-                        {/* Section 1: Practice & Facility Details */}
-                        {step === 1 && (
-                          <div className="form-grid">
+                          {/* Section description */}
+                          <p className="ea-section-desc">{SECTION_DESCRIPTIONS[step]}</p>
 
-                            {/* NPI Lookup */}
-                            <div className="form-field form-field--full">
-                              <label htmlFor="npi">
-                                Practice or Provider NPI * 
-                              </label>
-                              <div className="ea-npi-row">
-                                <input
-                                  id="npi"
-                                  type="text"
-                                  inputMode="numeric"
-                                  {...register('npi')}
-                                  className={`${errors.npi ? 'error' : ''} ${npiValidated ? 'ea-npi-success' : ''}`}
-                                  placeholder="Enter 10-digit NPI number"
-                                  maxLength={10}
-                                  onChange={e => {
-                                    const val = e.target.value.replace(/\D/g, '');
-                                    e.target.value = val;
-                                    register('npi').onChange(e);
-                                    if (val.length < 10) {
-                                      setNpiValidated(false);
-                                      setNpiEnumerationType('');
-                                      setNpiApiError('');
-                                    } else if (val.length === 10 && !isNpiValidating) {
-                                      validateNPI(val);
-                                    }
-                                  }}
-                                  disabled={isNpiValidating}
-                                />
-                                {isNpiValidating && (
-                                  <span className="ea-npi-status">
-                                    <span className="spinner spinner--blue ea-spinner-sm" /> Validating…
-                                  </span>
-                                )}
-                                {!isNpiValidating && npiValidated && (
-                                  <span className="ea-npi-status ea-npi-status--ok">✓ NPI validated</span>
-                                )}
-                              </div>
-                              {errors.npi && (
-                                <span className="error-message">{errors.npi.message}</span>
-                              )}
-                              {!errors.npi && npiApiError && (
-                                <span className="error-message">{npiApiError}</span>
-                              )}
-                            </div>
+                          {/* ── Section 1: Practice & Facility Details ── */}
+                          {step === 1 && (
+                            <div className="form-grid">
 
-                            <div className="form-field">
-                              <label htmlFor="practiceName">Practice/Facility Name *</label>
-                              <input
-                                id="practiceName"
-                                type="text"
-                                {...register('practiceName')}
-                                className={errors.practiceName ? 'error' : ''}
-                                placeholder="Enter practice or facility name"
-                              />
-                              {errors.practiceName && (
-                                <span className="error-message">{errors.practiceName.message}</span>
-                              )}
-                            </div>
-
-                            <div className="form-field">
-                              <label htmlFor="contactName">Primary Contact Name *</label>
-                              <input
-                                id="contactName"
-                                type="text"
-                                {...register('contactName')}
-                                className={errors.contactName ? 'error' : ''}
-                                placeholder="Enter primary contact name"
-                              />
-                              {errors.contactName && (
-                                <span className="error-message">{errors.contactName.message}</span>
-                              )}
-                            </div>
-
-                            <div className="form-field">
-                              <label htmlFor="phoneNumber">Phone Number *</label>
-                              <input
-                                id="phoneNumber"
-                                type="tel"
-                                {...register('phoneNumber')}
-                                className={errors.phoneNumber ? 'error' : ''}
-                                placeholder="10-digit phone number"
-                                maxLength={10}
-                              />
-                              {errors.phoneNumber && (
-                                <span className="error-message">{errors.phoneNumber.message}</span>
-                              )}
-                            </div>
-
-                            <div className="form-field">
-                              <label htmlFor="title">Title / Role *</label>
-                              <input
-                                id="title"
-                                type="text"
-                                {...register('title')}
-                                className={errors.title ? 'error' : ''}
-                                placeholder="e.g., Practice Administrator, CEO, Medical Director"
-                              />
-                              {errors.title && (
-                                <span className="error-message">{errors.title.message}</span>
-                              )}
-                            </div>
-
-                            <div className="form-field form-field--full">
-                              <label htmlFor="email">Email *</label>
-                              <div className="ea-email-row">
-                                <input
-                                  id="email"
-                                  type="email"
-                                  {...register('email')}
-                                  className={errors.email ? 'error' : ''}
-                                  placeholder="Enter email address"
-                                  disabled={otpVerified}
-                                />
-                                {otpVerified ? (
-                                  <span className="ea-verified-badge">✓ Email Verified</span>
-                                ) : (
+                              {/* NPI field + verify button */}
+                              <div className="form-field form-field--full">
+                                <label htmlFor="npi">Practice or Provider NPI *</label>
+                                <p className="ea-field-hint">10-digit National Provider Identifier — Type 1 (individual) or Type 2 (organization). Verified live against the CMS NPPES registry.</p>
+                                <div className="ea-npi-row">
+                                  <input
+                                    id="npi"
+                                    type="text"
+                                    inputMode="numeric"
+                                    {...register('npi')}
+                                    className={`${errors.npi ? 'error' : ''} ${npiValidated ? 'ea-npi-success' : ''}`}
+                                    placeholder="Enter 10-digit NPI number"
+                                    maxLength={10}
+                                    onChange={e => {
+                                      const val = e.target.value.replace(/\D/g, '');
+                                      e.target.value = val;
+                                      register('npi').onChange(e);
+                                      if (val.length < 10) {
+                                        setNpiValidated(false);
+                                        setNpiEnumerationType('');
+                                        setNpiApiError('');
+                                        setShowNpiPanel(false);
+                                        setNpiApiData(null);
+                                      }
+                                    }}
+                                    disabled={isNpiValidating || npiConfirmed}
+                                  />
                                   <button
                                     type="button"
-                                    className="btn ea-otp-send-btn"
+                                    className="ea-npi-verify-btn"
+                                    onClick={handleNpiVerify}
+                                    disabled={isNpiValidating || npiConfirmed}
+                                  >
+                                    {isNpiValidating
+                                      ? <><span className="spinner spinner--blue ea-spinner-sm" /> Verifying…</>
+                                      : 'Verify NPI'
+                                    }
+                                  </button>
+                                </div>
+                                {errors.npi && <span className="error-message">{errors.npi.message}</span>}
+                                {!errors.npi && npiApiError && <span className="error-message">{npiApiError}</span>}
+
+                                {/* Verified success panel */}
+                                {npiConfirmed && npiApiData && (
+                                  <div className="ea-npi-verified-panel" style={{ marginTop: '0.75rem' }}>
+                                    <div className="ea-npi-verified-left">
+                                      <div className="ea-npi-verified-icon">
+                                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                                          <circle cx="9" cy="9" r="9" fill="#22c55e" />
+                                          <path d="M4.5 9l3 3 6-6" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                        </svg>
+                                      </div>
+                                      <div className="ea-npi-verified-info">
+                                        <div className="ea-npi-verified-title">Verified via NPPES</div>
+                                        <div className="ea-npi-verified-sub">
+                                          {npiApiData.displayName}&nbsp;·&nbsp;NPI {npiApiData.npi}
+                                          <button
+                                            type="button"
+                                            className="ea-npi-change-btn"
+                                            onClick={() => {
+                                              setNpiConfirmed(false);
+                                              setNpiValidated(false);
+                                              setShowNpiPanel(false);
+                                              setNpiApiData(null);
+                                              setValue('npi' as any, '');
+                                            }}
+                                          >
+                                            Change
+                                          </button>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <span className="ea-npi-verified-time">just now</span>
+                                  </div>
+                                )}
+
+                                {/* NPPES confirmation panel */}
+                                {showNpiPanel && npiApiData && (
+                                  <div className="ea-npi-panel">
+                                    <div className="ea-npi-panel-header">
+                                      <div className="ea-npi-cms-badge">CMS</div>
+                                      <div className="ea-npi-panel-title-area">
+                                        <div className="ea-npi-panel-title">NPPES Registry Lookup</div>
+                                        <div className="ea-npi-panel-subtitle">National Plan &amp; Provider Enumeration System</div>
+                                      </div>
+                                      <div className="ea-npi-match-badge">✓ Match Found</div>
+                                    </div>
+
+                                    <div className="ea-npi-panel-body">
+                                      <h3 className="ea-npi-provider-name">{npiApiData.displayName}</h3>
+                                      <div className="ea-npi-type-row">
+                                        <span className="ea-npi-type-badge">
+                                          TYPE {npiApiData.enumType === 'NPI-1' ? '1' : '2'} · {npiApiData.enumType === 'NPI-1' ? 'INDIVIDUAL' : 'ORGANIZATION'}
+                                        </span>
+                                        <span className="ea-npi-status-text">
+                                          {npiApiData.status}{npiApiData.lastUpdated ? ` · Last updated ${npiApiData.lastUpdated}` : ''}
+                                        </span>
+                                      </div>
+
+                                      <div className="ea-npi-detail-grid">
+                                        <div className="ea-npi-detail-cell">
+                                          <div className="ea-npi-detail-label">PRIMARY TAXONOMY</div>
+                                          <div className="ea-npi-detail-value">{npiApiData.taxonomyDesc || '—'}</div>
+                                        </div>
+                                        <div className="ea-npi-detail-cell">
+                                          <div className="ea-npi-detail-label">ENUMERATION DATE</div>
+                                          <div className="ea-npi-detail-value ea-npi-detail-value--bold">{npiApiData.enumerationDate || '—'}</div>
+                                        </div>
+                                        {npiApiData.addr && (
+                                          <div className="ea-npi-detail-cell ea-npi-detail-cell--full">
+                                            <div className="ea-npi-detail-label">PRACTICE LOCATION</div>
+                                            <div className="ea-npi-detail-value ea-npi-detail-value--bold">{npiApiData.addr}</div>
+                                          </div>
+                                        )}
+                                        <div className="ea-npi-detail-cell">
+                                          <div className="ea-npi-detail-label">AUTHORIZED OFFICIAL</div>
+                                          <div className="ea-npi-detail-value">{npiApiData.authorizedOfficial}</div>
+                                        </div>
+                                        <div className="ea-npi-detail-cell">
+                                          <div className="ea-npi-detail-label">NPI</div>
+                                          <div className="ea-npi-detail-value ea-npi-detail-value--bold">{npiApiData.npi}</div>
+                                        </div>
+                                      </div>
+
+                                      <div className="ea-npi-panel-actions">
+                                        <button type="button" className="ea-npi-confirm-btn" onClick={handleNpiConfirm}>
+                                          ✓ Confirm — this is my practice
+                                        </button>
+                                        <button
+                                          type="button"
+                                          className="ea-npi-wrong-btn"
+                                          onClick={() => { setShowNpiPanel(false); setNpiApiData(null); }}
+                                        >
+                                          Not the right entity?
+                                        </button>
+                                      </div>
+
+                                      <div className="ea-npi-panel-footer">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, opacity: 0.5 }}>
+                                          <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                                          <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                                        </svg>
+                                        <span>
+                                          Sourced from the public NPPES API maintained by the Centers for Medicare &amp; Medicaid Services. No PHI is retrieved or stored.
+                                        </span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+
+                              <div className="form-field">
+                                <label htmlFor="practiceName">Practice/Facility Name *</label>
+                                <input
+                                  id="practiceName"
+                                  type="text"
+                                  {...register('practiceName')}
+                                  className={errors.practiceName ? 'error' : ''}
+                                  placeholder="Enter practice or facility name"
+                                  disabled={npiConfirmed}
+                                />
+                                {errors.practiceName && (
+                                  <span className="error-message">{errors.practiceName.message}</span>
+                                )}
+                              </div>
+
+                              <div className="form-field">
+                                <label htmlFor="contactName">Primary Contact Name *</label>
+                                <input
+                                  id="contactName"
+                                  type="text"
+                                  {...register('contactName')}
+                                  className={errors.contactName ? 'error' : ''}
+                                  placeholder="Enter primary contact name"
+                                />
+                                {errors.contactName && (
+                                  <span className="error-message">{errors.contactName.message}</span>
+                                )}
+                              </div>
+
+                              <div className="form-field">
+                                <label htmlFor="phoneNumber">Phone Number *</label>
+                                <input
+                                  id="phoneNumber"
+                                  type="tel"
+                                  {...register('phoneNumber')}
+                                  className={errors.phoneNumber ? 'error' : ''}
+                                  placeholder="10-digit phone number"
+                                  maxLength={10}
+                                />
+                                {errors.phoneNumber && (
+                                  <span className="error-message">{errors.phoneNumber.message}</span>
+                                )}
+                              </div>
+
+                              <div className="form-field">
+                                <label htmlFor="title">Title / Role *</label>
+                                <input
+                                  id="title"
+                                  type="text"
+                                  {...register('title')}
+                                  className={errors.title ? 'error' : ''}
+                                  placeholder="e.g., Practice Administrator, CEO, Medical Director"
+                                />
+                                {errors.title && (
+                                  <span className="error-message">{errors.title.message}</span>
+                                )}
+                              </div>
+
+                              <div className="form-field form-field--full">
+                                <label htmlFor="email">Email *</label>
+                                <div className="ea-email-row">
+                                  <input
+                                    id="email"
+                                    type="email"
+                                    {...register('email')}
+                                    className={errors.email ? 'error' : ''}
+                                    placeholder="Enter email address"
+                                    disabled={otpVerified}
+                                  />
+                                  <button
+                                    type="button"
+                                    className="ea-otp-send-btn"
                                     onClick={handleSendOTP}
-                                    disabled={otpLoading}
+                                    disabled={otpVerified || otpLoading}
                                   >
                                     {otpLoading && !otpSent ? <span className="spinner spinner--blue ea-spinner-sm" /> : null}
                                     {otpSent ? 'Resend OTP' : 'Send OTP'}
                                   </button>
-                                )}
-                              </div>
-                              {errors.email && (
-                                <span className="error-message">{errors.email.message}</span>
-                              )}
-
-                              {emailRegistered && (
-                                <div className="ea-email-registered">
-                                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true" style={{flexShrink:0,marginTop:'2px'}}>
-                                    <circle cx="8" cy="8" r="7" stroke="#d97706" strokeWidth="1.5"/>
-                                    <path d="M8 5v3.5" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round"/>
-                                    <circle cx="8" cy="11" r="0.75" fill="#d97706"/>
-                                  </svg>
-                                  <span>{emailRegisteredMsg}</span>
                                 </div>
-                              )}
+                                {errors.email && (
+                                  <span className="error-message">{errors.email.message}</span>
+                                )}
 
-                              {otpSent && !otpVerified && (
-                                <div className="ea-otp-inline">
-                                  <p className="ea-otp-hint">Enter the 6-digit OTP sent to your email</p>
-                                  <div className="ea-otp-input-row">
-                                    <input
-                                      type="text"
-                                      inputMode="numeric"
-                                      className="ea-otp-input"
-                                      maxLength={6}
-                                      value={otpValue}
-                                      onChange={e => setOtpValue(e.target.value.replace(/\D/g, ''))}
-                                      placeholder="000000"
-                                    />
-                                    <button
-                                      type="button"
-                                      className="ea-otp-verify-btn"
-                                      onClick={handleVerifyOTP}
-                                      disabled={otpValue.length !== 6 || otpLoading}
-                                    >
-                                      {otpLoading ? <span className="spinner spinner--blue ea-spinner-sm" /> : 'Verify OTP'}
-                                    </button>
-                                    {otpTimer > 0 ? (
-                                      <span className="ea-otp-timer">Resend in {otpTimer}s</span>
-                                    ) : (
-                                      <button type="button" className="ea-otp-resend-btn" onClick={handleSendOTP}>
-                                        Resend
-                                      </button>
-                                    )}
+                                {/* Email verified success panel */}
+                                {otpVerified && (
+                                  <div className="ea-npi-verified-panel" style={{ marginTop: '0.75rem' }}>
+                                    <div className="ea-npi-verified-left">
+                                      <div className="ea-npi-verified-icon">
+                                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                                          <circle cx="9" cy="9" r="9" fill="#22c55e" />
+                                          <path d="M4.5 9l3 3 6-6" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                        </svg>
+                                      </div>
+                                      <div className="ea-npi-verified-info">
+                                        <div className="ea-npi-verified-title">Verified via Email</div>
+                                        <div className="ea-npi-verified-sub">
+                                          {verifiedEmailRef.current}
+                                          <button
+                                            type="button"
+                                            className="ea-npi-change-btn"
+                                            onClick={() => {
+                                              setOtpVerified(false);
+                                              setOtpSent(false);
+                                              setOtpDigits(['', '', '', '', '', '']);
+                                            }}
+                                          >
+                                            Change
+                                          </button>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <span className="ea-npi-verified-time">just now</span>
                                   </div>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        )}
+                                )}
 
-                        {/* Section 2: Practice Type */}
-                        {step === 2 && (
-                          <div className="form-field">
-                            <label htmlFor="practiceType">Practice Type *</label>
-                            <select
-                              id="practiceType"
-                              {...register('practiceType')}
-                              className={errors.practiceType ? 'error' : ''}
-                            >
-                              {practiceTypeOptions.filter(o => !o.group).map(option => (
-                                <option key={option.value} value={option.value}>{option.label}</option>
-                              ))}
-                              {groupOrder.map(group => (
-                                <optgroup key={group} label={group}>
-                                  {groupedPracticeTypes[group]?.map(option => (
-                                    <option key={option.value} value={option.value}>{option.label}</option>
-                                  ))}
-                                </optgroup>
-                              ))}
-                            </select>
-                            {errors.practiceType && (
-                              <span className="error-message">{errors.practiceType.message}</span>
-                            )}
-                          </div>
-                        )}
+                                {emailRegistered && (
+                                  <div className="ea-email-registered">
+                                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true" style={{ flexShrink: 0, marginTop: '2px' }}>
+                                      <circle cx="8" cy="8" r="7" stroke="#d97706" strokeWidth="1.5" />
+                                      <path d="M8 5v3.5" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" />
+                                      <circle cx="8" cy="11" r="0.75" fill="#d97706" />
+                                    </svg>
+                                    <span>{emailRegisteredMsg}</span>
+                                  </div>
+                                )}
 
-                        {/* Section 3: Operational Profile */}
-                        {step === 3 && (
-                          <>
-                            <div className="form-grid">
-                              <div className="form-field">
-                                <label htmlFor="providers">Number of Rendering Providers *</label>
-                                <select
-                                  id="providers"
-                                  {...register('providers')}
-                                  className={errors.providers ? 'error' : ''}
-                                >
-                                  {providersOptions.map(option => (
-                                    <option key={option.value} value={option.value}>{option.label}</option>
-                                  ))}
-                                </select>
-                                {errors.providers && (
-                                  <span className="error-message">{errors.providers.message}</span>
+                                {/* ── OTP card ── */}
+                                {otpSent && !otpVerified && (
+                                  <div className="ea-otp-card">
+                                    <div className="ea-otp-card-header">
+                                      <div className="ea-otp-card-icon">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                          <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                                          <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                                        </svg>
+                                      </div>
+                                      <div className="ea-otp-card-titles">
+                                        <div className="ea-otp-card-title">Confirm Primary Contact Email</div>
+                                        <div className="ea-otp-card-subtitle">One-time passcode dispatched</div>
+                                      </div>
+                                      <span className="ea-otp-awaiting-badge">
+                                        <span className="ea-otp-awaiting-dot" />
+                                        Awaiting code
+                                      </span>
+                                    </div>
+
+                                    <div className="ea-otp-card-body">
+                                      <p className="ea-otp-card-desc">
+                                        A 6-digit code has been sent to <span className="ea-otp-email-highlight">{watchedEmail}</span>. The code expires in <strong>10 minutes</strong>.
+                                      </p>
+
+                                      <div className="ea-otp-boxes">
+                                        {otpDigits.map((digit, i) => (
+                                          <input
+                                            key={i}
+                                            ref={el => { otpInputRefs.current[i] = el; }}
+                                            type="text"
+                                            inputMode="numeric"
+                                            className="ea-otp-box"
+                                            maxLength={1}
+                                            value={digit}
+                                            onChange={e => handleOtpDigitChange(i, e.target.value)}
+                                            onKeyDown={e => handleOtpKeyDown(i, e)}
+                                            onPaste={i === 0 ? handleOtpPaste : undefined}
+                                          />
+                                        ))}
+                                      </div>
+
+                                      <div className="ea-otp-card-footer">
+                                        <span className="ea-otp-expires-text">
+                                          <span className="ea-otp-expires-dot" />
+                                          {otpExpireTimer > 0 ? `Expires in ${formatExpireTime(otpExpireTimer)}` : 'Code expired'}
+                                        </span>
+                                        <div className="ea-otp-resend-row">
+                                          Didn&apos;t receive it?&nbsp;
+                                          {otpTimer > 0 ? (
+                                            <span className="ea-otp-resend-wait">Resend code ({otpTimer}s)</span>
+                                          ) : (
+                                            <button type="button" className="ea-otp-resend-link" onClick={handleSendOTP}>
+                                              Resend code
+                                            </button>
+                                          )}
+                                        </div>
+                                      </div>
+
+                                      <button
+                                        type="button"
+                                        className="ea-otp-verify-card-btn"
+                                        onClick={handleVerifyOTP}
+                                        disabled={otpDigits.join('').length !== 6 || otpLoading}
+                                      >
+                                        {otpLoading ? <span className="spinner spinner--white ea-spinner-sm" /> : 'Verify Code'}
+                                      </button>
+                                    </div>
+                                  </div>
                                 )}
                               </div>
-
-                              <div className="form-field">
-                                <label htmlFor="locations">Number of Locations *</label>
-                                <select
-                                  id="locations"
-                                  {...register('locations')}
-                                  className={errors.locations ? 'error' : ''}
-                                >
-                                  {locationsOptions.map(option => (
-                                    <option key={option.value} value={option.value}>{option.label}</option>
-                                  ))}
-                                </select>
-                                {errors.locations && (
-                                  <span className="error-message">{errors.locations.message}</span>
-                                )}
-                              </div>
                             </div>
+                          )}
 
-                            <div className="form-field form-field--full">
-                              <label htmlFor="claimVolume">Estimated Monthly Claim Volume *</label>
+                          {/* ── Section 2: Practice Type ── */}
+                          {step === 2 && (
+                            <div className="form-field">
+                              <label htmlFor="practiceType">Practice Type *</label>
                               <select
-                                id="claimVolume"
-                                {...register('claimVolume')}
-                                className={errors.claimVolume ? 'error' : ''}
+                                id="practiceType"
+                                {...register('practiceType')}
+                                className={errors.practiceType ? 'error' : ''}
                               >
-                                {claimVolumeOptions.map(option => (
+                                {practiceTypeOptions.filter(o => !o.group).map(option => (
                                   <option key={option.value} value={option.value}>{option.label}</option>
                                 ))}
+                                {groupOrder.map(group => (
+                                  <optgroup key={group} label={group}>
+                                    {groupedPracticeTypes[group]?.map(option => (
+                                      <option key={option.value} value={option.value}>{option.label}</option>
+                                    ))}
+                                  </optgroup>
+                                ))}
                               </select>
-                              {errors.claimVolume && (
-                                <span className="error-message">{errors.claimVolume.message}</span>
+                              {errors.practiceType && (
+                                <span className="error-message">{errors.practiceType.message}</span>
                               )}
                             </div>
-                          </>
-                        )}
+                          )}
 
-                        {/* Continue / Confirm button */}
-                        <div className="ea-section-actions">
-                          <button
-                            type="button"
-                            className="btn btn-primary ea-continue-btn"
-                            onClick={() => handleContinue(step)}
-                          >
-                            {step === 1 && 'Continue to Practice Type'}
-                            {step === 2 && 'Continue to Operational Profile'}
-                            {step === 3 && 'Confirm & Submit'}
-                          </button>
+                          {/* ── Section 3: Operational Profile ── */}
+                          {step === 3 && (
+                            <>
+                              <div className="form-grid">
+                                <div className="form-field">
+                                  <label htmlFor="providers">Number of Rendering Providers *</label>
+                                  <select
+                                    id="providers"
+                                    {...register('providers')}
+                                    className={errors.providers ? 'error' : ''}
+                                  >
+                                    {providersOptions.map(option => (
+                                      <option key={option.value} value={option.value}>{option.label}</option>
+                                    ))}
+                                  </select>
+                                  {errors.providers && (
+                                    <span className="error-message">{errors.providers.message}</span>
+                                  )}
+                                </div>
+
+                                <div className="form-field">
+                                  <label htmlFor="locations">Number of Locations *</label>
+                                  <select
+                                    id="locations"
+                                    {...register('locations')}
+                                    className={errors.locations ? 'error' : ''}
+                                  >
+                                    {locationsOptions.map(option => (
+                                      <option key={option.value} value={option.value}>{option.label}</option>
+                                    ))}
+                                  </select>
+                                  {errors.locations && (
+                                    <span className="error-message">{errors.locations.message}</span>
+                                  )}
+                                </div>
+                              </div>
+
+                              <div className="form-field form-field--full">
+                                <label htmlFor="claimVolume">Estimated Monthly Claim Volume *</label>
+                                <select
+                                  id="claimVolume"
+                                  {...register('claimVolume')}
+                                  className={errors.claimVolume ? 'error' : ''}
+                                >
+                                  {claimVolumeOptions.map(option => (
+                                    <option key={option.value} value={option.value}>{option.label}</option>
+                                  ))}
+                                </select>
+                                {errors.claimVolume && (
+                                  <span className="error-message">{errors.claimVolume.message}</span>
+                                )}
+                              </div>
+                            </>
+                          )}
+
+                          {/* Continue / Confirm button */}
+                          <div className="ea-section-actions">
+                            <button
+                              type="button"
+                              className="btn btn-primary ea-continue-btn"
+                              onClick={() => handleContinue(step)}
+                            >
+                              {step === 1 && 'Continue to Practice Type →'}
+                              {step === 2 && 'Continue to Operational Profile →'}
+                              {step === 3 && 'Confirm & Submit →'}
+                            </button>
+                          </div>
                         </div>
-                      </div>
                       </div>
                     </div>
                   </div>
                 );
               })}
 
-              {/* ── What happens next ── */}
-              {/* <div className="ea-next-info">
-                <div className="ea-next-icon" aria-hidden="true">
-                  <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-                    <rect x="4" y="20" width="24" height="4" rx="2" fill="rgba(255,255,255,0.9)" />
-                    <rect x="4" y="14" width="24" height="4" rx="2" fill="rgba(255,255,255,0.7)" />
-                    <rect x="4" y="8" width="24" height="4" rx="2" fill="rgba(255,255,255,0.5)" />
+              {/* ── What happens next callout ── */}
+              <div className="ea-what-next-callout">
+                <div className="ea-what-next-icon">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                    <path d="M2 17l10 5 10-5" />
+                    <path d="M2 12l10 5 10-5" />
                   </svg>
                 </div>
                 <div>
-                  <h3 className="ea-next-title">What happens next?</h3>
-                  <p className="ea-next-body">
-                    On submission, you&apos;ll receive a confirmation email. If your practice is selected for the early release cohort, an invitation to schedule onboarding will be extended approximately six weeks before launch.
-                  </p>
+                  <div className="ea-what-next-title">What happens next?</div>
+                  <div className="ea-what-next-body">
+                    On submission, you'll receive a confirmation email. If your practice is selected for the early release cohort, an invitation to schedule onboarding will be extended approximately six weeks before launch.
+                  </div>
                 </div>
-              </div> */}
+              </div>
 
               {/* ── Footer: consent + submit ── */}
               <div className="ea-form-footer">
-              
+                <p className="ea-consent-text">
+                  By submitting, you consent to email contact regarding your early access request. Your information will not be shared with third parties.
+                </p>
                 <button
                   type="submit"
                   className={`btn ea-submit-btn${completedSteps.size >= 3 ? ' ea-submit-btn--enabled' : ''}`}
