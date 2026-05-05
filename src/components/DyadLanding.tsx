@@ -301,7 +301,7 @@ const DyadLanding: React.FC = () => {
       id: 3,
       title: 'Approach & Methodology',
       subtitle: 'How we deliver results',
-      paragraph: 'We combine innovative technologies with healthcare finance expertise to deliver comprehensive solutions. Our methodology involves thorough a assessment, strategic planning, seamless implementation, and ongoing optimization. We work collaboratively with our clients to understand their workflows, identify opportunities for improvement, and implement changes that drive measurable results.',
+      paragraph: 'We combine innovative technologies with healthcare finance expertise to deliver comprehensive solutions. Our methodology involves thorough assessment, strategic planning, seamless implementation, and ongoing optimization. We work collaboratively with our clients to understand their workflows, identify opportunities for improvement, and implement changes that drive measurable results.',
       image: '/assets/images/aboutus4.jpg'
     },
     {

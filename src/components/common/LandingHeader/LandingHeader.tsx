@@ -212,22 +212,16 @@ const LandingHeader: React.FC<LandingHeaderProps> = ({ activePage = 'Home', hide
             </ul>
           </nav>
 
-          <div className="dyad-actions" style={{ flexDirection: 'column', gap: '0.35rem' }}>
-            <div className="platform-access-shine" style={{ fontSize: '0.8rem', color: 'black', fontWeight: 600, fontFamily: 'Prompt, sans-serif', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
-              Platform Access Begins Q3 2026
-            </div>
-            {!hideEarlyAccess && (
+          {!hideEarlyAccess && (
+            <div className="dyad-actions" style={{ flexDirection: 'column', gap: '0.35rem' }}>
+              <div className="platform-access-shine" style={{ fontSize: '0.8rem', color: '#003f7f', fontWeight: 600, fontFamily: 'Prompt, sans-serif', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+                Platform Access Begins Q3 2026
+              </div>
               <button className="btn btn-primary" onClick={handleEarlyAccess} style={{width : '260px'}}>
                 <span>Request Early Access</span>
               </button>
-            )}
-            {/* <button className="btn btn-primary" onClick={handleLogin}>
-              <span>Login/Register</span>
-            </button>
-            <button className="btn btn-primary" onClick={handleContactRequest}>
-              <span>Contact Us</span>
-            </button> */}
-          </div>
+            </div>
+          )}
         </div>
 
         <button
@@ -343,7 +337,7 @@ const LandingHeader: React.FC<LandingHeaderProps> = ({ activePage = 'Home', hide
           </ul>
         </nav>
         <div className="mobile-actions">
-            <div className="platform-access-shine" style={{ fontSize: '0.8rem', color: 'black', fontWeight: 600, fontFamily: 'Prompt, sans-serif', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+            <div className="platform-access-shine" style={{ fontSize: '0.8rem', color: '#003f7f', fontWeight: 600, fontFamily: 'Prompt, sans-serif', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
               Platform Access Begins Q3 2026
             </div>
             {!hideEarlyAccess && (

@@ -892,7 +892,7 @@ header.dyad-header .dyad-nav-actions .dyad-nav .nav-list .dyad-nav .nav-link.act
 
 .mobile-dropdown-item:hover {
   color: #1D6DD8;
-  background: rgba(248, 250, 252, 0.8);
+  background: transparent;
 }
 
 .mobile-dropdown-item:last-child {

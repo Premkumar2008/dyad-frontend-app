@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
@@ -521,13 +521,20 @@ const EarlyAccess: React.FC = () => {
 
       <main className="early-access-main">
         <div className="early-access-content">
+          <nav className="ea-breadcrumb" aria-label="Breadcrumb">
+            <ol>
+              <li><Link to="/">Home</Link></li>
+              <li aria-hidden="true">›</li>
+              <li aria-current="page">Request Early Access</li>
+            </ol>
+          </nav>
           {!formSubmitted && <div className="early-access-header">
             <h1 className="early-access-title">Request Early Access</h1>
             <div className="early-access-intro">
-              <p>
+              <p style={{color : "#1a1a1a"}}>
                 Dyad&apos;s platform launches Q3 2026. A limited number of practices and facilities will be invited to join our early release cohort.
               </p>
-              <p>
+              <p style={{color : "#546E7A"}}>
                 Early access provides priority onboarding to institutional-grade practice infrastructure and fiduciary-level financial governance with direct input on roadmap development.
               </p>
               <p className="early-access-note">
@@ -602,7 +609,7 @@ const EarlyAccess: React.FC = () => {
 
               {/* ── Progress bar ── */}
               <div className="ea-progress">
-                   <span className="ea-progress-pct">Section {completedSteps.size}/3</span>
+                   <span className="ea-progress-pct">Section {completedSteps.size} of 3</span>
                 <div className="ea-progress-track">
                   <div className="ea-progress-fill" style={{ width: `${progress}%` }} />
                 </div>
@@ -661,7 +668,7 @@ const EarlyAccess: React.FC = () => {
 
                               {/* NPI field + verify button */}
                               <div className="form-field form-field--full">
-                                <label htmlFor="npi">Practice or Provider NPI *</label>
+                                <label htmlFor="npi">Practice or Provider NPI <span className="ea-required">*</span></label>
                                 <p className="ea-field-hint">10-digit National Provider Identifier — Type 1 (individual) or Type 2 (organization). Verified live against the CMS NPPES registry.</p>
                                 <div className="ea-npi-row">
                                   <input
@@ -731,7 +738,7 @@ const EarlyAccess: React.FC = () => {
                                         </div>
                                       </div>
                                     </div>
-                                    <span className="ea-npi-verified-time">just now</span>
+                                   
                                   </div>
                                 )}
 
@@ -811,7 +818,7 @@ const EarlyAccess: React.FC = () => {
                               </div>
 
                               <div className="form-field">
-                                <label htmlFor="practiceName">Practice/Facility Name *</label>
+                                <label htmlFor="practiceName">Practice/Facility Name <span className="ea-required">*</span></label>
                                 <input
                                   id="practiceName"
                                   type="text"
@@ -826,7 +833,7 @@ const EarlyAccess: React.FC = () => {
                               </div>
 
                               <div className="form-field">
-                                <label htmlFor="contactName">Primary Contact Name *</label>
+                                <label htmlFor="contactName">Primary Contact Name <span className="ea-required">*</span></label>
                                 <input
                                   id="contactName"
                                   type="text"
@@ -840,7 +847,7 @@ const EarlyAccess: React.FC = () => {
                               </div>
 
                               <div className="form-field">
-                                <label htmlFor="phoneNumber">Phone Number *</label>
+                                <label htmlFor="phoneNumber">Phone Number <span className="ea-required">*</span></label>
                                 <input
                                   id="phoneNumber"
                                   type="tel"
@@ -855,7 +862,7 @@ const EarlyAccess: React.FC = () => {
                               </div>
 
                               <div className="form-field">
-                                <label htmlFor="title">Title / Role *</label>
+                                <label htmlFor="title">Title / Role <span className="ea-required">*</span></label>
                                 <input
                                   id="title"
                                   type="text"
@@ -869,7 +876,9 @@ const EarlyAccess: React.FC = () => {
                               </div>
 
                               <div className="form-field form-field--full">
-                                <label htmlFor="email">Email *</label>
+                                <label htmlFor="email">Email <span className="ea-required">*</span></label>
+                               <p className="ea-field-hint">A 6-digit one-time passcode will be sent to confirm this address.</p>
+
                                 <div className="ea-email-row">
                                   <input
                                     id="email"
@@ -1013,7 +1022,7 @@ const EarlyAccess: React.FC = () => {
                           {/* ── Section 2: Practice Type ── */}
                           {step === 2 && (
                             <div className="form-field">
-                              <label htmlFor="practiceType">Practice Type *</label>
+                              <label htmlFor="practiceType">Practice Type <span className="ea-required">*</span></label>
                               <select
                                 id="practiceType"
                                 {...register('practiceType')}
@@ -1041,7 +1050,7 @@ const EarlyAccess: React.FC = () => {
                             <>
                               <div className="form-grid">
                                 <div className="form-field">
-                                  <label htmlFor="providers">Number of Rendering Providers *</label>
+                                  <label htmlFor="providers">Number of Rendering Providers <span className="ea-required">*</span></label>
                                   <select
                                     id="providers"
                                     {...register('providers')}
@@ -1057,7 +1066,7 @@ const EarlyAccess: React.FC = () => {
                                 </div>
 
                                 <div className="form-field">
-                                  <label htmlFor="locations">Number of Locations *</label>
+                                  <label htmlFor="locations">Number of Locations <span className="ea-required">*</span></label>
                                   <select
                                     id="locations"
                                     {...register('locations')}
@@ -1074,7 +1083,7 @@ const EarlyAccess: React.FC = () => {
                               </div>
 
                               <div className="form-field form-field--full">
-                                <label htmlFor="claimVolume">Estimated Monthly Claim Volume *</label>
+                                <label htmlFor="claimVolume">Estimated Monthly Claim Volume <span className="ea-required">*</span></label>
                                 <select
                                   id="claimVolume"
                                   {...register('claimVolume')}
@@ -1113,7 +1122,7 @@ const EarlyAccess: React.FC = () => {
               {/* ── What happens next callout ── */}
               <div className="ea-what-next-callout">
                 <div className="ea-what-next-icon">
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <svg width="35" height="35" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M12 2L2 7l10 5 10-5-10-5z" />
                     <path d="M2 17l10 5 10-5" />
                     <path d="M2 12l10 5 10-5" />
@@ -1126,6 +1135,7 @@ const EarlyAccess: React.FC = () => {
                   </div>
                 </div>
               </div>
+                <hr className="header-divider" />
 
               {/* ── Footer: consent + submit ── */}
               <div className="ea-form-footer">
