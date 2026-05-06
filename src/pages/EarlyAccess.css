@@ -1120,14 +1120,14 @@ input.ea-npi-success {
 
 /* ── Confirmation Screen ───────────────────────────────── */
 .sc-wrapper {
-  max-width: 600px;
+  max-width: 640px;
   margin: 0 auto;
   text-align: center;
   padding-bottom: 2rem;
 }
 
 .sc-icon {
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.25rem;
   display: flex;
   justify-content: center;
 }
@@ -1137,41 +1137,48 @@ input.ea-npi-success {
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: #1d6dd8;
+  color: #16a34a;
   margin-bottom: 0.75rem;
 }
 
 .sc-title {
-  font-size: 2rem;
+  font-size: 2.1rem;
   font-weight: 800;
-  color: #000000;
+  color: #003F7F;
   margin-bottom: 1rem;
   line-height: 1.25;
 }
 
 .sc-subtitle {
-  font-size: 1rem;
-  color: #4a5568;
+  font-size: 0.975rem;
+  color: #1A1A1A;
   line-height: 1.7;
   margin-bottom: 2rem;
 }
 
 .sc-next-card {
   background: white;
-  border-radius: 12px;
+  border-radius: 8px;
   border: 1px solid #e2e8f0;
-  padding: 1.75rem 2rem;
+  padding: 1.5rem 1.75rem;
   text-align: left;
   margin-bottom: 2rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .sc-next-heading {
-  font-size: 1.1rem;
+  font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: #000000;
-  margin-bottom: 1.25rem;
+  color: #546E7A;
+  margin-bottom: 1rem;
+}
+
+.sc-next-divider {
+  border: none;
+  border-top: 1px solid #e5e7eb;
+  margin: 0 0 0 0;
 }
 
 .sc-steps {
@@ -1194,15 +1201,15 @@ input.ea-npi-success {
 }
 
 .sc-step:first-child {
-  padding-top: 0;
+  padding-top: 1rem;
 }
 
 .sc-step-num {
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: #1d6dd8;
-  color: white;
+  background: #EEF6FB;
+  color: #003F7F;
   font-size: 0.8rem;
   font-weight: 700;
   display: flex;
@@ -1216,26 +1223,45 @@ input.ea-npi-success {
   display: block;
   font-size: 0.95rem;
   font-weight: 600;
-  color: #1a202c;
+  color: #1a1a1a;
   margin-bottom: 0.3rem;
 }
 
 .sc-step p {
   font-size: 0.875rem;
-  color: #6b7280;
+  color: #546E7A;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.sc-step-p--amber {
+  font-size: 0.875rem;
+  color: #d97706;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.sc-step-p--blue {
+  font-size: 0.875rem;
+  color: #1d6dd8;
   line-height: 1.6;
   margin: 0;
 }
 
 .sc-home-btn {
   background: transparent;
-  color: #1D6DD8;
+  color: #003F7F;
   padding: 0.875rem 2rem;
   font-size: 0.95rem;
   font-weight: 600;
-  border-radius: 8px;
-  border: 1.5px solid #1D6DD8;
+  border-radius: 6px !important;
+  border: 1.5px solid #003F7F;
   cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+
+.sc-home-btn:hover {
+  border-color: #94a3b8;
 }
 
 /* ── Responsive ──────────────────────────────────────── */

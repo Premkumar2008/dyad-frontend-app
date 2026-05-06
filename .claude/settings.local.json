@@ -3,7 +3,13 @@
     "allow": [
       "Bash(npx tsc:*)",
       "Bash(npm install *)",
-      "Bash(git checkout *)"
+      "Bash(git checkout *)",
+      "Bash(Remove-Item \"d:\\\\dyad zip\\\\landing-main\\\\newui\\\\.env.production\" -Force)",
+      "Bash(Remove-Item \"d:\\\\dyad zip\\\\landing-main\\\\newui\\\\nginx.conf\" -Force)",
+      "Bash(Remove-Item \"d:\\\\dyad zip\\\\landing-main\\\\newui\\\\Dockerfile\" -Force)",
+      "Bash(rm \"d:/dyad zip/landing-main/newui/.env.production\")",
+      "Bash(rm \"d:/dyad zip/landing-main/newui/nginx.conf\")",
+      "Bash(rm \"d:/dyad zip/landing-main/newui/Dockerfile\")"
     ]
   }
 }

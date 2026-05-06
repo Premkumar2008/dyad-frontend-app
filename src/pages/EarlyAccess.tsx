@@ -561,9 +561,9 @@ const EarlyAccess: React.FC = () => {
           {formSubmitted ? (
             <div className="sc-wrapper">
               <div className="sc-icon">
-                <svg width="52" height="52" viewBox="0 0 52 52" fill="none" aria-hidden="true">
-                  <circle cx="26" cy="26" r="24" fill="#1d6dd8" />
-                  <path d="M16 26l7 7 13-13" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                <svg width="64" height="64" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+                  <circle cx="32" cy="32" r="30" fill="#f0fdf4" stroke="#22c55e" strokeWidth="2" />
+                  <path d="M20 32l9 9 15-15" stroke="#16a34a" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </div>
 
@@ -575,6 +575,7 @@ const EarlyAccess: React.FC = () => {
 
               <div className="sc-next-card">
                 <p className="sc-next-heading">What Happens Next</p>
+                <hr className="sc-next-divider" />
                 <ol className="sc-steps">
                   <li className="sc-step">
                     <span className="sc-step-num">1</span>
@@ -587,21 +588,21 @@ const EarlyAccess: React.FC = () => {
                     <span className="sc-step-num">2</span>
                     <div>
                       <strong>Cohort review</strong>
-                      <p>Dyad reviews each submission to assess operational scope and strategic alignment for the early release cohort.</p>
+                      <p className="sc-step-p--amber">Dyad reviews each submission to assess operational scope and strategic alignment for the early release cohort.</p>
                     </div>
                   </li>
                   <li className="sc-step">
                     <span className="sc-step-num">3</span>
                     <div>
                       <strong>Invitation (if selected)</strong>
-                      <p>Selected practices will receive an invitation approximately six weeks before launch with a link to schedule an onboarding discussion.</p>
+                      <p className="sc-step-p--blue">Selected practices will receive an invitation approximately six weeks before launch with a link to schedule an onboarding discussion.</p>
                     </div>
                   </li>
                 </ol>
               </div>
 
               <button className="btn sc-home-btn" onClick={() => navigate('/')}>
-                Back to Dyad Homepage
+                ← Return to Dyad Homepage
               </button>
             </div>
           ) : (
