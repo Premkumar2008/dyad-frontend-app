@@ -60,6 +60,10 @@ export class EmailService {
     return 'https://dyadmd.com';
   }
 
+  private getApiUrl(): string {
+    return import.meta.env.VITE_API_URL || '/api';
+  }
+
   /**
    * Send early access confirmation email
    */
@@ -110,7 +114,7 @@ export class EmailService {
             .wrapper { background: #f4f4f4; padding: 30px 0; }
             .container { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
             .header { padding: 24px 32px; border-bottom: 2px solid #003F7F; }
-            .header img { height: 40px; width: auto; }
+            .header img { height: 80px; width: auto; }
             .content { padding: 32px 32px 24px; }
             .content p { margin: 0 0 16px; font-size: 15px; color: #444; }
             .signature { margin-top: 24px; }
@@ -288,7 +292,7 @@ This message confirms receipt of your early access request. No action is require
    */
   private async sendViaSendGrid(email: string, template: EmailTemplate): Promise<{ success: boolean; error?: string }> {
     try {
-      const response = await fetch('/api/send-email/sendgrid', {
+      const response = await fetch(`${this.getApiUrl()}/send-email/sendgrid`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -320,7 +324,7 @@ This message confirms receipt of your early access request. No action is require
    */
   private async sendViaSES(email: string, template: EmailTemplate): Promise<{ success: boolean; error?: string }> {
     try {
-      const response = await fetch('/api/send-email/ses', {
+      const response = await fetch(`${this.getApiUrl()}/send-email/ses`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -352,7 +356,7 @@ This message confirms receipt of your early access request. No action is require
    */
   private async sendViaMailgun(email: string, template: EmailTemplate): Promise<{ success: boolean; error?: string }> {
     try {
-      const response = await fetch('/api/send-email/mailgun', {
+      const response = await fetch(`${this.getApiUrl()}/send-email/mailgun`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -384,7 +388,7 @@ This message confirms receipt of your early access request. No action is require
    */
   private async sendViaBrevo(email: string, template: EmailTemplate): Promise<{ success: boolean; error?: string }> {
     try {
-      const response = await fetch('/api/send-email/brevo', {
+      const response = await fetch(`${this.getApiUrl()}/send-email/brevo`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
