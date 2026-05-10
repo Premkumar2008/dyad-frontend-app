@@ -188,6 +188,12 @@ const EarlyAccess: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
+  useEffect(() => {
+    if (formSubmitted) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [formSubmitted]);
+
   // Countdown timers
   useEffect(() => {
     if (otpTimer <= 0) return;
@@ -296,7 +302,7 @@ const EarlyAccess: React.FC = () => {
         setNpiApiError('NPI not found. Please check the number and try again.');
       }
     } catch {
-      setNpiApiError('NPI not found. Please check the number and try again.');
+      setNpiApiError('Something went wrong. Please try again later.');
     } finally {
       setIsNpiValidating(false);
     }
@@ -432,8 +438,14 @@ const EarlyAccess: React.FC = () => {
         setCurrentStep(nextStep);
       }
       setTimeout(() => {
-        document.getElementById(`ea-section-${nextStep}`)?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-      }, 50);
+        const el = document.getElementById(`ea-section-${nextStep}`);
+        if (el) {
+          const headerEl = document.querySelector('.dyad-header') as HTMLElement;
+          const headerHeight = headerEl ? headerEl.offsetHeight : 72;
+          const top = el.getBoundingClientRect().top + window.pageYOffset - headerHeight - 16;
+          window.scrollTo({ top, behavior: 'smooth' });
+        }
+      }, 420);
     } else {
       if (currentStep <= 3) setCurrentStep(4);
     }
@@ -610,11 +622,11 @@ const EarlyAccess: React.FC = () => {
 
               {/* ── Progress bar ── */}
               <div className="ea-progress">
-                   <span className="ea-progress-pct">Section {completedSteps.size} of 3</span>
+                <span className="ea-progress-pct">Section {completedSteps.size} of 3</span>
                 <div className="ea-progress-track">
                   <div className="ea-progress-fill" style={{ width: `${progress}%` }} />
                 </div>
-             
+                <span className="ea-progress-pct-right">{progress}%</span>
               </div>
 
               {/* ── Accordion sections ── */}
@@ -1043,6 +1055,7 @@ const EarlyAccess: React.FC = () => {
                               {errors.practiceType && (
                                 <span className="error-message">{errors.practiceType.message}</span>
                               )}
+                              <p className="ea-field-note">Note: If your organization spans multiple categories or doesn't fit cleanly, select the closest match — we'll refine during the introduction call.</p>
                             </div>
                           )}
 
@@ -1052,6 +1065,7 @@ const EarlyAccess: React.FC = () => {
                               <div className="form-grid">
                                 <div className="form-field">
                                   <label htmlFor="providers">Number of Rendering Providers <span className="ea-required">*</span></label>
+                                  <p className="ea-field-hint">Total clinicians who render billable services.</p>
                                   <select
                                     id="providers"
                                     {...register('providers')}
@@ -1068,6 +1082,7 @@ const EarlyAccess: React.FC = () => {
 
                                 <div className="form-field">
                                   <label htmlFor="locations">Number of Locations <span className="ea-required">*</span></label>
+                                  <p className="ea-field-hint">Site footprint across all clinical operations.</p>
                                   <select
                                     id="locations"
                                     {...register('locations')}
@@ -1085,6 +1100,7 @@ const EarlyAccess: React.FC = () => {
 
                               <div className="form-field form-field--full">
                                 <label htmlFor="claimVolume">Estimated Monthly Claim Volume <span className="ea-required">*</span></label>
+                                <p className="ea-field-hint">Approximate count of submitted claims across all payer categories per month.</p>
                                 <select
                                   id="claimVolume"
                                   {...register('claimVolume')}
@@ -1110,7 +1126,7 @@ const EarlyAccess: React.FC = () => {
                             >
                               {step === 1 && 'Continue to Practice Type →'}
                               {step === 2 && 'Continue to Operational Profile →'}
-                              {step === 3 && 'Confirm & Submit →'}
+                              {step === 3 && 'Mark Complete ✓'}
                             </button>
                           </div>
                         </div>

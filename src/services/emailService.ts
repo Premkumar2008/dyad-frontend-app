@@ -109,15 +109,16 @@ export class EmailService {
             body { font-family: Arial, sans-serif; line-height: 1.7; color: #333; margin: 0; padding: 0; background: #f4f4f4; }
             .wrapper { background: #f4f4f4; padding: 30px 0; }
             .container { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
-            .header { padding: 24px 32px; border-bottom: 1px solid #e8e8e8; }
+            .header { padding: 24px 32px; border-bottom: 2px solid #003F7F; }
             .header img { height: 40px; width: auto; }
             .content { padding: 32px 32px 24px; }
             .content p { margin: 0 0 16px; font-size: 15px; color: #444; }
             .signature { margin-top: 24px; }
             .signature p { margin: 0; font-size: 15px; color: #444; }
+            .dyad-team { color: #003F7F; font-weight: 700; }
             .footer { background: #f9f9f9; border-top: 1px solid #e8e8e8; padding: 20px 32px; text-align: center; }
             .footer p { margin: 0 0 6px; font-size: 12px; color: #888; }
-            .footer a { color: #888; text-decoration: underline; }
+            .footer a { color: #003F7F; text-decoration: underline; }
           </style>
         </head>
         <body>
@@ -134,7 +135,7 @@ export class EmailService {
                 <p>We appreciate your interest in Dyad Practice Solutions and look forward to the possibility of working with your team.</p>
                 <div class="signature">
                   <p>Regards,</p>
-                  <p><strong>The Dyad Team</strong><br/>Dyad Practice Solutions</p>
+                  <p><span class="dyad-team">The Dyad Team</span><br/>Dyad Practice Solutions</p>
                 </div>
               </div>
               <div class="footer">

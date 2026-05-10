@@ -1,12 +1,13 @@
-@import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 /* ── Container ─────────────────────────────────────────── */
 .early-access-container {
   min-height: 100vh;
-  font-family: 'Prompt', sans-serif;
+  font-family: 'Inter', sans-serif;
   background-color: #F8F9FA;
   display: flex;
   flex-direction: column;
+  overflow-x: clip;
 }
 
 .protocol-callout {
@@ -92,7 +93,7 @@
 }
 
 .early-access-content {
-  max-width: 860px;
+  max-width: 1020px;
   margin: 0 auto;
   padding: 0 1.5rem;
 }
@@ -150,7 +151,7 @@
 
 .ea-progress-fill {
   height: 100%;
-  background: #1d6dd8;
+  background: #003F7F;
   border-radius: 99px;
   transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -158,7 +159,13 @@
 .ea-progress-pct {
   white-space: nowrap;
   color: #6b7280;
- 
+}
+
+.ea-progress-pct-right {
+  white-space: nowrap;
+  color: #003F7F;
+  font-weight: 600;
+  font-size: 0.8rem;
 }
 
 /* ── Accordion Section ─────────────────────────────────── */
@@ -170,6 +177,7 @@
   overflow: hidden;
   transition: box-shadow 0.25s ease;
   padding: 1.5rem;
+  scroll-margin-top: 90px;
 }
 
 .ea-section--locked {
@@ -223,7 +231,7 @@
 }
 
 .ea-step-icon--completed {
-  background: #1d6dd8;
+  background: #003f7f;
   color: white;
 }
 
@@ -782,7 +790,7 @@ input.ea-npi-success {
   background: white;
   outline: none;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
-  caret-color: transparent;
+  caret-color: auto;
 }
 
 .ea-otp-box:focus {
@@ -990,6 +998,17 @@ input.ea-npi-success {
   margin: 0 0 0.5rem;
 }
 
+.ea-field-note {
+  font-size: 0.78rem;
+  color: #64748b;
+  line-height: 1.55;
+  margin: 0.5rem 0 0;
+  padding: 0.5rem 0.75rem;
+  background: #F8FBFD;
+  border-left: 3px solid #003f7f;
+  border-radius: 6px;
+}
+
 /* ── What happens next callout ─────────────────────────── */
 .ea-what-next-callout {
  background: linear-gradient(135deg, #003F7F 0%, #0066CC 100%);
@@ -1040,7 +1059,7 @@ input.ea-npi-success {
   font-size: 0.78rem;
   color: #9ca3af;
   line-height: 1.55;
-  max-width: 380px;
+  max-width: 480px;
   margin: 0;
 }
 
