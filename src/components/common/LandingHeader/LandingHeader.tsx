@@ -337,13 +337,15 @@ const LandingHeader: React.FC<LandingHeaderProps> = ({ activePage = 'Home', hide
           </ul>
         </nav>
         <div className="mobile-actions">
-            <div className="platform-access-shine" style={{ fontSize: '0.8rem', color: '#003f7f', fontWeight: 600, fontFamily: 'Prompt, sans-serif', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
-              Platform Access Begins Q3 2026
-            </div>
             {!hideEarlyAccess && (
-              <button className="btn btn-primary" onClick={handleEarlyAccess}>
-                <span>Request Early Access</span>
-              </button>
+              <>
+                <div className="platform-access-shine" style={{ fontSize: '0.8rem', color: '#003f7f', fontWeight: 600, fontFamily: 'Prompt, sans-serif', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+                  Platform Access Begins Q3 2026
+                </div>
+                <button className="btn btn-primary" onClick={handleEarlyAccess}>
+                  <span>Request Early Access</span>
+                </button>
+              </>
             )}
           {/* <button className="btn btn-primary btn-full" onClick={handleContactRequest}>
             <span>Contact Us</span>

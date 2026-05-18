@@ -4081,6 +4081,7 @@ margin-top: 1.5rem;
   }
   
   .footer-section .footer-column-title {
+    margin-top:0.5rem !important;
     margin-bottom: 2rem !important;
   }
   

@@ -9,7 +9,11 @@
       "Bash(Remove-Item \"d:\\\\dyad zip\\\\landing-main\\\\newui\\\\Dockerfile\" -Force)",
       "Bash(rm \"d:/dyad zip/landing-main/newui/.env.production\")",
       "Bash(rm \"d:/dyad zip/landing-main/newui/nginx.conf\")",
-      "Bash(rm \"d:/dyad zip/landing-main/newui/Dockerfile\")"
+      "Bash(rm \"d:/dyad zip/landing-main/newui/Dockerfile\")",
+      "Bash(Get-ChildItem -Path \"d:\\\\dyad zip\\\\landing-main\\\\newui\" -Recurse -Force)",
+      "Bash(Select-Object FullName)",
+      "PowerShell(Get-ChildItem -Path \"d:\\\\dyad zip\\\\landing-main\\\\newui\" -Recurse | Where-Object { -not $_.PSIsContainer } | Select-Object -ExpandProperty FullName | Sort-Object)",
+      "Bash(Get-ChildItem \"d:\\\\dyad zip\\\\landing-main\\\\newui\\\\src\\\\pages\\\\\" -Filter \"*.css\" | Select-Object FullName)"
     ]
   }
 }

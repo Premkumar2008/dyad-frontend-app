@@ -343,10 +343,11 @@ align-items: flex-start !important;
 }
 
 .btn-primary:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-  background-color: #9ca3af;
+ color: #9ca3af !important;
+    opacity: 1;
+    cursor: not-allowed;
+    transform: none;
+    background-color: #d1d5db !important;
 }
 
 /* Responsive Design */
