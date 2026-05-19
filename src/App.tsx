@@ -15,6 +15,7 @@ import TermsOfService from './pages/TermsOfService';
 import MobileTerms from './pages/MobileTerms';
 import MobilePrivacyPolicy from './pages/MobilePrivacyPolicy';
 import EarlyAccess from './pages/EarlyAccess';
+import TermsEarlyAccessCohort from './pages/TermsEarlyAccessCohort';
 import { initializeSecurity } from './utils/security';
 import SecurityMonitor from './utils/securityMonitor';
 import AboutUsDetail from './pages/about-us-detail';
@@ -46,6 +47,7 @@ function App() {
             <Route path="/mobile-terms" element={<MobileTerms />} />
             <Route path="/mobile-privacy-policy" element={<MobilePrivacyPolicy />} />
             <Route path="/early-access" element={<EarlyAccess />} />
+            <Route path="/terms-early-access-cohort" element={<TermsEarlyAccessCohort />} />
             <Route
               path="/admin" 
               element={

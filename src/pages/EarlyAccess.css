@@ -189,6 +189,40 @@ background: #1d6dd80f;
   font-weight: 600;
 }
 
+@keyframes sidebar-flash {
+  0%   { box-shadow: 0 0 0 0 rgba(0, 167, 216, 0.45); border-color: #00a7d8; }
+  50%  { box-shadow: 0 0 0 10px rgba(0, 167, 216, 0); border-color: #00a7d8; }
+  100% { box-shadow: 0 0 0 0 rgba(0, 167, 216, 0); border-color: #173e7a; }
+}
+
+.ea-sidebar-box--highlight {
+  animation: sidebar-flash 1.4s ease-out forwards;
+}
+
+.ea-ack-sidebar-link {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font-size: inherit;
+  font-family: inherit;
+  font-weight: 600;
+  color: #173e7a;
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 2px;
+  display: inline;
+  line-height: inherit;
+  vertical-align: baseline;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.ea-ack-sidebar-link:hover {
+  color: #00a7d8;
+}
+
 .ea-sidebar-table {
   padding: 0.5rem 1.25rem 0.75rem;
   display: flex;
@@ -982,10 +1016,16 @@ input.ea-npi-success {
 }
 
 .ea-otp-spam-note {
-  font-size: 0.78rem;
-  color: #9ca3af;
+  font-weight: 700;
+  font-size: 0.8rem;
+  color: #173e7a;
   margin-top: 0.35rem;
   width: 100%;
+}
+
+.ea-otp-spam-highlight {
+ 
+  font-weight: 600;
 }
 
 .ea-otp-verify-card-btn {
@@ -1301,7 +1341,7 @@ input.ea-npi-success {
     margin-top: 2rem;
     text-align: center;
     background: white;
-    border: 0.5px solid #17a34b;
+    border: 0.5px solid #00a7d8;
     border-radius: 12px;
   padding: 2.5rem 2rem;
 }

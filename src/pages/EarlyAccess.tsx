@@ -186,6 +186,7 @@ const EarlyAccess: React.FC = () => {
   const [mobileStickyBar, setMobileStickyBar] = useState(false);
   const subHeaderRef = useRef<HTMLDivElement>(null);
   const mobileProgressRef = useRef<HTMLDivElement>(null);
+  const sidebarRef = useRef<HTMLDivElement>(null);
 
   // ── NPI state ──────────────────────────────────────────
   const [isNpiValidating, setIsNpiValidating] = useState(false);
@@ -319,6 +320,21 @@ const EarlyAccess: React.FC = () => {
       case 4: return acknowledgementAccepted;
       default: return false;
     }
+  };
+
+  // ── Sidebar scroll + highlight ─────────────────────────
+  const scrollToSidebar = () => {
+    const el = sidebarRef.current;
+    if (!el) return;
+    if (window.innerWidth <= 900) {
+      const hh = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--dyad-header-h') || '72', 10);
+      const sh = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--ea-subheader-h') || '68', 10);
+      const top = el.getBoundingClientRect().top + window.pageYOffset - hh - sh - 16;
+      window.scrollTo({ top, behavior: 'smooth' });
+    }
+    el.classList.remove('ea-sidebar-box--highlight');
+    void el.offsetWidth;
+    el.classList.add('ea-sidebar-box--highlight');
   };
 
   // ── Scroll helper ──────────────────────────────────────
@@ -625,7 +641,7 @@ const EarlyAccess: React.FC = () => {
       try {
         const emailService = createEmailService();
         const logoUrl = `${window.location.origin}/assets/images/logo_main.png`;
-        await emailService.sendEarlyAccessConfirmation(data.email, data.contactName, logoUrl);
+        await emailService.sendEarlyAccessConfirmation(data.email, data.contactName, data.practiceName, logoUrl);
       } catch (emailError) {
         console.error('Confirmation email failed:', emailError);
       }
@@ -684,7 +700,7 @@ const EarlyAccess: React.FC = () => {
           </div>
           <div className="ea-sub-header-right">
             <div className="ea-progress-top-row">
-              <span className="ea-progress-label">SECTION {Math.min(currentStep, 4)} OF 4</span>
+              <span className="ea-progress-label">SECTION {completedSteps.size} OF 4</span>
               <span className="ea-progress-pct-right">{progress}%</span>
             </div>
             <div className="ea-progress-track">
@@ -701,7 +717,7 @@ const EarlyAccess: React.FC = () => {
           <h1 className="ea-mobile-intro-title">Request Early Access</h1>
           <p className="ea-mobile-intro-subtitle  ea-mobile-intro-container">Dyad's platform launches Q3 2026. A limited number of practices and facilities will be invited to participate as an early release cohort partner.</p>
           <div ref={mobileProgressRef} className="ea-mobile-progress-row">
-            <span className="ea-progress-label">SECTION {Math.min(currentStep, 4)} OF 4</span>
+            <span className="ea-progress-label">SECTION {completedSteps.size} OF 4</span>
             <div className="ea-progress-track">
               <div className="ea-progress-fill" style={{ width: `${progress}%` }} />
             </div>
@@ -714,7 +730,7 @@ const EarlyAccess: React.FC = () => {
 
             {/* ── Left Sidebar ── */}
             <aside className="ea-sidebar">
-              <div className="ea-sidebar-box">
+              <div className="ea-sidebar-box" ref={sidebarRef}>
                 <div className="ea-sidebar-header">
                   <h2 className="ea-sidebar-title">Join Our Early Release Cohort</h2>
                   {acknowledgementAccepted ? (
@@ -807,11 +823,11 @@ const EarlyAccess: React.FC = () => {
                                       disabled={formSubmitted}
                                     />
                                     <span>
-                                      I have read and understand the <span className='ea-sidebar-desc-highlight'>purpose, terms, and feedback expectations of the Early Release Cohort</span> set forth above, and I am willing to <span className='ea-sidebar-desc-highlight'>proceed</span> on that basis.
+                                      I have read and understand the <a href="#ea-sidebar" className="ea-ack-sidebar-link" onClick={e => { e.preventDefault(); e.stopPropagation(); scrollToSidebar(); }}>purpose, terms, and feedback expectations of the Early Release Cohort</a> set forth above, and I am willing to <span className='ea-sidebar-desc-highlight'>proceed</span> on that basis.
                                     </span>
                                   </label>
                                   <hr className='sperator-ack-section' />
-                                  <small className='ea-ack-section-small'>No engagement will commence until all operationally required documents — including the Master Services Agreement, Confidentiality Agreement, Business Associate Agreement, and a defined fee schedule — have been formally executed by both parties. This acknowledgment does not constitute a binding commercial agreement.</small>
+                                  <small className='ea-ack-section-small'>No engagement will commence until all operationally required documents including the Master Services Agreement, Confidentiality Agreement, Business Associate Agreement, and a defined fee schedule have been formally executed by both parties. This acknowledgment does not constitute a binding commercial agreement.</small>
                                 </div>
                                
                               </div>
@@ -1164,7 +1180,7 @@ const EarlyAccess: React.FC = () => {
                                             )}
                                           </div>
                                           <div className="ea-otp-spam-note">
-                                            Can't find it? Check your <strong>spam or junk folder</strong>.
+                                            Can't find it? Check your <strong className="ea-otp-spam-highlight">spam or junk folder</strong>.
                                           </div>
                                         </div>
 
@@ -1321,7 +1337,7 @@ const EarlyAccess: React.FC = () => {
                   <div id="ea-success-block" className="sc-wrapper">
                     <div className="sc-icon">
                       <svg width="64" height="64" viewBox="0 0 64 64" fill="none" aria-hidden="true">
-                        <circle cx="32" cy="32" r="30" fill="#17a34b" stroke="white" strokeWidth="2" />
+                        <circle cx="32" cy="32" r="30" fill="#00a7d8" stroke="white" strokeWidth="2" />
                         <path d="M20 32l9 9 15-15" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                       </svg>
                     </div>

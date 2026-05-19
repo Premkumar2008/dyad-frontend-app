@@ -67,9 +67,9 @@ export class EmailService {
   /**
    * Send early access confirmation email
    */
-  async sendEarlyAccessConfirmation(email: string, contactName: string, logoUrl: string): Promise<{ success: boolean; error?: string }> {
+  async sendEarlyAccessConfirmation(email: string, contactName: string, practiceName: string, logoUrl: string): Promise<{ success: boolean; error?: string }> {
     try {
-      const template = this.generateEarlyAccessConfirmationTemplate(contactName, logoUrl);
+      const template = this.generateEarlyAccessConfirmationTemplate(contactName, practiceName, logoUrl);
 
       switch (this.config.service) {
         case 'smtp':
@@ -97,9 +97,7 @@ export class EmailService {
   /**
    * Generate early access confirmation email template
    */
-  private generateEarlyAccessConfirmationTemplate(contactName: string, logoUrl: string): EmailTemplate {
-    const firstName = contactName.split(' ')[0] || contactName;
-
+  private generateEarlyAccessConfirmationTemplate(contactName: string, practiceName: string, logoUrl: string): EmailTemplate {
     return {
       subject: 'Early Access Request Received',
       html: `
@@ -117,6 +115,7 @@ export class EmailService {
             .header img { height: 80px; width: auto; }
             .content { padding: 32px 32px 24px; }
             .content p { margin: 0 0 16px; font-size: 15px; color: #444; }
+            .practice-name { color: #003F7F; font-weight: 700; }
             .signature { margin-top: 24px; }
             .signature p { margin: 0; font-size: 15px; color: #444; }
             .dyad-team { color: #003F7F; font-weight: 700; }
@@ -132,11 +131,13 @@ export class EmailService {
                 <img src="${logoUrl}" alt="Dyad Practice Solutions" />
               </div>
               <div class="content">
-                <p>Hello ${firstName},</p>
-                <p>Thank you for submitting an early access request. Dyad's platform launches September 2026, and we are now onboarding select practices ahead of the public release.</p>
-                <p>Early access provides priority onboarding, dedicated implementation support, and preferred pricing for practices that join before our general availability date.</p>
+                <p>Dear ${contactName},</p>
+                <p>Your early access request has been received. Practices selected for the Early Release Cohort will be contacted approximately six weeks before the Q3 2026 launch.</p>
+                <p>Dyad's platform launches Q3 2026, and we are now onboarding select practices ahead of the public release. Early access provides priority onboarding, dedicated implementation support, and preferred pricing for practices that join before our general availability date.</p>
                 <p>If your practice is selected, a member of our team will reach out within 3–5 business days to schedule an introductory call and walk you through the next steps.</p>
                 <p>We appreciate your interest in Dyad Practice Solutions and look forward to the possibility of working with your team.</p>
+                <p>Terms of Early Release Cohort: <a href="${this.getBaseUrl()}/terms-early-access-cohort">${this.getBaseUrl()}/terms-early-access-cohort</a></p>
+
                 <div class="signature">
                   <p>Regards,</p>
                   <p><span class="dyad-team">The Dyad Team</span><br/>Dyad Practice Solutions</p>
@@ -152,11 +153,13 @@ export class EmailService {
         </html>
       `,
       text: `
-Hello ${firstName},
+Dear ${contactName},
 
-Thank you for submitting an early access request. Dyad's platform launches September 2026, and we are now onboarding select practices ahead of the public release.
 
-Early access provides priority onboarding, dedicated implementation support, and preferred pricing for practices that join before our general availability date.
+
+Your early access request has been received. Practices selected for the Early Release Cohort will be contacted approximately six weeks before the Q3 2026 launch.
+
+Dyad's platform launches Q3 2026, and we are now onboarding select practices ahead of the public release. Early access provides priority onboarding, dedicated implementation support, and preferred pricing for practices that join before our general availability date.
 
 If your practice is selected, a member of our team will reach out within 3–5 business days to schedule an introductory call and walk you through the next steps.
 
@@ -167,6 +170,7 @@ The Dyad Team
 Dyad Practice Solutions
 
 ---
+Terms of Early Release Cohort: ${this.getBaseUrl()}/terms-early-access-cohort
 Dyad Practice Solutions, LLC · dyadmd.com
 This message confirms receipt of your early access request. No action is required at this time.
       `

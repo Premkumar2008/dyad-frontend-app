@@ -1,0 +1,178 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+.teac-container {
+  min-height: 100vh;
+  font-family: 'Inter', sans-serif;
+  background-color: #f8f9fa;
+  display: flex;
+  flex-direction: column;
+}
+
+.teac-main {
+  flex: 1;
+  padding: 5rem 1.5rem 5rem;
+}
+
+.teac-content {
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+/* ── Page header ── */
+.teac-eyebrow {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #00a7d8;
+  margin: 0 0 0.5rem;
+}
+
+.teac-title {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #173e7a;
+  margin: 0 0 1rem;
+  line-height: 1.2;
+}
+
+.teac-subtitle {
+  font-size: 0.95rem;
+  color: #4a5568;
+  line-height: 1.75;
+  margin: 0 0 2.5rem;
+}
+
+.teac-highlight {
+  color: #173e7a;
+  font-weight: 600;
+}
+
+.teac-page-header {
+  margin-bottom: 2rem;
+}
+
+/* ── Card ── */
+.teac-card {
+  background: #ffffff;
+  border: 1px solid #173e7a;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  margin-bottom: 2rem;
+}
+
+.teac-card-header {
+  padding: 1.125rem 1.5rem 1rem;
+  border-bottom: 1px solid #e2e8f0;
+  background: #fafbff;
+}
+
+.teac-card-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #173e7a;
+  margin: 0;
+}
+
+/* ── Terms table ── */
+.teac-table {
+  padding: 0.5rem 1.5rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.teac-row {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 1rem;
+  padding: 0.85rem 0;
+  border-bottom: 1px solid #ededed;
+  align-items: flex-start;
+}
+
+.teac-row:last-child {
+  border-bottom: none;
+}
+
+.teac-row-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #173e7a;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  line-height: 1.5;
+  padding-top: 1px;
+}
+
+.teac-row-value {
+  font-size: 0.875rem;
+  color: #1a1a1a;
+  line-height: 1.65;
+}
+
+.teac-row-highlight {
+  color: #173e7a;
+  font-weight: 600;
+}
+
+/* ── Disclaimer ── */
+.teac-disclaimer {
+  background: #f8f9fa;
+  border-top: 1px solid #e2e8f0;
+  padding: 1rem 1.5rem;
+  font-size: 0.78rem;
+  color: #78909c;
+  line-height: 1.7;
+}
+
+/* ── CTA ── */
+.teac-cta {
+  display: flex;
+  justify-content: center;
+}
+
+.teac-cta-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.875rem 2rem;
+  background: #173e7a;
+  color: white;
+  text-decoration: none;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  transition: background 0.2s ease;
+}
+
+.teac-cta-btn:hover {
+  background: #1d6dd8;
+}
+
+/* ── Responsive ── */
+@media (max-width: 600px) {
+  .teac-main {
+    padding: 3rem 1rem 3rem;
+  }
+
+  .teac-title {
+    font-size: 1.5rem;
+  }
+
+  .teac-row {
+    grid-template-columns: 90px 1fr;
+    gap: 0.75rem;
+  }
+
+  .teac-table {
+    padding: 0.5rem 1rem 0.75rem;
+  }
+
+  .teac-card-header {
+    padding: 1rem 1rem 0.875rem;
+  }
+
+  .teac-disclaimer {
+    padding: 0.875rem 1rem;
+  }
+}
