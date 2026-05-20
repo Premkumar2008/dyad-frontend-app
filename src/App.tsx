@@ -18,6 +18,7 @@ import EarlyAccess from './pages/EarlyAccess';
 import TermsEarlyAccessCohort from './pages/TermsEarlyAccessCohort';
 import AdminLogin from './pages/AdminLogin';
 import AdminEarlyAccess from './pages/AdminEarlyAccess';
+import ScheduleCall from './pages/ScheduleCall';
 import { initializeSecurity } from './utils/security';
 import SecurityMonitor from './utils/securityMonitor';
 import AboutUsDetail from './pages/about-us-detail';
@@ -52,6 +53,7 @@ function App() {
             <Route path="/terms-early-access-cohort" element={<TermsEarlyAccessCohort />} />
             <Route path="/admin-login" element={<AdminLogin />} />
             <Route path="/admin-early-access" element={<AdminEarlyAccess />} />
+            <Route path="/schedule-call" element={<ScheduleCall />} />
             <Route
               path="/admin" 
               element={

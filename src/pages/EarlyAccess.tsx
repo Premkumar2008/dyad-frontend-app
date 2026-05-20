@@ -416,9 +416,10 @@ const EarlyAccess: React.FC = () => {
 
         if (enumType === 'NPI-2') {
           orgName = basic.organization_name || data.organization_name || '';
-          const aoPrefix = basic.authorized_official_name_prefix || '';
-          const aoFirst = basic.authorized_official_first_name || '';
-          const aoLast = basic.authorized_official_last_name || '';
+          const stripDashes = (v: string) => v.replace(/^-+\s*/, '').trim();
+          const aoPrefix = stripDashes(basic.authorized_official_name_prefix || '');
+          const aoFirst = stripDashes(basic.authorized_official_first_name || '');
+          const aoLast = stripDashes(basic.authorized_official_last_name || '');
           title = basic.authorized_official_title_or_position || '';
           contactName = [aoPrefix, aoFirst, aoLast].filter(Boolean).join(' ').trim();
           displayName = orgName;

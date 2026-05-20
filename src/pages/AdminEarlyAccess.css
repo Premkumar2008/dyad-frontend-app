@@ -30,7 +30,7 @@
 }
 
 .adm2-logo-img {
-  height: 56px;
+  height: 75px;
   width: auto;
   display: block;
   margin-bottom: 0.45rem;
@@ -210,7 +210,7 @@
 /* ── Toolbar ── */
 .adm2-toolbar {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 0.75rem;
   flex-wrap: wrap;
@@ -236,7 +236,7 @@
 .adm2-search-wrap {
   position: relative;
   flex: 1;
-  min-width: 200px;
+  min-width: 180px;
   max-width: 340px;
 }
 
@@ -570,10 +570,237 @@
   text-align: center;
 }
 
+/* ── Table footer & Pagination ── */
+.adm2-table-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  border-top: 1px solid #f1f5f9;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.adm2-pagination-info {
+  font-size: 0.78rem;
+  color: #78909c;
+}
+
+.adm2-pagination {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.adm2-page-btn {
+  min-width: 32px;
+  height: 32px;
+  padding: 0 0.4rem;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #374151;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.adm2-page-btn:hover:not(:disabled):not(.adm2-page-btn--active) {
+  background: #f1f5f9;
+  border-color: #c7d9f5;
+  color: #173e7a;
+}
+
+.adm2-page-btn--active {
+  background: #173e7a;
+  border-color: #173e7a;
+  color: #ffffff;
+  font-weight: 700;
+  cursor: default;
+}
+
+.adm2-page-btn--nav {
+  font-size: 1rem;
+  color: #546e7a;
+}
+
+.adm2-page-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.adm2-page-ellipsis {
+  min-width: 28px;
+  text-align: center;
+  font-size: 0.8rem;
+  color: #9ca3af;
+}
+
+/* ── Automation banner ── */
+.adm2-automation-banner {
+  margin-top: 1rem;
+  background: #f0f6ff;
+  border: 1px solid #c7d9f5;
+  border-radius: 8px;
+  padding: 0.875rem 1.125rem;
+  font-size: 0.8rem;
+  color: #374151;
+  line-height: 1.65;
+}
+
+.adm2-automation-label {
+  font-weight: 700;
+  color: #173e7a;
+}
+
+/* ── Manual Invite Modal ── */
+.adm2-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.adm2-modal {
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
+  width: 100%;
+  max-width: 440px;
+  display: flex;
+  flex-direction: column;
+}
+
+.adm2-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem 1rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.adm2-modal-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #173e7a;
+  margin: 0;
+}
+
+.adm2-modal-close {
+  background: none;
+  border: none;
+  color: #9ca3af;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+.adm2-modal-close:hover { color: #374151; background: #f1f5f9; }
+
+.adm2-modal-body {
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.adm2-modal-desc {
+  font-size: 0.82rem;
+  color: #546e7a;
+  line-height: 1.55;
+  margin: 0 0 0.75rem;
+}
+
+.adm2-modal-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.adm2-modal-input {
+  width: 100%;
+  padding: 0.6rem 0.875rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  color: #1a1a1a;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  box-sizing: border-box;
+}
+
+.adm2-modal-input:focus {
+  border-color: #173e7a;
+  box-shadow: 0 0 0 3px rgba(23, 62, 122, 0.08);
+}
+
+.adm2-modal-input--error { border-color: #ef4444; }
+.adm2-modal-input--error:focus { box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1); }
+
+.adm2-modal-error {
+  font-size: 0.78rem;
+  color: #dc2626;
+  margin: 0;
+}
+
+.adm2-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding: 1rem 1.5rem 1.25rem;
+  border-top: 1px solid #f1f5f9;
+}
+
+.adm2-btn-spinner {
+  display: inline-block;
+  width: 13px;
+  height: 13px;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: adm2-spin 0.65s linear infinite;
+  vertical-align: middle;
+}
+
 /* ── Responsive ── */
 @media (max-width: 1024px) {
   .adm2-stats-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* Tablet: left side wraps, right buttons stay together on their own row */
+  .adm2-toolbar {
+    flex-wrap: wrap;
+  }
+
+  .adm2-toolbar-left {
+    flex: 1 1 100%;
+  }
+
+  .adm2-toolbar-right {
+    flex: 0 0 auto;
+    margin-left: auto;
+  }
+
+  .adm2-search-wrap {
+    flex: 1 1 100%;
+    max-width: 100%;
+  }
+
+  .adm2-filter-select {
+    flex: 1 1 auto;
   }
 }
 
@@ -596,9 +823,25 @@
     align-items: stretch;
   }
 
-  .adm2-toolbar-left { flex-direction: column; }
-  .adm2-search-wrap  { max-width: 100%; }
-  .adm2-toolbar-right { justify-content: flex-end; }
+  .adm2-toolbar-left {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .adm2-toolbar-right {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    width: 100%;
+  }
+
+  .adm2-toolbar-right .adm2-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .adm2-search-wrap  { max-width: 100%; min-width: 0; }
+
+  .adm2-filter-select { width: 100%; }
 
   .adm2-bulk-bar {
     flex-direction: column;

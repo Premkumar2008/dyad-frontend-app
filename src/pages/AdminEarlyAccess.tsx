@@ -58,6 +58,99 @@ const PRACTICE_TYPE_OPTIONS = [
   'Gastroenterology Group', 'Urology Group',
 ];
 
+// ── Invite email template (mirrors emailService.ts pattern) ──
+const buildInviteHtml = (contactName: string, email: string): string => {
+  const scheduleUrl = `${window.location.origin}/schedule-call?name=${encodeURIComponent(contactName)}&email=${encodeURIComponent(email)}`;
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Early Access Invitation – Dyad</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f4f4f4;font-family:Arial,Helvetica,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#f4f4f4;padding:32px 0;">
+    <tr><td align="center">
+      <table width="680" cellpadding="0" cellspacing="0" border="0" style="background-color:#ffffff;border-radius:4px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.08);">
+
+        <!-- Logo -->
+        <tr><td style="padding:32px 48px 20px 48px;">
+          <img src="https://landing-dev.dyadmd.com/assets/images/logo_main.png" alt="Dyad Practice Solutions" width="180" style="width:180px;display:block;" />
+        </td></tr>
+        <tr><td style="padding:0 48px;"><hr style="border:none;border-top:1px solid #e0e0e0;margin:0;" /></td></tr>
+
+        <!-- Blue banner -->
+        <tr><td style="padding:24px 48px;">
+          <div style="background-color:#173e7a;border-radius:6px;padding:22px 28px;">
+            <div style="font-size:11px;font-weight:600;color:#a8c8f0;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;">SELECTED FOR EARLY ACCESS</div>
+            <div style="font-size:18px;font-weight:700;color:#ffffff;line-height:1.4;">Your practice has been chosen for the early release cohort</div>
+          </div>
+        </td></tr>
+
+        <!-- Body copy -->
+        <tr><td style="padding:8px 48px 0 48px;font-size:14px;color:#333333;line-height:1.8;">
+          <p style="margin:0 0 16px 0;">Dear ${contactName},</p>
+          <p style="margin:0 0 16px 0;">We are pleased to invite your practice to join Dyad's early access program ahead of our September 2026 launch.</p>
+          <p style="margin:0 0 16px 0;">Your practice has been selected as one of a limited number of practices that will shape Dyad's product roadmap and implementation approach during the final development phase.</p>
+          <p style="margin:0 0 16px 0;">As an early access partner, you will receive priority onboarding to institutional-grade infrastructure, FDIC-insured banking workflows, integrated lockbox architecture, and fiduciary-level financial governance. Your operational feedback will directly inform product priorities, workflow design, and integration sequencing before broader release.</p>
+          <p style="margin:0 0 24px 0;">To begin, please schedule a brief 30-minute introduction call at your convenience.</p>
+        </td></tr>
+
+        <!-- Schedule CTA card -->
+        <tr><td style="padding:0 48px 28px 48px;">
+          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #e0e0e0;border-radius:8px;overflow:hidden;background:#f9fbff;">
+            <tr><td style="padding:24px 28px;">
+              <table cellpadding="0" cellspacing="0" border="0"><tr>
+                <td style="vertical-align:middle;padding-right:14px;">
+                  <div style="width:44px;height:44px;border:1.5px solid #c3d4f0;border-radius:8px;text-align:center;line-height:44px;font-size:22px;background:#ffffff;">&#128197;</div>
+                </td>
+                <td style="vertical-align:middle;">
+                  <div style="font-size:14px;font-weight:700;color:#1a1a1a;margin-bottom:3px;">Dyad Early Access &middot; Introduction Call</div>
+                  <div style="font-size:12px;color:#6b7280;">30 min &nbsp;&middot;&nbsp; Video conference &nbsp;&middot;&nbsp; Sroothi Jaikumar</div>
+                </td>
+              </tr></table>
+            </td></tr>
+            <tr><td style="padding:0 28px 24px 28px;text-align:center;">
+              <a href="${scheduleUrl}" target="_blank" style="display:inline-block;background-color:#173e7a;color:#ffffff;text-decoration:none;padding:14px 40px;border-radius:6px;font-size:15px;font-weight:700;letter-spacing:0.02em;">Schedule Your Introduction Call &rarr;</a>
+            </td></tr>
+          </table>
+        </td></tr>
+
+        <!-- Sign-off -->
+        <tr><td style="padding:4px 48px 28px 48px;font-size:14px;color:#333333;line-height:1.7;">
+          <p style="margin:0 0 16px 0;">We appreciate your interest in Dyad and look forward to the opportunity to serve your practice.</p>
+          <p style="margin:0 0 4px 0;">Warm regards,</p>
+          <p style="margin:0 0 2px 0;font-weight:700;color:#1a6faf;">Sroothi Jaikumar</p>
+          <p style="margin:0;color:#888888;font-size:13px;">Founder &amp; CEO, Dyad Practice Solutions</p>
+        </td></tr>
+
+        <tr><td style="padding:0 48px;"><hr style="border:none;border-top:1px solid #e0e0e0;margin:0;" /></td></tr>
+
+        <!-- Footer -->
+        <tr><td style="background-color:#f8f8f8;padding:20px 48px;text-align:center;">
+          <p style="margin:0 0 6px 0;font-size:12px;color:#888888;">
+            Dyad Practice Solutions, LLC &nbsp;&bull;&nbsp;
+            <a href="https://dyadmd.com" style="color:#1a6faf;text-decoration:none;">dyadmd.com</a>
+            &nbsp;&bull;&nbsp;
+            <a href="https://dyadmd.com/unsubscribe" style="color:#1a6faf;text-decoration:none;">Unsubscribe</a>
+            &nbsp;&bull;&nbsp;
+            <a href="https://dyadmd.com/privacy" style="color:#1a6faf;text-decoration:none;">Privacy Policy</a>
+          </p>
+          <p style="margin:0;font-size:11px;color:#aaaaaa;">This invitation is extended to a limited cohort of selected practices. If you no longer wish to participate, please let us know.</p>
+        </td></tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+};
+
+const buildInviteText = (contactName: string, email: string): string => {
+  const scheduleUrl = `${window.location.origin}/schedule-call?name=${encodeURIComponent(contactName)}&email=${encodeURIComponent(email)}`;
+  return `Dear ${contactName},\n\nWe are pleased to invite your practice to join Dyad's early access program ahead of our September 2026 launch.\n\nYour practice has been selected as one of a limited number of practices that will shape Dyad's product roadmap and implementation approach during the final development phase.\n\nTo schedule your 30-minute introduction call, visit:\n${scheduleUrl}\n\nWarm regards,\nSroothi Jaikumar\nFounder & CEO, Dyad Practice Solutions\n\nDyad Practice Solutions, LLC · dyadmd.com`;
+};
+
 const STATUS_OPTIONS = [
   { value: '', label: 'All statuses' },
   { value: 'pending', label: 'Pending review' },
@@ -75,9 +168,15 @@ const AdminEarlyAccess: React.FC = () => {
   const [togglingIds, setTogglingIds] = useState<Set<string>>(new Set());
   const [sendingInvite, setSendingInvite] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [manualInviteOpen, setManualInviteOpen] = useState(false);
+  const [manualInviteEmail, setManualInviteEmail] = useState('');
+  const [manualInviteLoading, setManualInviteLoading] = useState(false);
+  const [manualInviteError, setManualInviteError] = useState('');
   const [search, setSearch] = useState('');
   const [filterType, setFilterType] = useState('All types');
   const [filterStatus, setFilterStatus] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const PAGE_SIZE = 8;
 
   // ── Auth guard ──────────────────────────────────────────
   useEffect(() => {
@@ -164,16 +263,38 @@ const AdminEarlyAccess: React.FC = () => {
     });
   }, [submissions, search, filterType, filterStatus]);
 
-  // ── Selection ───────────────────────────────────────────
-  const allSelected = filtered.length > 0 && filtered.every(s => selected.has(s._id));
+  // Reset to page 1 whenever filters change
+  useEffect(() => { setCurrentPage(1); }, [search, filterType, filterStatus]);
+
+  // ── Pagination ──────────────────────────────────────────
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const paginated = useMemo(() => {
+    const start = (currentPage - 1) * PAGE_SIZE;
+    return filtered.slice(start, start + PAGE_SIZE);
+  }, [filtered, currentPage, PAGE_SIZE]);
+
+  const getPageNumbers = (cur: number, total: number): (number | '…')[] => {
+    if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+    const pages: (number | '…')[] = [1];
+    if (cur > 3) pages.push('…');
+    for (let i = Math.max(2, cur - 1); i <= Math.min(total - 1, cur + 1); i++) pages.push(i);
+    if (cur < total - 2) pages.push('…');
+    pages.push(total);
+    return pages;
+  };
+
+  // ── Selection (beta-cohort only) ─────────────────────────
+  const selectable = filtered.filter(s => s.status === 'beta-cohort' && !s.invitationSent);
+  const allSelected = selectable.length > 0 && selectable.every(s => selected.has(s._id));
   const toggleAll = () => {
     if (allSelected) {
-      setSelected(prev => { const n = new Set(prev); filtered.forEach(s => n.delete(s._id)); return n; });
+      setSelected(prev => { const n = new Set(prev); selectable.forEach(s => n.delete(s._id)); return n; });
     } else {
-      setSelected(prev => { const n = new Set(prev); filtered.forEach(s => n.add(s._id)); return n; });
+      setSelected(prev => { const n = new Set(prev); selectable.forEach(s => n.add(s._id)); return n; });
     }
   };
-  const toggleRow = (id: string) => {
+  const toggleRow = (id: string, status: string, invitationSent: boolean) => {
+    if (status !== 'beta-cohort' || invitationSent) return;
     setSelected(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
   };
 
@@ -203,50 +324,162 @@ const AdminEarlyAccess: React.FC = () => {
 
   // ── Send invite ─────────────────────────────────────────
   const handleSendInvite = async () => {
-    const ids = Array.from(selected).filter(id => {
-      const sub = submissions.find(s => s._id === id);
-      return sub && !sub.invitationSent;
-    });
-    if (!ids.length) return;
+    const targetSubs = Array.from(selected)
+      .map(id => submissions.find(s => s._id === id))
+      .filter((s): s is Submission => !!s && !s.invitationSent);
+    if (!targetSubs.length) return;
+
     setSendingInvite(true);
-    try {
-      const apiUrl = import.meta.env.VITE_API_URL || '';
-      const token = localStorage.getItem('adminAccessToken') || '';
-      const res = await axios.post(
-        `${apiUrl}/api-early-access/send-invite`,
-        { ids },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      const sentIds: string[] = res.data?.sentIds ?? res.data?.data?.sentIds ?? ids;
-      if (sentIds.length > 0) {
-        setSubmissions(prev => prev.map(s =>
-          sentIds.includes(s._id) ? { ...s, invitationSent: true } : s
-        ));
-        toast.success(`Invitation${sentIds.length > 1 ? 's' : ''} sent to ${sentIds.length} practice${sentIds.length > 1 ? 's' : ''}.`);
-      }
-      const failedCount = ids.length - sentIds.length;
-      if (failedCount > 0) toast.error(`${failedCount} invitation${failedCount > 1 ? 's' : ''} failed to send.`);
-      setSelected(new Set());
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Failed to send invitations. Please try again.');
-    } finally {
-      setSendingInvite(false);
+    const subject = "You've Been Selected for Dyad Early Access";
+    const apiUrl = import.meta.env.VITE_API_URL || '';
+    const token = localStorage.getItem('adminAccessToken') || '';
+    const sentIds: string[] = [];
+
+    await Promise.allSettled(
+      targetSubs.map(async sub => {
+        try {
+          await axios.post(
+            `${apiUrl}/api-early-access/send-invite`,
+            {
+              ids: [sub._id],
+              subject,
+              html: buildInviteHtml(sub.contactName, sub.email),
+              text: buildInviteText(sub.contactName, sub.email),
+            },
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+          sentIds.push(sub._id);
+        } catch {
+          // individual failure — tracked via sentIds length
+        }
+      })
+    );
+
+    if (sentIds.length > 0) {
+      setSubmissions(prev => prev.map(s =>
+        sentIds.includes(s._id) ? { ...s, invitationSent: true } : s
+      ));
+      toast.success(`Invitation${sentIds.length > 1 ? 's' : ''} sent to ${sentIds.length} practice${sentIds.length > 1 ? 's' : ''}.`);
     }
+    const failedCount = targetSubs.length - sentIds.length;
+    if (failedCount > 0) toast.error(`${failedCount} invitation${failedCount > 1 ? 's' : ''} failed to send.`);
+    setSelected(new Set());
+    setSendingInvite(false);
   };
 
   // ── Export CSV ──────────────────────────────────────────
   const handleExportCSV = () => {
-    const cols = ['NPI', 'Practice/Facility', 'Contact', 'Email', 'Phone', 'Title', 'Practice Type', 'Providers', 'Locations', 'Claim Volume', 'Submitted', 'Beta Invite', 'Status'];
+    const cols = ['NPI', 'Practice/Facility', 'Contact', 'Email', 'Phone', 'Title', 'Practice Type', 'Providers', 'Locations', 'Claim Volume', 'Submitted', 'Beta Invite', 'Status', 'Invitation Sent'];
     const rows = filtered.map(s => [
       s.npi, s.practiceName, s.contactName, s.email, s.phoneNumber, s.title,
       s.practiceType, s.providers, s.locations, s.claimVolume,
-      formatDate(s.createdAt), s.betaInvite ? 'Yes' : 'No', s.status,
+      formatDate(s.createdAt), s.betaInvite ? 'Yes' : 'No', s.status, s.invitationSent ? 'Yes' : 'No',
     ]);
     const csv = [cols, ...rows].map(r => r.map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(',')).join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a'); a.href = url; a.download = 'early-access-submissions.csv'; a.click();
     URL.revokeObjectURL(url);
+  };
+
+  // ── Manual invite ────────────────────────────────────────
+  const handleManualInvite = async () => {
+    const email = manualInviteEmail.trim();
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setManualInviteError('Please enter a valid email address.');
+      return;
+    }
+    setManualInviteError('');
+    setManualInviteLoading(true);
+    const baseUrl = window.location.origin;
+    const logoUrl = `${baseUrl}/assets/images/logo_main.png`;
+    const registerUrl = `${baseUrl}/early-access`;
+    const html = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>You're Invited — Dyad Early Access</title>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.7; color: #333; margin: 0; padding: 0; background: #f4f4f4; }
+    .wrapper { background: #f4f4f4; padding: 30px 0; }
+    .container { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+    .header { padding: 24px 32px; border-bottom: 2px solid #003F7F; }
+    .header img { height: 80px; width: auto; }
+    .content { padding: 32px 32px 24px; }
+    .content p { margin: 0 0 16px; font-size: 15px; color: #444; }
+    .cta-wrap { text-align: center; margin: 28px 0; }
+    .cta-btn { display: inline-block; background: #003F7F; color: #ffffff !important; text-decoration: none; padding: 13px 32px; border-radius: 6px; font-size: 15px; font-weight: 700; letter-spacing: 0.02em; }
+    .signature { margin-top: 24px; }
+    .signature p { margin: 0; font-size: 15px; color: #444; }
+    .dyad-team { color: #003F7F; font-weight: 700; }
+    .footer { background: #f9f9f9; border-top: 1px solid #e8e8e8; padding: 20px 32px; text-align: center; }
+    .footer p { margin: 0 0 6px; font-size: 12px; color: #888; }
+    .footer a { color: #003F7F; text-decoration: underline; }
+    .thanks { font-size: 14px; color: #666; text-align: center; margin: 0 0 6px; }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="container">
+      <div class="header">
+        <img src="${logoUrl}" alt="Dyad Practice Solutions" />
+      </div>
+      <div class="content">
+               <p class="thanks">Thank you for your interest in Dyad Practice Solutions.</p>
+
+        <p>We're excited to invite you to join the <strong>Dyad Early Access Program</strong> an exclusive cohort of forward-thinking practices onboarding ahead of our Q3 2026 public launch.</p>
+        <div class="cta-wrap">
+          <a href="${registerUrl}" class="cta-btn">Register for Early Access</a>
+        </div>
+        <p>If the button doesn't work, copy and paste this link into your browser:<br/><a href="${registerUrl}">${registerUrl}</a></p>
+        <div class="signature">
+          <p>Regards,</p>
+          <p><span class="dyad-team">The Dyad Team</span><br/>Dyad Practice Solutions</p>
+        </div>
+      </div>
+      <div class="footer">
+        <p>Dyad Practice Solutions, LLC &middot; <a href="${baseUrl}">dyadmd.com</a> &middot; <a href="${baseUrl}/privacy-policy">Privacy Policy</a></p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>`;
+    const text = `Hello,\n\nWe're excited to invite you to join the Dyad Early Access Program.\n\nRegister here: ${registerUrl}\n\nRegards,\nThe Dyad Team\nDyad Practice Solutions\n\nThank you for your interest in Dyad Practice Solutions.\n${baseUrl}`;
+    const apiUrl = import.meta.env.VITE_API_URL || '';
+    const token = localStorage.getItem('adminAccessToken') || '';
+    try {
+      // Step 1: check if email is already registered
+      const checkRes = await axios.post(
+        `${apiUrl}/api-early-access/check-email`,
+        { email },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (checkRes.data?.exists) {
+        setManualInviteError(checkRes.data.message || 'This email is already registered.');
+        setManualInviteLoading(false);
+        return;
+      }
+    } catch (err: any) {
+      setManualInviteError(err.response?.data?.message || 'Failed to verify email. Please try again.');
+      setManualInviteLoading(false);
+      return;
+    }
+    try {
+      // Step 2: send the invite email
+      await axios.post(
+        `${apiUrl}/api-early-access/send-invite-email`,
+        { email, subject: "You're Invited — Dyad Early Access Program", html, text },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success(`Invitation sent to ${email}`);
+      setManualInviteOpen(false);
+      setManualInviteEmail('');
+    } catch (err: any) {
+      setManualInviteError(err.response?.data?.message || 'Failed to send invitation. Please try again.');
+    } finally {
+      setManualInviteLoading(false);
+    }
   };
 
   // ── Logout ──────────────────────────────────────────────
@@ -352,8 +585,8 @@ const AdminEarlyAccess: React.FC = () => {
             <button className="adm2-btn adm2-btn--ghost" onClick={handleExportCSV}>
               Export CSV
             </button>
-            <button className="adm2-btn adm2-btn--primary">
-              + Add Manual Entry
+            <button className="adm2-btn adm2-btn--primary" onClick={() => { setManualInviteOpen(true); setManualInviteEmail(''); setManualInviteError(''); }}>
+              Add Manual Invite
             </button>
           </div>
         </div>
@@ -415,7 +648,7 @@ const AdminEarlyAccess: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {filtered.map(sub => {
+                {paginated.map(sub => {
                   const badge = practiceTypeBadge(sub.practiceType);
                   const sc = statusConfig[sub.status] ?? statusConfig['pending'];
                   const isSelected = selected.has(sub._id);
@@ -423,7 +656,7 @@ const AdminEarlyAccess: React.FC = () => {
                   return (
                     <tr key={sub._id} className={`adm2-tr${isSelected ? ' adm2-tr--selected' : ''}${isInvited ? ' adm2-tr--invited' : ''}`}>
                       <td className="adm2-td adm2-td--check">
-                        <input type="checkbox" className="adm2-checkbox" checked={isSelected} onChange={() => toggleRow(sub._id)} disabled={isInvited} />
+                        <input type="checkbox" className="adm2-checkbox" checked={isSelected} onChange={() => toggleRow(sub._id, sub.status, sub.invitationSent)} disabled={sub.status !== 'beta-cohort' || isInvited} />
                       </td>
                       <td className="adm2-td">
                         <span className="adm2-practice-name">{sub.practiceName}</span>
@@ -478,9 +711,98 @@ const AdminEarlyAccess: React.FC = () => {
               </tbody>
             </table>
           )}
+
+          {/* Pagination footer */}
+          {!loading && filtered.length > 0 && (
+            <div className="adm2-table-footer">
+              <span className="adm2-pagination-info">
+                Showing {Math.min((currentPage - 1) * PAGE_SIZE + 1, filtered.length)}–{Math.min(currentPage * PAGE_SIZE, filtered.length)} of {filtered.length} submission{filtered.length !== 1 ? 's' : ''}
+              </span>
+              <div className="adm2-pagination">
+                <button
+                  className="adm2-page-btn adm2-page-btn--nav"
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  aria-label="Previous page"
+                >‹</button>
+                {getPageNumbers(currentPage, totalPages).map((p, i) =>
+                  p === '…' ? (
+                    <span key={`ellipsis-${i}`} className="adm2-page-ellipsis">…</span>
+                  ) : (
+                    <button
+                      key={p}
+                      className={`adm2-page-btn${currentPage === p ? ' adm2-page-btn--active' : ''}`}
+                      onClick={() => setCurrentPage(p as number)}
+                    >{p}</button>
+                  )
+                )}
+                <button
+                  className="adm2-page-btn adm2-page-btn--nav"
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  aria-label="Next page"
+                >›</button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Automation logic banner */}
+        <div className="adm2-automation-banner">
+          <span className="adm2-automation-label">Daily automation logic:</span>
+          {' '}A scheduled job runs daily at 8:00 AM PT. For each submission record, the job checks three conditions:{' '}
+          <code className="adm2-code">current_date</code> within the outreach window (e.g., 6 weeks before launch),{' '}
+          <code className="adm2-code">beta_invite = true</code>, and{' '}
+          <code className="adm2-code">invite_sent_at IS NULL</code>. When all three are met, Email 2 (Beta Invitation) is dispatched with the embedded Calendly link, and{' '}
+          <code className="adm2-code">invite_sent_at</code> is stamped to prevent re-send. Bulk actions on this page modify the{' '}
+          <code className="adm2-code">beta_invite</code> flag in the database — they do not send emails directly.
         </div>
 
       </div>
+
+      {/* ══ Manual Invite Modal ══════════════════════════ */}
+      {manualInviteOpen && (
+        <div className="adm2-modal-backdrop" onClick={() => setManualInviteOpen(false)}>
+          <div className="adm2-modal" onClick={e => e.stopPropagation()}>
+            <div className="adm2-modal-header">
+              <h2 className="adm2-modal-title">Send Manual Invite</h2>
+              <button className="adm2-modal-close" onClick={() => setManualInviteOpen(false)} aria-label="Close">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  <path d="M2 2l12 12M14 2L2 14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+                </svg>
+              </button>
+            </div>
+            <div className="adm2-modal-body">
+              <p className="adm2-modal-desc">
+                Enter the recipient's email address. They'll receive an invitation with a link to register at the Early Access page.
+              </p>
+              <label className="adm2-modal-label">Email Address</label>
+              <input
+                type="email"
+                className={`adm2-modal-input${manualInviteError ? ' adm2-modal-input--error' : ''}`}
+                placeholder="e.g. doctor@practice.com"
+                value={manualInviteEmail}
+                onChange={e => { setManualInviteEmail(e.target.value); setManualInviteError(''); }}
+                onKeyDown={e => e.key === 'Enter' && handleManualInvite()}
+                autoFocus
+                disabled={manualInviteLoading}
+              />
+              {manualInviteError && <p className="adm2-modal-error">{manualInviteError}</p>}
+            </div>
+            <div className="adm2-modal-footer">
+              <button className="adm2-btn adm2-btn--ghost" onClick={() => setManualInviteOpen(false)} disabled={manualInviteLoading}>
+                Cancel
+              </button>
+              <button className="adm2-btn adm2-btn--primary" onClick={handleManualInvite} disabled={manualInviteLoading}>
+                {manualInviteLoading ? (
+                  <><span className="adm2-btn-spinner" /> Sending…</>
+                ) : 'Send Invite'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };

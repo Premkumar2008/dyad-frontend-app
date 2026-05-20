@@ -87,101 +87,84 @@ const AdminLogin: React.FC = () => {
 
         {/* ── Left: form ── */}
         <div className="login-form-section">
-          <div>
-            <div
-              className="dyad-logo"
-              style={{ cursor: 'pointer' }}
-              onClick={() => navigate('/')}
-            >
+          <div className="admin-login-inner">
+
+            <div style={{ cursor: 'pointer' }} onClick={() => navigate('/')}>
               <img
                 src="/assets/images/logo_main.png"
                 alt="Dyad Logo"
                 className="logo-image login-logo"
               />
             </div>
-          </div>
 
-          <div className="login-form-content">
-            <h3 className="text-xl font-medium text-gray-900">Admin Login</h3>
+            <h3 className="admin-login-title">Admin Login</h3>
 
-            <div className="form-container-login">
-              <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            <form onSubmit={handleSubmit(onSubmit)} className="admin-login-form">
 
-                {/* Username */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Username
-                  </label>
-                  <input
-                    {...register('username')}
-                    type="text"
-                    placeholder="Enter admin username"
-                    className="input-field"
-                    disabled={loading}
-                    autoComplete="username"
-                  />
-                  {errors.username && (
-                    <p className="mt-1 text-sm text-red-600">{errors.username.message}</p>
-                  )}
-                </div>
-
-                {/* Password */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Password
-                  </label>
-                  <div className="relative">
-                    <input
-                      {...register('password')}
-                      type={showPassword ? 'text' : 'password'}
-                      placeholder="Enter password"
-                      className="input-field input-field-pr-10"
-                      disabled={loading}
-                      autoComplete="current-password"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(v => !v)}
-                      className="password-toggle-button"
-                      disabled={loading}
-                    >
-                      {showPassword ? (
-                        <img src="/assets/images/openeye.svg" alt="Hide password" />
-                      ) : (
-                        <img src="/assets/images/closeeye.svg" alt="Show password" />
-                      )}
-                    </button>
-                  </div>
-                  {errors.password && (
-                    <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
-                  )}
-                </div>
-
-                {/* Error */}
-                {error && (
-                  <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-                    {error}
-                  </div>
-                )}
-
-                {/* Submit */}
-                <button
-                  type="submit"
+              <div className="admin-login-field">
+                <label className="admin-login-label">Username</label>
+                <input
+                  {...register('username')}
+                  type="text"
+                  placeholder="Enter admin username"
+                  className="input-field"
                   disabled={loading}
-                  className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {loading ? (
-                    <div className="flex items-center justify-center">
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2" />
-                      Signing In...
-                    </div>
-                  ) : (
-                    'Sign In'
-                  )}
-                </button>
+                  autoComplete="username"
+                />
+                {errors.username && (
+                  <p className="admin-login-error">{errors.username.message}</p>
+                )}
+              </div>
 
-              </form>
-            </div>
+              <div className="admin-login-field">
+                <label className="admin-login-label">Password</label>
+                <div className="relative">
+                  <input
+                    {...register('password')}
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="Enter password"
+                    className="input-field input-field-pr-10"
+                    disabled={loading}
+                    autoComplete="current-password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(v => !v)}
+                    className="password-toggle-button"
+                    disabled={loading}
+                  >
+                    {showPassword ? (
+                      <img src="/assets/images/openeye.svg" alt="Hide password" />
+                    ) : (
+                      <img src="/assets/images/closeeye.svg" alt="Show password" />
+                    )}
+                  </button>
+                </div>
+                {errors.password && (
+                  <p className="admin-login-error">{errors.password.message}</p>
+                )}
+              </div>
+
+              {error && (
+                <div className="admin-login-api-error">{error}</div>
+              )}
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="btn-primary w-full"
+              >
+                {loading ? (
+                  <div className="flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2" />
+                    Signing In...
+                  </div>
+                ) : (
+                  'Sign In'
+                )}
+              </button>
+
+            </form>
           </div>
         </div>
 
