@@ -33,7 +33,7 @@ const formatDate = (iso: string) => {
 const practiceTypeBadge = (type: string): { bg: string; color: string } => {
   const t = type.toLowerCase();
   if (t.includes('anesthesia'))     return { bg: '#dcfce7', color: '#16a34a' };
-  if (t.includes('ophthalmology'))  return { bg: '#dbeafe', color: '#1d6dd8' };
+  if (t.includes('ophthalmology'))  return { bg: '#dbeafe', color: '#173e7a' };
   if (t.includes('asc') || t.includes('ambulatory')) return { bg: '#ede9fe', color: '#7c3aed' };
   if (t.includes('pain'))           return { bg: '#ffedd5', color: '#ea580c' };
   if (t.includes('orthopedic'))     return { bg: '#fef3c7', color: '#d97706' };
@@ -106,7 +106,7 @@ const buildInviteHtml = (contactName: string, email: string): string => {
                 </td>
                 <td style="vertical-align:middle;">
                   <div style="font-size:14px;font-weight:700;color:#1a1a1a;margin-bottom:3px;">Dyad Early Access &middot; Introduction Call</div>
-                  <div style="font-size:12px;color:#6b7280;">30 min &nbsp;&middot;&nbsp; Video conference &nbsp;&middot;&nbsp; Sroothi Jaikumar</div>
+                  <div style="font-size:12px;color:#6b7280;">30 min &nbsp;&middot;&nbsp; Video conference &nbsp;&middot;&nbsp; Dyad Practice Solutions</div>
                 </td>
               </tr></table>
             </td></tr>

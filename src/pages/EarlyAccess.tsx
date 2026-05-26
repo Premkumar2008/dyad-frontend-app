@@ -314,7 +314,7 @@ const EarlyAccess: React.FC = () => {
 
   const isSectionReady = (step: number): boolean => {
     switch (step) {
-      case 1: return !!(watchedPracticeName && watchedContactName && watchedPhoneNumber?.length === 10 && watchedTitle && otpVerified);
+      case 1: return !!(watchedPracticeName && watchedContactName && watchedPhoneNumber?.length === 10 && watchedTitle && otpVerified && npiConfirmed);
       case 2: return !!watchedPracticeType;
       case 3: return !!(watchedProviders && watchedLocations && watchedClaimVolume);
       case 4: return acknowledgementAccepted;
@@ -581,7 +581,11 @@ const EarlyAccess: React.FC = () => {
   };
 
   const handleContinue = async (step: number) => {
-    // Step 1 (Practice Details): requires OTP verification
+    // Step 1 (Practice Details): requires NPI verification and OTP verification
+    if (step === 1 && !npiConfirmed) {
+      toast.error('Please verify your NPI number before continuing.');
+      return;
+    }
     if (step === 1 && !otpVerified) {
       toast.error('Please verify your email before continuing.');
       return;
@@ -904,6 +908,7 @@ const EarlyAccess: React.FC = () => {
                                                   setShowNpiPanel(false);
                                                   setNpiApiData(null);
                                                   setValue('npi' as any, '');
+                                                  setCompletedSteps(prev => { const next = new Set(prev); next.delete(1); return next; });
                                                 }}
                                               >
                                                 Change
@@ -1100,6 +1105,7 @@ const EarlyAccess: React.FC = () => {
                                                   setOtpVerified(false);
                                                   setOtpSent(false);
                                                   setOtpDigits(['', '', '', '', '', '']);
+                                                  setCompletedSteps(prev => { const next = new Set(prev); next.delete(1); return next; });
                                                 }}
                                               >
                                                 Change

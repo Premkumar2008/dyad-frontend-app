@@ -41,7 +41,7 @@
 }
 
 .logo-section h1 {
-  color: #1D6DD8;
+  color: #173e7a;
   font-size: 1.8rem;
   font-weight: 600;
   margin: 0;
@@ -78,7 +78,7 @@
 .coming-soon-title {
   font-size: 4rem;
   font-weight: 700;
-  color: #1D6DD8;
+  color: #173e7a;
   margin-bottom: 20px;
   text-transform: uppercase;
   letter-spacing: 2px;
@@ -100,7 +100,7 @@
 }
 
 .time-unit {
-  background: linear-gradient(135deg, #1D6DD8 0%, #1558b8 100%);
+  background: linear-gradient(135deg, #173e7a 0%, #1558b8 100%);
   border-radius: 15px;
   padding: 30px 20px;
   min-width: 120px;
@@ -135,7 +135,7 @@
 
 .feature-highlights h3 {
   font-size: 2rem;
-  color: #1D6DD8;
+  color: #173e7a;
   margin-bottom: 40px;
 }
 
@@ -156,7 +156,7 @@
 
 .feature-item:hover {
   transform: translateY(-5px);
-  border-color: #1D6DD8;
+  border-color: #173e7a;
   background: rgba(29, 109, 216, 0.1);
 }
 
@@ -167,7 +167,7 @@
 
 .feature-item h4 {
   font-size: 1.2rem;
-  color: #1D6DD8;
+  color: #173e7a;
   margin-bottom: 15px;
   font-weight: 600;
 }
@@ -189,7 +189,7 @@
 
 .notification-section h3 {
   font-size: 1.8rem;
-  color: #1D6DD8;
+  color: #173e7a;
   margin-bottom: 15px;
 }
 
@@ -216,12 +216,12 @@
 
 .email-input:focus {
   outline: none;
-  border-color: #1D6DD8;
+  border-color: #173e7a;
   box-shadow: 0 0 0 3px rgba(29, 109, 216, 0.1);
 }
 
 .notify-btn {
-  background: linear-gradient(135deg, #1D6DD8 0%, #1558b8 100%);
+  background: linear-gradient(135deg, #173e7a 0%, #1558b8 100%);
   color: white;
   border: none;
   padding: 15px 30px;
@@ -245,7 +245,7 @@
 }
 
 .contact-section a {
-  color: #1D6DD8;
+  color: #173e7a;
   text-decoration: none;
   font-weight: 600;
 }
@@ -272,7 +272,7 @@
 }
 
 .footer-links a {
-  color: #1D6DD8;
+  color: #173e7a;
   text-decoration: none;
   font-weight: 500;
   transition: color 0.3s ease;

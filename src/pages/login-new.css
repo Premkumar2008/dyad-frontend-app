@@ -312,7 +312,7 @@ align-items: flex-start !important;
 
 .input-field:focus {
   outline: none;
-  border-color: #1D6DD8;
+  border-color: #173e7a;
   background: white;
   box-shadow: 0 0 0 3px rgba(29, 109, 216, 0.1);
 }
@@ -323,7 +323,7 @@ align-items: flex-start !important;
 }
 
 .btn-primary {
-  background: #1D6DD8;
+  background: #173e7a;
   color: white;
   padding: 0.875rem 1.5rem;
   border: none;
@@ -337,7 +337,7 @@ align-items: flex-start !important;
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: #1a5fc4;
+ 
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(29, 109, 216, 0.3);
 }
@@ -618,7 +618,7 @@ align-items: flex-start !important;
 }
 
 .login-form-content .text-primary-600 {
-  color: #1D6DD8;
+  color: #173e7a;
 }
 
 .login-form-content .text-primary-600:hover {

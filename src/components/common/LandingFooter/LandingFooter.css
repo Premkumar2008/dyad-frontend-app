@@ -64,7 +64,7 @@
 }
 
 .footer-menu a:hover {
-  color: #1D6DD8;
+  color: #173e7a;
 }
 
 .footer-contact-info {
@@ -125,7 +125,7 @@
 }
 
 .footer-legal-menu a:hover {
-  color: #1D6DD8;
+  color: #173e7a;
 }
 
 @media (max-width: 768px) {
@@ -188,6 +188,6 @@
 .platformaccess-banner{
  font-weight: 600;
     padding: 0.8rem;
-    background-color: #1d6dd81a;
+    background-color: #173e7a1a;
     text-align: center;
 }

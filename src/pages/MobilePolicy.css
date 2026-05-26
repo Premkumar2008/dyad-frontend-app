@@ -82,7 +82,7 @@
 }
 
 .policy-toc ul li a:hover {
-  color: #1D6DD8;
+  color: #173e7a;
   background: #eff6ff;
 }
 
@@ -106,7 +106,7 @@
 }
 
 .mobile-policy-breadcrumb a {
-  color: #1D6DD8;
+  color: #173e7a;
   text-decoration: none;
 }
 
@@ -150,7 +150,7 @@
   margin-bottom: 1rem;
   font-family: 'Prompt', sans-serif;
   padding-bottom: 0.4rem;
-  border-bottom: 2px solid #1D6DD8;
+  border-bottom: 2px solid #173e7a;
   display: inline-block;
 }
 
@@ -163,7 +163,7 @@
 .mobile-policy-subsection h3 {
   font-size: 1rem;
   font-weight: 600;
-  color: #1D6DD8;
+  color: #173e7a;
   margin-bottom: 0.6rem;
   font-family: 'Prompt', sans-serif;
 }
@@ -179,7 +179,7 @@
 
 .mobile-policy-subsection a,
 .mobile-policy-section a {
-  color: #1D6DD8;
+  color: #173e7a;
   text-decoration: none;
   transition: color 0.2s ease;
 }
@@ -218,7 +218,7 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background-color: #1D6DD8;
+  background-color: #173e7a;
 }
 
 .mobile-policy-subsection ul li strong,
@@ -259,7 +259,7 @@
   margin-top: 3px;
   width: 16px;
   height: 16px;
-  accent-color: #1D6DD8;
+  accent-color: #173e7a;
   flex-shrink: 0;
 }
 
@@ -286,7 +286,7 @@
 }
 
 .sms-consent-links a {
-  color: #1D6DD8;
+  color: #173e7a;
   text-decoration: none;
   font-family: 'Prompt', sans-serif;
 }

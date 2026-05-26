@@ -21,25 +21,25 @@ const AuthHeader: React.FC<AuthHeaderProps> = () => {
           <nav className="hidden md:flex space-x-8">
             <Link
               to="/"
-              className="text-gray-700 hover:text-[#1D6DD8] px-3 py-2 text-sm font-medium transition-colors duration-200"
+              className="text-gray-700 hover:text-[#173e7a] px-3 py-2 text-sm font-medium transition-colors duration-200"
             >
               Home
             </Link>
             <Link
               to="/#about"
-              className="text-gray-700 hover:text-[#1D6DD8] px-3 py-2 text-sm font-medium transition-colors duration-200"
+              className="text-gray-700 hover:text-[#173e7a] px-3 py-2 text-sm font-medium transition-colors duration-200"
             >
               About
             </Link>
             <Link
               to="/#services"
-              className="text-gray-700 hover:text-[#1D6DD8] px-3 py-2 text-sm font-medium transition-colors duration-200"
+              className="text-gray-700 hover:text-[#173e7a] px-3 py-2 text-sm font-medium transition-colors duration-200"
             >
               Services
             </Link>
             <Link
               to="/#contact"
-              className="text-gray-700 hover:text-[#1D6DD8] px-3 py-2 text-sm font-medium transition-colors duration-200"
+              className="text-gray-700 hover:text-[#173e7a] px-3 py-2 text-sm font-medium transition-colors duration-200"
             >
               Contact
             </Link>
@@ -49,13 +49,13 @@ const AuthHeader: React.FC<AuthHeaderProps> = () => {
           <div className="flex items-center space-x-4">
             <Link
               to="/login"
-              className="text-gray-700 hover:text-[#1D6DD8] px-3 py-2 text-sm font-medium transition-colors duration-200"
+              className="text-gray-700 hover:text-[#173e7a] px-3 py-2 text-sm font-medium transition-colors duration-200"
             >
               Login
             </Link>
             <Link
               to="/register"
-              className="bg-[#1D6DD8] text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-opacity-90 transition-colors duration-200"
+              className="bg-[#173e7a] text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-opacity-90 transition-colors duration-200"
             >
               Register
             </Link>
@@ -63,7 +63,7 @@ const AuthHeader: React.FC<AuthHeaderProps> = () => {
 
           {/* Mobile menu button - could be expanded later if needed */}
           <div className="md:hidden">
-            <button className="text-gray-700 hover:text-[#1D6DD8] p-2">
+            <button className="text-gray-700 hover:text-[#173e7a] p-2">
               <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               </svg>

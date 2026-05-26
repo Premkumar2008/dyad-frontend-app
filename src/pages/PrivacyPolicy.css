@@ -91,7 +91,7 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background-color: #1D6DD8;
+  background-color: #173e7a;
   flex-shrink: 0;
 }
 
@@ -103,7 +103,7 @@
 .policy-address {
   font-style: normal;
   background: #f9fafb;
-  border-left: 4px solid #1D6DD8;
+  border-left: 4px solid #173e7a;
   padding: 1.25rem 1.5rem;
   border-radius: 0 6px 6px 0;
 }
@@ -115,7 +115,7 @@
 }
 
 .policy-address a {
-  color: #1D6DD8;
+  color: #173e7a;
   text-decoration: none;
   transition: color 0.2s ease;
 }
@@ -126,7 +126,7 @@
 }
 
 .policy-section--notice ul li::before {
-  background-color: #1D6DD8;
+  background-color: #173e7a;
 }
 
 @media (max-width: 768px) {

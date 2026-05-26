@@ -125,8 +125,8 @@ const Landing: React.FC = () => {
                   href="#home" 
                   className={`text-sm sm:text-base font-medium transition-colors px-3 py-2 rounded-lg ${
                     activeSection === 'home' 
-                      ? 'text-[#1D6DD8]' 
-                      : 'text-[#222222] hover:text-[#1D6DD8] hover:bg-blue-50'
+                      ? 'text-[#173e7a]' 
+                      : 'text-[#222222] hover:text-[#173e7a] hover:bg-blue-50'
                   }`}
                   onClick={(e) => {
                     e.preventDefault();
@@ -139,8 +139,8 @@ const Landing: React.FC = () => {
                   href="#about" 
                   className={`text-sm sm:text-base font-medium transition-colors px-3 py-2 rounded-lg ${
                     activeSection === 'about' 
-                      ? 'text-[#1D6DD8]' 
-                      : 'text-[#222222] hover:text-[#1D6DD8] hover:bg-blue-50'
+                      ? 'text-[#173e7a]' 
+                      : 'text-[#222222] hover:text-[#173e7a] hover:bg-blue-50'
                   }`}
                   onClick={(e) => {
                     e.preventDefault();
@@ -153,8 +153,8 @@ const Landing: React.FC = () => {
                   href="#leadership" 
                   className={`text-sm sm:text-base font-medium transition-colors px-3 py-2 rounded-lg ${
                     activeSection === 'leadership' 
-                      ? 'text-[#1D6DD8]' 
-                      : 'text-[#222222] hover:text-[#1D6DD8] hover:bg-blue-50'
+                      ? 'text-[#173e7a]' 
+                      : 'text-[#222222] hover:text-[#173e7a] hover:bg-blue-50'
                   }`}
                   onClick={(e) => {
                     e.preventDefault();
@@ -167,8 +167,8 @@ const Landing: React.FC = () => {
                   href="#services" 
                   className={`text-sm sm:text-base font-medium transition-colors px-3 py-2 rounded-lg ${
                     activeSection === 'services' 
-                      ? 'text-[#1D6DD8]' 
-                      : 'text-[#222222] hover:text-[#1D6DD8] hover:bg-blue-50'
+                      ? 'text-[#173e7a]' 
+                      : 'text-[#222222] hover:text-[#173e7a] hover:bg-blue-50'
                   }`}
                   onClick={(e) => {
                     e.preventDefault();
@@ -181,8 +181,8 @@ const Landing: React.FC = () => {
                   href="#contact" 
                   className={`text-sm sm:text-base font-medium transition-colors px-3 py-2 rounded-lg ${
                     activeSection === 'contact' 
-                      ? 'text-[#1D6DD8]' 
-                      : 'text-[#222222] hover:text-[#1D6DD8] hover:bg-blue-50'
+                      ? 'text-[#173e7a]' 
+                      : 'text-[#222222] hover:text-[#173e7a] hover:bg-blue-50'
                   }`}
                   onClick={(e) => {
                     e.preventDefault();
@@ -198,8 +198,8 @@ const Landing: React.FC = () => {
                   href="#home" 
                   className={`text-sm sm:text-base font-medium transition-colors px-3 py-2 rounded-lg ${
                     activeSection === 'home' 
-                      ? 'text-[#1D6DD8]' 
-                      : 'text-[#222222] hover:text-[#1D6DD8] hover:bg-blue-50'
+                      ? 'text-[#173e7a]' 
+                      : 'text-[#222222] hover:text-[#173e7a] hover:bg-blue-50'
                   }`}
                   onClick={(e) => {
                     e.preventDefault();
@@ -212,8 +212,8 @@ const Landing: React.FC = () => {
                   href="#about" 
                   className={`text-sm sm:text-base font-medium transition-colors px-3 py-2 rounded-lg ${
                     activeSection === 'about' 
-                      ? 'text-[#1D6DD8]' 
-                      : 'text-[#222222] hover:text-[#1D6DD8] hover:bg-blue-50'
+                      ? 'text-[#173e7a]' 
+                      : 'text-[#222222] hover:text-[#173e7a] hover:bg-blue-50'
                   }`}
                   onClick={(e) => {
                     e.preventDefault();
@@ -226,8 +226,8 @@ const Landing: React.FC = () => {
                   href="#leadership" 
                   className={`text-sm sm:text-base font-medium transition-colors px-3 py-2 rounded-lg ${
                     activeSection === 'leadership' 
-                      ? 'text-[#1D6DD8]' 
-                      : 'text-[#222222] hover:text-[#1D6DD8] hover:bg-blue-50'
+                      ? 'text-[#173e7a]' 
+                      : 'text-[#222222] hover:text-[#173e7a] hover:bg-blue-50'
                   }`}
                   onClick={(e) => {
                     e.preventDefault();
@@ -240,8 +240,8 @@ const Landing: React.FC = () => {
                   href="#services" 
                   className={`text-sm sm:text-base font-medium transition-colors px-3 py-2 rounded-lg ${
                     activeSection === 'services' 
-                      ? 'text-[#1D6DD8]' 
-                      : 'text-[#222222] hover:text-[#1D6DD8] hover:bg-blue-50'
+                      ? 'text-[#173e7a]' 
+                      : 'text-[#222222] hover:text-[#173e7a] hover:bg-blue-50'
                   }`}
                   onClick={(e) => {
                     e.preventDefault();
@@ -254,8 +254,8 @@ const Landing: React.FC = () => {
                   href="#contact" 
                   className={`text-sm sm:text-base font-medium transition-colors px-3 py-2 rounded-lg ${
                     activeSection === 'contact' 
-                      ? 'text-[#1D6DD8]' 
-                      : 'text-[#222222] hover:text-[#1D6DD8] hover:bg-blue-50'
+                      ? 'text-[#173e7a]' 
+                      : 'text-[#222222] hover:text-[#173e7a] hover:bg-blue-50'
                   }`}
                   onClick={(e) => {
                     e.preventDefault();
@@ -345,8 +345,8 @@ const Landing: React.FC = () => {
               href="#home" 
               className={`block font-medium py-2 px-4 rounded-lg transition-colors ${
                 activeSection === 'home' 
-                  ? 'text-[#1D6DD8]' 
-                  : 'text-[#222222] hover:text-[#1D6DD8] hover:bg-blue-50'
+                  ? 'text-[#173e7a]' 
+                  : 'text-[#222222] hover:text-[#173e7a] hover:bg-blue-50'
               }`}
               onClick={(e) => {
                 e.preventDefault();
@@ -360,8 +360,8 @@ const Landing: React.FC = () => {
               href="#about" 
               className={`block font-medium py-2 px-4 rounded-lg transition-colors ${
                 activeSection === 'about' 
-                  ? 'text-[#1D6DD8]' 
-                  : 'text-[#222222] hover:text-[#1D6DD8] hover:bg-blue-50'
+                  ? 'text-[#173e7a]' 
+                  : 'text-[#222222] hover:text-[#173e7a] hover:bg-blue-50'
               }`}
               onClick={(e) => {
                 e.preventDefault();
@@ -375,8 +375,8 @@ const Landing: React.FC = () => {
               href="#leadership" 
               className={`block font-medium py-2 px-4 rounded-lg transition-colors ${
                 activeSection === 'leadership' 
-                  ? 'text-[#1D6DD8]' 
-                  : 'text-[#222222] hover:text-[#1D6DD8] hover:bg-blue-50'
+                  ? 'text-[#173e7a]' 
+                  : 'text-[#222222] hover:text-[#173e7a] hover:bg-blue-50'
               }`}
               onClick={(e) => {
                 e.preventDefault();
@@ -390,8 +390,8 @@ const Landing: React.FC = () => {
               href="#services" 
               className={`block font-medium py-2 px-4 rounded-lg transition-colors ${
                 activeSection === 'services' 
-                  ? 'text-[#1D6DD8]' 
-                  : 'text-[#222222] hover:text-[#1D6DD8] hover:bg-blue-50'
+                  ? 'text-[#173e7a]' 
+                  : 'text-[#222222] hover:text-[#173e7a] hover:bg-blue-50'
               }`}
               onClick={(e) => {
                 e.preventDefault();
@@ -405,8 +405,8 @@ const Landing: React.FC = () => {
               href="#contact" 
               className={`block font-medium py-2 px-4 rounded-lg transition-colors ${
                 activeSection === 'contact' 
-                  ? 'text-[#1D6DD8]' 
-                  : 'text-[#222222] hover:text-[#1D6DD8] hover:bg-blue-50'
+                  ? 'text-[#173e7a]' 
+                  : 'text-[#222222] hover:text-[#173e7a] hover:bg-blue-50'
               }`}
               onClick={(e) => {
                 e.preventDefault();
@@ -495,7 +495,7 @@ const Landing: React.FC = () => {
             <div className="flex flex-col sm:flex-row gap-4 sm:gap-4 justify-start sm:justify-start items-center">
               <Link
                 to="/register"
-                className="w-full sm:w-auto bg-[#1D6DD8] text-white px-6 sm:px-6 py-4 sm:py-3 rounded-lg font-medium hover:bg-opacity-90 transition-all duration-300 flex items-center justify-center gap-3 sm:gap-3 text-base sm:text-base shadow-lg sm:shadow-xl hover:shadow-xl sm:hover:shadow-2xl transform hover:-translate-y-1"              >
+                className="w-full sm:w-auto bg-[#173e7a] text-white px-6 sm:px-6 py-4 sm:py-3 rounded-lg font-medium hover:bg-opacity-90 transition-all duration-300 flex items-center justify-center gap-3 sm:gap-3 text-base sm:text-base shadow-lg sm:shadow-xl hover:shadow-xl sm:hover:shadow-2xl transform hover:-translate-y-1"              >
                 <span className="flex items-center gap-3">
                   Request a Demo
                   <ArrowRight className="w-5 h-5 sm:w-4 sm:h-4 flex-shrink-0" />
@@ -503,7 +503,7 @@ const Landing: React.FC = () => {
               </Link>
               <a
                 href="#contact"
-                className="w-full sm:w-auto bg-white text-[#1D6DD8] px-6 sm:px-6 py-4 sm:py-3 rounded-lg font-medium hover:bg-gray-50 transition-all duration-300 flex items-center justify-center gap-3 sm:gap-3 text-base sm:text-base shadow-lg sm:shadow-xl hover:shadow-xl sm:hover:shadow-2xl transform hover:-translate-y-1"                onClick={(e) => {
+                className="w-full sm:w-auto bg-white text-[#173e7a] px-6 sm:px-6 py-4 sm:py-3 rounded-lg font-medium hover:bg-gray-50 transition-all duration-300 flex items-center justify-center gap-3 sm:gap-3 text-base sm:text-base shadow-lg sm:shadow-xl hover:shadow-xl sm:hover:shadow-2xl transform hover:-translate-y-1"                onClick={(e) => {
                   e.preventDefault();
                   handleScrollToSection('contact');
                 }}

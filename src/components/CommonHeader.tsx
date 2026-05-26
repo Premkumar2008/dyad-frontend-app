@@ -50,8 +50,8 @@ const CommonHeader: React.FC<CommonHeaderProps> = ({
               <Link
                 key={item.name}
                 to={item.href}
-                className={`text-gray-700 hover:text-[#1D6DD8] px-3 py-2 text-sm font-medium transition-colors duration-200 ${
-                  location.pathname === item.href ? 'border-b-2 border-[#1D6DD8]' : ''
+                className={`text-gray-700 hover:text-[#173e7a] px-3 py-2 text-sm font-medium transition-colors duration-200 ${
+                  location.pathname === item.href ? 'border-b-2 border-[#173e7a]' : ''
                 }`}
               >
                 {item.name}
@@ -68,7 +68,7 @@ const CommonHeader: React.FC<CommonHeaderProps> = ({
                     <span className="user-name">{user.name}</span>
                     <button 
                       onClick={handleLogout}
-                      className="text-gray-700 hover:text-[#1D6DD8] px-3 py-2 text-sm font-medium transition-colors duration-200"
+                      className="text-gray-700 hover:text-[#173e7a] px-3 py-2 text-sm font-medium transition-colors duration-200"
                     >
                       <span>Logout</span>
                     </button>
@@ -78,13 +78,13 @@ const CommonHeader: React.FC<CommonHeaderProps> = ({
                 <>
                   <Link
                     to="/login"
-                    className="text-gray-700 hover:text-[#1D6DD8] px-3 py-2 text-sm font-medium transition-colors duration-200"
+                    className="text-gray-700 hover:text-[#173e7a] px-3 py-2 text-sm font-medium transition-colors duration-200"
                   >
                     <span>Login</span>
                   </Link>
                   <Link
                     to="/register"
-                    className="bg-[#1D6DD8] text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-opacity-90 transition-colors duration-200"
+                    className="bg-[#173e7a] text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-opacity-90 transition-colors duration-200"
                   >
                     <span>Register</span>
                   </Link>
@@ -95,7 +95,7 @@ const CommonHeader: React.FC<CommonHeaderProps> = ({
 
           {/* Mobile menu button - could be expanded later if needed */}
           <div className="md:hidden">
-            <button className="text-gray-700 hover:text-[#1D6DD8] p-2">
+            <button className="text-gray-700 hover:text-[#173e7a] p-2">
               <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               </svg>

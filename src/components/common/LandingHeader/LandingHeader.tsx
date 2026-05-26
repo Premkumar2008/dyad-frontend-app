@@ -124,7 +124,7 @@ const LandingHeader: React.FC<LandingHeaderProps> = ({ activePage = 'Home', hide
                       <div className="dropdown-container">
                         <a
                           style={{
-                            color: hoveredMenu === item.name ? '#1D6DD8' : '#374151',
+                            color: hoveredMenu === item.name ? '#173e7a' : '#374151',
                             cursor: 'pointer',
                             textDecoration: 'none',
                             fontWeight: 400,
@@ -192,7 +192,7 @@ const LandingHeader: React.FC<LandingHeaderProps> = ({ activePage = 'Home', hide
                         href={item.href}
                         onClick={(e) => { e.preventDefault(); handleNavClick(item); }}
                         style={{
-                          color: isActive ? '#1D6DD8' : '#374151',
+                          color: isActive ? '#173e7a' : '#374151',
                           cursor: 'pointer',
                           textDecoration: 'none',
                           fontWeight: 400,
@@ -252,7 +252,7 @@ const LandingHeader: React.FC<LandingHeaderProps> = ({ activePage = 'Home', hide
                         }}
                         className={`mobile-nav-link ${isActive ? 'active' : ''}`}
                         style={{
-                          color: isActive ? '#1D6DD8' : '#374151',
+                          color: isActive ? '#173e7a' : '#374151',
                           cursor: 'pointer',
                           display: 'flex',
                           alignItems: 'center',
@@ -325,7 +325,7 @@ const LandingHeader: React.FC<LandingHeaderProps> = ({ activePage = 'Home', hide
                     <a
                       onClick={(e) => { e.preventDefault(); handleNavClick(item); setIsMobileMenuOpen(false); }}
                       className={`mobile-nav-link ${isActive ? 'active' : ''}`}
-                      style={{ color: isActive ? '#1D6DD8' : '#374151', cursor: 'pointer' }}
+                      style={{ color: isActive ? '#173e7a' : '#374151', cursor: 'pointer' }}
                       href={item.href}
                     >
                       {item.name}

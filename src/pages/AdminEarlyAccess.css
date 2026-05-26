@@ -302,7 +302,7 @@
   border: 1px solid #173e7a;
 }
 
-.adm2-btn--primary:hover { background: #1d6dd8; border-color: #1d6dd8; }
+.adm2-btn--primary:hover { background: #173e7a; border-color: #173e7a; }
 
 .adm2-btn--ghost {
   background: #ffffff;

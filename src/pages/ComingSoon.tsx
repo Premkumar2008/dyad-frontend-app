@@ -37,7 +37,7 @@ const ComingSoon: React.FC = () => {
       />
 
       <h1 style={{
-        color: '#1D6DD8',
+        color: '#173e7a',
         fontSize: '3rem',
         marginBottom: '20px'
       }}>
@@ -55,7 +55,7 @@ const ComingSoon: React.FC = () => {
       <span
         onClick={handleBackToHome}
         style={{
-          color: '#1D6DD8',
+          color: '#173e7a',
           fontSize: '1.1rem',
           fontWeight: '500',
           cursor: 'pointer',

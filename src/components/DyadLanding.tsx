@@ -646,7 +646,7 @@ const DyadLanding: React.FC = () => {
                          <div className="aboutcard-subtitle">  <p className="about-card-subtitle">{item.subtitle}</p>
                          </div>  <div className="about-card-arrow">
                             <div className="arrow-circle">
-                              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="lucide lucide-chevron-right-circle w-6 h-6" style={{color: '#0066cc'}}><circle cx="12" cy="12" r="10"></circle><path d="m10 8 4 4-4 4"></path></svg>
+                              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="lucide lucide-chevron-right-circle w-6 h-6" style={{color: '#173e7a'}}><circle cx="12" cy="12" r="10"></circle><path d="m10 8 4 4-4 4"></path></svg>
                               </div>
                           </div>
                            </div>
@@ -680,7 +680,7 @@ const DyadLanding: React.FC = () => {
                         e.stopPropagation();
                         toggleMobileCard(card.id);
                       }}>
-                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="lucide lucide-chevron-right-circle w-6 h-6" style={{color: '#0066cc'}}><circle cx="12" cy="12" r="10"></circle><path d="m10 8 4 4-4 4"></path></svg>        </div>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="lucide lucide-chevron-right-circle w-6 h-6" style={{color: '#173e7a'}}><circle cx="12" cy="12" r="10"></circle><path d="m10 8 4 4-4 4"></path></svg>        </div>
                     </div>
                   </div>
                   <div className={`mobile-card-description ${expandedMobileCard === card.id ? 'expanded' : ''}`}>
@@ -757,7 +757,7 @@ const DyadLanding: React.FC = () => {
                       <div className="servicecard-subtitle"> <p className="service-card-subtitle">{service.subtitle}</p></div>
                     <div className="service-card-arrow">
                       <div className="arrow-circle">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="lucide lucide-chevron-right-circle w-6 h-6" style={{color: '#0066cc'}}><circle cx="12" cy="12" r="10"></circle><path d="m10 8 4 4-4 4"></path></svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="lucide lucide-chevron-right-circle w-6 h-6" style={{color: '#173e7a'}}><circle cx="12" cy="12" r="10"></circle><path d="m10 8 4 4-4 4"></path></svg>
                           </div>
                     </div>
                     </div>
@@ -772,7 +772,7 @@ const DyadLanding: React.FC = () => {
                           <li key={index} className={feature === 'ONC Integration FHIR' ? 'red-feature' : ''}>
                            <div> <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 622 622" width="17" height="17" aria-hidden="true" fill="none">
                               <g transform="translate(0,28)">
-                                <path d="M 430.134 68.771 A 260 260 0 1 0 521.365 183.135" stroke="#1D6DD8" stroke-width="52" stroke-linecap="butt"/>
+                                <path d="M 430.134 68.771 A 260 260 0 1 0 521.365 183.135" stroke="#173e7a" stroke-width="52" stroke-linecap="butt"/>
                                 <polyline points="196 265 288 382 552 40" stroke="#00A7D8" stroke-width="52" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
                               </g>
                             </svg></div>
@@ -805,7 +805,7 @@ const DyadLanding: React.FC = () => {
                         e.stopPropagation();
                         toggleMobileCardService(card.id);
                       }}>
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="lucide lucide-chevron-right-circle w-6 h-6" style={{color: '#0066cc'}}><circle cx="12" cy="12" r="10"></circle><path d="m10 8 4 4-4 4"></path></svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="lucide lucide-chevron-right-circle w-6 h-6" style={{color: '#173e7a'}}><circle cx="12" cy="12" r="10"></circle><path d="m10 8 4 4-4 4"></path></svg>
                        </div>
                     </div>
                   </div>
@@ -816,7 +816,7 @@ const DyadLanding: React.FC = () => {
                           <li key={index} className={feature === 'ONC Integration FHIR' ? 'red-feature' : ''}>
                            <div> <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 622 622" width="17" height="17" aria-hidden="true" fill="none">
                               <g transform="translate(0,28)">
-                                <path d="M 430.134 68.771 A 260 260 0 1 0 521.365 183.135" stroke="#1D6DD8" stroke-width="45" stroke-linecap="butt"/>
+                                <path d="M 430.134 68.771 A 260 260 0 1 0 521.365 183.135" stroke="#173e7a" stroke-width="45" stroke-linecap="butt"/>
                                 <polyline points="196 265 288 382 552 40" stroke="#00A7D8" stroke-width="45" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
                               </g>
                             </svg></div>
@@ -892,7 +892,7 @@ const DyadLanding: React.FC = () => {
                     <li key={index} className="feature-item">
                       <div> <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 622 622" width="17" height="17" aria-hidden="true" fill="none">
                         <g transform="translate(0,28)">
-                          <path d="M 430.134 68.771 A 260 260 0 1 0 521.365 183.135" stroke="#1D6DD8" stroke-width="45" stroke-linecap="butt"/>
+                          <path d="M 430.134 68.771 A 260 260 0 1 0 521.365 183.135" stroke="#173e7a" stroke-width="45" stroke-linecap="butt"/>
                           <polyline points="196 265 288 382 552 40" stroke="#00A7D8" stroke-width="45" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
                         </g>
                       </svg></div>

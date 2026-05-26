@@ -32,7 +32,7 @@ const ScheduleCall: React.FC = () => {
           Schedule Your Introduction Call
         </h1>
         <p style={{ margin: '0 auto', maxWidth: '520px', fontSize: '15px', color: '#6b7280', lineHeight: 1.6 }}>
-          30-minute video call &nbsp;&middot;&nbsp; Hosted by Sroothi Jaikumar &nbsp;&middot;&nbsp; Dyad Practice Solutions
+          30-minute video call &nbsp;&middot;&nbsp; Dyad Practice Solutions
         </p>
         {name && (
           <p style={{ margin: '10px 0 0', fontSize: '13px', color: '#9ca3af' }}>

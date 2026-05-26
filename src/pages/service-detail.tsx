@@ -221,7 +221,7 @@ const AboutUsDetail: React.FC = () => {
                         >
                           <a 
                             style={{ 
-                              color: hoveredMenu === item.name ? '#1D6DD8' : '#374151',
+                              color: hoveredMenu === item.name ? '#173e7a' : '#374151',
                               cursor: 'pointer',
                               textDecoration: 'none',
                               fontWeight: 400,
@@ -310,7 +310,7 @@ const AboutUsDetail: React.FC = () => {
                             handleNavClick(item);
                           }}
                           style={{ 
-                            color: isActive ? '#1D6DD8' : '#374151',
+                            color: isActive ? '#173e7a' : '#374151',
                             cursor: 'pointer',
                             textDecoration: 'none',
                             fontWeight: 500,
@@ -373,7 +373,7 @@ const AboutUsDetail: React.FC = () => {
                             }}
                             className={`mobile-nav-link ${isActive ? 'active' : ''}`}
                             style={{ 
-                              color: isActive ? '#1D6DD8' : '#374151',
+                              color: isActive ? '#173e7a' : '#374151',
                               cursor: 'pointer',
                               display: 'flex',
                               alignItems: 'center',
@@ -462,7 +462,7 @@ const AboutUsDetail: React.FC = () => {
                           }}
                           className={`mobile-nav-link ${isActive ? 'active' : ''}`}
                           style={{ 
-                            color: isActive ? '#1D6DD8' : '#374151',
+                            color: isActive ? '#173e7a' : '#374151',
                             cursor: 'pointer'
                           }}
                           href={item.href}
