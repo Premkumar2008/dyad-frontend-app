@@ -24,6 +24,7 @@ import SecurityMonitor from './utils/securityMonitor';
 import AboutUsDetail from './pages/about-us-detail';
 import ServiceDetail from './pages/service-detail';
 import ComingSoon from './pages/ComingSoon';
+import DyadOnboarding from './pages/DyadOnboarding';
 
 // Initialize security measures on app startup
 initializeSecurity();
@@ -54,6 +55,8 @@ function App() {
             <Route path="/admin-login" element={<AdminLogin />} />
             <Route path="/admin-early-access" element={<AdminEarlyAccess />} />
             <Route path="/schedule-call" element={<ScheduleCall />} />
+            <Route path="/dyad-onboarding-access" element={<DyadOnboarding />} />
+            <Route path="/client-onboarding-process" element={<DyadOnboarding />} />
             <Route
               path="/admin" 
               element={
