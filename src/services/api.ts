@@ -261,16 +261,10 @@ export const handleApiError = (error: any): string => {
         return data.message || `Request failed with status ${status}. Please try again.`;
     }
   } else if (error.request) {
-    // Network error
     if (error.code === 'ECONNABORTED') {
       return 'Request was cancelled. Please try again.';
-    } else if (error.code === 'ETIMEDOUT') {
-      return 'Connection timeout. Please check your internet connection and try again.';
-    } else if (error.code === 'ENOTFOUND') {
-      return 'Server not found. Please check the URL and try again.';
-    } else {
-      return 'Network error. Please check your internet connection and try again.';
     }
+    return 'Something went wrong. Please try again later.';
   } else {
     // Other error
     return error.message || 'An unexpected error occurred. Please try again.';

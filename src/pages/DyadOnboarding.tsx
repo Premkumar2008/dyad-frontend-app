@@ -17,6 +17,14 @@ import {
   buildScheduleCalendarMonths,
   SCHEDULE_DAYS_AHEAD,
 } from '../services/onboardingCalendarService';
+import {
+  type NpiApiData,
+  buildPrefillFromNpiData,
+  clearNpiDerivedFields,
+  formatNpiLookupError,
+  lookupNpiRegistry,
+  resetAllowedTaxonomiesCache,
+} from '../services/npiRegistryService';
 import { formatDateForDisplay, formatTimeForDisplay } from '../utils/dateTimeUtils';
 import './DyadOnboarding.css';
 
@@ -24,6 +32,10 @@ import './DyadOnboarding.css';
 
 interface OnboardingData {
   // Step 1
+  npi: string;
+  npiConfirmed: boolean;
+  npiEnumerationType: string;
+  npiApiData: NpiApiData | null;
   practiceType: string;
   confirmedPracticeType: string;
   sectionAContinued: boolean;
@@ -57,7 +69,6 @@ interface OnboardingData {
   baaAgreed: boolean;
   baaSignature: string;
   // Step 4
-  npi: string;
   groupLegalName: string;
   taxId: string;
   providerCount: string;
@@ -81,6 +92,10 @@ interface OnboardingData {
 }
 
 const INITIAL_DATA: OnboardingData = {
+  npi: '',
+  npiConfirmed: false,
+  npiEnumerationType: '',
+  npiApiData: null,
   practiceType: '',
   confirmedPracticeType: '',
   sectionAContinued: false,
@@ -111,7 +126,6 @@ const INITIAL_DATA: OnboardingData = {
   confidentialityAgreed: false,
   baaAgreed: false,
   baaSignature: '',
-  npi: '',
   groupLegalName: '',
   taxId: '',
   providerCount: '',
@@ -173,7 +187,14 @@ const SIDEBAR_STEPS = [
   { id: 6, label: 'Bank & Payment Setup' },
 ];
 
-const PHASES = ['Getting Started', 'Discovery', 'Proposal', 'Execution', 'Go Live'];
+const PHASES = [
+  'Welcome',
+  'Intro Call',
+  'Privacy Setup',
+  'Discovery',
+  'Align on Terms',
+  'Enrollment Complete',
+];
 
 const PATHWAY_STEPS = [
   {
@@ -298,19 +319,29 @@ const STEP2_PREP_ITEMS = [
   'Any relevant contracts or agreements that may be in transition (billing vendors, payer contracts, etc.)',
 ];
 
-const getPhaseFromStep = (step: number) => {
-  if (step === 1) return 0;
-  if (step === 2) return 1;
-  if (step <= 4) return 2;
-  if (step === 5) return 3;
-  return 4;
+const getPhaseFromStep = (
+  step: number,
+  sectionAComplete = false,
+  sectionBComplete = false,
+) => {
+  if (step === 1) {
+    if (sectionAComplete && sectionBComplete) return 1;
+    return 0;
+  }
+  return Math.min(step - 1, PHASES.length - 1);
 };
 
 const getProgressPct = (step: number, sectionAComplete: boolean, sectionBComplete: boolean) => {
   if (step === 1) {
-    return getOverviewSectionsComplete(sectionAComplete, sectionBComplete) * 50;
+    if (sectionAComplete && sectionBComplete) {
+      return Math.round((1 / PHASES.length) * 100);
+    }
+    if (sectionAComplete) {
+      return Math.round((0.5 / PHASES.length) * 100);
+    }
+    return 0;
   }
-  return Math.round((getPhaseFromStep(step) / PHASES.length) * 100);
+  return Math.round(((step - 1) / (PHASES.length - 1)) * 100);
 };
 
 const getStep2SectionsComplete = (data: OnboardingData) =>
@@ -328,21 +359,55 @@ const getOverviewSectionsComplete = (sectionAComplete: boolean, sectionBComplete
 
 // ─── Progress Card ───────────────────────────────────────────────────────────
 
+interface EnrollmentSectionsBarRowProps {
+  progressPct: number;
+  sectionsComplete: number;
+  totalSections: number;
+}
+
+const EnrollmentSectionsBarRow: React.FC<EnrollmentSectionsBarRowProps> = ({
+  progressPct, sectionsComplete, totalSections,
+}) => (
+  <div className="ob-ph-bar-row">
+    <span className="ob-ph-bar-text">{sectionsComplete} of {totalSections} sections complete</span>
+    <div className="ob-ph-track">
+      <div className="ob-ph-fill" style={{ width: `${progressPct}%` }} />
+    </div>
+    <span className="ob-ph-bar-pct">{progressPct}%</span>
+  </div>
+);
+
+const getEnrollmentPhasesComplete = (
+  step: number,
+  sectionAComplete: boolean,
+  sectionBComplete: boolean,
+) => {
+  if (step > 1) return step - 1;
+  if (sectionAComplete && sectionBComplete) return 1;
+  return 0;
+};
+
+const getPhaseConnectorFillPct = (completedPhases: number, totalPhases: number) =>
+  totalPhases > 1 ? (completedPhases / (totalPhases - 1)) * 100 : 0;
+
 interface EnrollmentProgressCardProps {
   progressPct: number;
   phaseIdx: number;
   sectionsComplete: number;
   totalSections: number;
   className?: string;
+  showBarRow?: boolean;
 }
 
 const EnrollmentProgressCard: React.FC<EnrollmentProgressCardProps> = ({
-  progressPct, phaseIdx, sectionsComplete, totalSections, className = '',
-}) => (
+  progressPct, phaseIdx, sectionsComplete, totalSections, className = '', showBarRow = true,
+}) => {
+  const connectorFillPct = getPhaseConnectorFillPct(sectionsComplete, totalSections);
+
+  return (
   <div className={`ob-progress-card${className ? ` ${className}` : ''}`}>
     <div className="ob-ph-top">
       <span className="ob-ph-label">ENROLLMENT PROGRESS</span>
-
     </div>
 
     <div className="ob-phases">
@@ -350,16 +415,16 @@ const EnrollmentProgressCard: React.FC<EnrollmentProgressCardProps> = ({
         <div className="ob-phases-connector-bg" />
         <div
           className="ob-phases-connector-fill"
-          style={{ width: `${(phaseIdx / (PHASES.length - 1)) * 100}%` }}
+          style={{ width: `${connectorFillPct}%` }}
         />
       </div>
       {PHASES.map((ph, i) => (
         <div
           key={ph}
-          className={`ob-phase-step${i <= phaseIdx ? ' ob-phase-active' : ''}${i < phaseIdx ? ' ob-phase-done' : ''}`}
+          className={`ob-phase-step${i < sectionsComplete ? ' ob-phase-done' : ''}${i === phaseIdx ? ' ob-phase-active' : ''}`}
         >
           <div className="ob-phase-dot">
-            {i < phaseIdx
+            {i < sectionsComplete
               ? <Check size={10} strokeWidth={3} />
               : <span className="ob-phase-dot-inner" />}
           </div>
@@ -368,15 +433,16 @@ const EnrollmentProgressCard: React.FC<EnrollmentProgressCardProps> = ({
       ))}
     </div>
 
-    <div className="ob-ph-bar-row">
-      <span className="ob-ph-bar-text">{sectionsComplete} of {totalSections} sections complete</span>
-      <div className="ob-ph-track">
-        <div className="ob-ph-fill" style={{ width: `${progressPct}%` }} />
-      </div>
-      <span className="ob-ph-bar-pct">{progressPct}%</span>
-    </div>
+    {showBarRow && (
+      <EnrollmentSectionsBarRow
+        progressPct={progressPct}
+        sectionsComplete={sectionsComplete}
+        totalSections={totalSections}
+      />
+    )}
   </div>
-);
+  );
+};
 
 // ─── Main Component ──────────────────────────────────────────────────────────
 
@@ -398,6 +464,12 @@ const DyadOnboarding: React.FC = () => {
       if (!Array.isArray(parsed.selectedStates)) {
         parsed.selectedStates = [];
       }
+      if (typeof parsed.npiConfirmed !== 'boolean') {
+        parsed.npiConfirmed = false;
+      }
+      if (!parsed.npiApiData) {
+        parsed.npiApiData = null;
+      }
       if (parsed.sectionAContinued && parsed.practiceType && !parsed.confirmedPracticeType) {
         parsed.confirmedPracticeType = parsed.practiceType;
       }
@@ -415,7 +487,7 @@ const DyadOnboarding: React.FC = () => {
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isInitialSave = useRef(true);
 
-  const sectionAUnlocked = !!formData.practiceType;
+  const sectionAUnlocked = formData.npiConfirmed && !!formData.practiceType;
   const sectionAComplete = formData.sectionAContinued;
   const sectionBComplete = formData.enrollmentPathwayViewed;
   const canBeginEnrollment = sectionAComplete && sectionBComplete;
@@ -465,7 +537,11 @@ const DyadOnboarding: React.FC = () => {
       return;
     }
     setIsSubmitting(true);
-    await submitStep(1, { practiceType: formData.practiceType });
+    await submitStep(1, {
+      practiceType: formData.practiceType,
+      npi: formData.npi,
+      npiApiData: formData.npiApiData,
+    });
     setIsSubmitting(false);
     goToStep(2);
   };
@@ -510,7 +586,10 @@ const DyadOnboarding: React.FC = () => {
     }
   };
 
-  const phaseIdx = getPhaseFromStep(currentStep);
+  const phaseIdx = getPhaseFromStep(currentStep, sectionAComplete, sectionBComplete);
+  const enrollmentPhasesComplete = getEnrollmentPhasesComplete(
+    currentStep, sectionAComplete, sectionBComplete,
+  );
   const stepLabel = SIDEBAR_STEPS.find(s => s.id === currentStep)?.label.toUpperCase() ?? 'OVERVIEW';
   const mobileStepDisplay = currentStep - 1;
 
@@ -591,17 +670,14 @@ const DyadOnboarding: React.FC = () => {
 
       {/* ── Main ── */}
       <main className="ob-main">
-        {/* Sticky progress bar for steps 3–6 (steps 1–2 use in-content progress card) */}
-        {currentStep !== 1 && currentStep !== 2 && (
-          <div className="ob-progress-header">
-            <EnrollmentProgressCard
-              progressPct={progressPct}
-              phaseIdx={phaseIdx}
-              sectionsComplete={currentStep - 1}
-              totalSections={SIDEBAR_STEPS.length}
-            />
-          </div>
-        )}
+        <div className="ob-progress-header">
+          <EnrollmentProgressCard
+            progressPct={progressPct}
+            phaseIdx={phaseIdx}
+            sectionsComplete={enrollmentPhasesComplete}
+            totalSections={PHASES.length}
+          />
+        </div>
 
         {/* Step Content */}
         <div className="ob-content">
@@ -619,8 +695,6 @@ const DyadOnboarding: React.FC = () => {
               setSectionBOpen={setSectionBOpen}
               onBeginEnrollment={handleBeginEnrollment}
               isSubmitting={isSubmitting}
-              progressPct={progressPct}
-              phaseIdx={phaseIdx}
               overviewSectionsComplete={overviewSectionsComplete}
             />
           )}
@@ -632,8 +706,6 @@ const DyadOnboarding: React.FC = () => {
               onNext={handleNextFromStep}
               onBack={() => goToStep(1)}
               isSubmitting={isSubmitting}
-              progressPct={progressPct}
-              phaseIdx={phaseIdx}
             />
           )}
           {currentStep === 3 && (
@@ -726,8 +798,6 @@ interface StepOverviewProps {
   setSectionBOpen: (v: boolean) => void;
   onBeginEnrollment: () => void;
   isSubmitting: boolean;
-  progressPct: number;
-  phaseIdx: number;
   overviewSectionsComplete: number;
 }
 
@@ -735,30 +805,85 @@ const StepOverview: React.FC<StepOverviewProps> = ({
   formData, set, setFormData, sectionAUnlocked, sectionAComplete, sectionBComplete,
   sectionAOpen, setSectionAOpen, sectionBOpen, setSectionBOpen,
   onBeginEnrollment, isSubmitting,
-  progressPct, phaseIdx, overviewSectionsComplete,
+  overviewSectionsComplete,
 }) => {
+  const [isNpiValidating, setIsNpiValidating] = useState(false);
+  const [npiApiError, setNpiApiError] = useState('');
+  const [previewNpiData, setPreviewNpiData] = useState<NpiApiData | null>(null);
+  const [showNpiPanel, setShowNpiPanel] = useState(false);
+
   const showSectionAContinue = sectionAOpen && !formData.sectionAContinued;
   const showSectionBReview = formData.sectionAContinued && !sectionBComplete;
+  const npiPanelData = previewNpiData;
+  const verifiedNpiData = formData.npiApiData;
 
-  const handlePracticeTypeSelect = (id: string) => {
-    if (formData.sectionAContinued && id !== formData.confirmedPracticeType) {
-      setFormData(prev => ({
-        ...prev,
-        practiceType: id,
-        sectionAContinued: false,
-        confirmedPracticeType: '',
-        enrollmentPathwayViewed: false,
-      }));
-      setSectionAOpen(true);
-      setSectionBOpen(false);
+  const handleNpiInputChange = (value: string) => {
+    const digits = value.replace(/\D/g, '').slice(0, 10);
+    set('npi', digits);
+    if (digits.length < 10) {
+      setNpiApiError('');
+      setShowNpiPanel(false);
+      setPreviewNpiData(null);
+    }
+  };
+
+  const handleResetNpi = () => {
+    setFormData(prev => ({ ...prev, ...clearNpiDerivedFields() }));
+    setNpiApiError('');
+    setShowNpiPanel(false);
+    setPreviewNpiData(null);
+    setSectionAOpen(true);
+    setSectionBOpen(false);
+  };
+
+  const handleNpiVerify = async () => {
+    if (formData.npi.length !== 10) {
+      toast.error('Please enter a valid 10-digit NPI number');
       return;
     }
-    set('practiceType', id);
+    setIsNpiValidating(true);
+    setNpiApiError('');
+    setShowNpiPanel(false);
+    setPreviewNpiData(null);
+    try {
+      const result = await lookupNpiRegistry(formData.npi);
+      setPreviewNpiData(result);
+      setShowNpiPanel(true);
+    } catch (err: unknown) {
+      resetAllowedTaxonomiesCache();
+      setNpiApiError(formatNpiLookupError(err));
+    } finally {
+      setIsNpiValidating(false);
+    }
+  };
+
+  const handleNpiConfirm = () => {
+    if (!npiPanelData) return;
+    const prefill = buildPrefillFromNpiData(npiPanelData);
+    setFormData(prev => ({
+      ...prev,
+      ...prefill,
+      confirmedPracticeType: '',
+      sectionAContinued: false,
+      enrollmentPathwayViewed: false,
+    }));
+    setShowNpiPanel(false);
+    setPreviewNpiData(null);
+    setNpiApiError('');
+    if (prefill.practiceType) {
+      toast.success('Practice type assigned from your NPI taxonomy');
+    } else {
+      toast.error('We could not determine a practice type from this NPI. Please try a different NPI.');
+    }
   };
 
   const handleContinueToPathway = () => {
+    if (!formData.npiConfirmed) {
+      toast.error('Please verify and confirm your NPI before continuing');
+      return;
+    }
     if (!formData.practiceType) {
-      toast.error('Please select a practice type to continue');
+      toast.error('Practice type could not be determined from your NPI. Please try a different NPI.');
       return;
     }
     set('confirmedPracticeType', formData.practiceType);
@@ -786,15 +911,6 @@ const StepOverview: React.FC<StepOverviewProps> = ({
 
   return (
     <div className="ob-step-content ob-step1-layout">
-      <div className="ob-step1-progress">
-        <EnrollmentProgressCard
-          progressPct={progressPct}
-          phaseIdx={phaseIdx}
-          sectionsComplete={overviewSectionsComplete}
-          totalSections={2}
-        />
-      </div>
-
       <div className="ob-step1-welcome">
         <h1 className="ob-welcome-title">Welcome to Dyad Practice Solutions</h1>
         <p className="ob-welcome-body">
@@ -811,8 +927,16 @@ const StepOverview: React.FC<StepOverviewProps> = ({
         </div>
       </div>
 
+      <div className="ob-step1-sections-bar">
+        <EnrollmentSectionsBarRow
+          progressPct={overviewSectionsComplete * 50}
+          sectionsComplete={overviewSectionsComplete}
+          totalSections={2}
+        />
+      </div>
+
       <div className="ob-step1-sections">
-      {/* Section A */}
+      {/* Section 1 */}
       <div className={`ob-section-card${sectionAOpen ? ' ob-section-expanded' : ''}${sectionAComplete ? ' ob-section-complete' : ''}`}>
         <button
           className="ob-section-header ob-section-header-btn"
@@ -820,13 +944,15 @@ const StepOverview: React.FC<StepOverviewProps> = ({
           disabled={!formData.sectionAContinued}
           type="button"
         >
-          <div className={`ob-section-badge${sectionAComplete ? ' ob-badge-done' : ' ob-badge-inprogress'}`}>A</div>
+          <div className={`ob-section-badge${sectionAComplete ? ' ob-badge-done' : ' ob-badge-inprogress'}`}>1</div>
           <div className="ob-section-meta">
             <span className="ob-section-title">Select Practice Type</span>
             <span className={`ob-section-status${sectionAComplete ? ' ob-status-done' : ' ob-status-inprogress'}`}>
               {sectionAComplete
-                ? 'Complete — practice type selected'
-                : 'In progress — choose your specialty to continue'}
+                ? 'Completed'
+                : formData.npiConfirmed
+                ? 'In progress'
+                : 'In progress'}
             </span>
           </div>
           <div className="ob-section-chevron">
@@ -840,19 +966,149 @@ const StepOverview: React.FC<StepOverviewProps> = ({
 
         <SectionCollapse open={sectionAOpen}>
           <div className="ob-section-body">
-            <p className="ob-section-desc">
+          <p className="ob-section-desc">
               This helps us tailor the enrollment process and document requirements to your specific specialty.
-              Your selection determines the credentialing pathway, fee schedule, and operational workflows
-              applied to your practice.
+              Your practice type is assigned automatically from your NPI taxonomy and determines the credentialing
+              pathway, fee schedule, and operational workflows applied to your practice.
             </p>
 
-            <div className="ob-practice-grid">
-              {PRACTICE_TYPES.map(({ id, Icon, title, desc }) => (
+            <div className="ob-npi-field">
+              <label className="ob-label" htmlFor="ob-npi-input">
+                Practice or Provider NPI <span className="ob-req">*</span>
+              </label>
+              <p className="ob-field-hint">
+                10-digit National Provider Identifier — Type 1 (individual) or Type 2 (organization). Verified live against the CMS NPPES registry.
+              </p>
+              <div className="ob-npi-row">
+                <input
+                  id="ob-npi-input"
+                  type="text"
+                  inputMode="numeric"
+                  className={`ob-input${formData.npiConfirmed ? ' ob-npi-success' : ''}`}
+                  placeholder="Enter 10-digit NPI number"
+                  maxLength={10}
+                  value={formData.npi}
+                  onChange={e => handleNpiInputChange(e.target.value)}
+                  disabled={isNpiValidating || formData.npiConfirmed}
+                />
                 <button
-                  key={id}
-                  className={`ob-practice-card${formData.practiceType === id ? ' ob-practice-selected' : ''}`}
-                  onClick={() => handlePracticeTypeSelect(id)}
                   type="button"
+                  className="ob-npi-verify-btn"
+                  onClick={handleNpiVerify}
+                  disabled={isNpiValidating || formData.npiConfirmed || formData.npi.length !== 10}
+                >
+                  {isNpiValidating ? 'Verifying…' : 'Verify NPI'}
+                </button>
+              </div>
+              {npiApiError && <span className="ob-field-error">{npiApiError}</span>}
+
+              {formData.npiConfirmed && verifiedNpiData && (
+                <div className="ob-npi-verified-panel">
+                  <div className="ob-npi-verified-left">
+                    <div className="ob-npi-verified-icon">
+                      <CheckCircle2 size={18} className="ob-check-green" />
+                    </div>
+                    <div className="ob-npi-verified-info">
+                      <div className="ob-npi-verified-title">Verified via NPPES</div>
+                      <div className="ob-npi-verified-sub">
+                        {verifiedNpiData.displayName}&nbsp;·&nbsp;NPI {verifiedNpiData.npi}
+                        <button type="button" className="ob-npi-change-btn" onClick={handleResetNpi}>
+                          Change
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {showNpiPanel && npiPanelData && (
+                <div className="ob-npi-panel">
+                  <div className="ob-npi-panel-header">
+                    <div className="ob-npi-cms-badge">CMS</div>
+                    <div className="ob-npi-panel-title-area">
+                      <div className="ob-npi-panel-title">NPPES Registry Lookup</div>
+                      <div className="ob-npi-panel-subtitle">National Plan &amp; Provider Enumeration System</div>
+                    </div>
+                    <div className="ob-npi-match-badge">✓ Match Found</div>
+                  </div>
+
+                  <div className="ob-npi-panel-body">
+                    <h3 className="ob-npi-provider-name">{npiPanelData.displayName}</h3>
+                    <div className="ob-npi-type-row">
+                      <span className="ob-npi-type-badge">
+                        TYPE {npiPanelData.enumType === 'NPI-1' ? '1' : '2'} · {npiPanelData.enumType === 'NPI-1' ? 'INDIVIDUAL' : 'ORGANIZATION'}
+                      </span>
+                      <span className="ob-npi-status-text">
+                        {npiPanelData.status}{npiPanelData.lastUpdated ? ` · Last updated ${npiPanelData.lastUpdated}` : ''}
+                      </span>
+                    </div>
+
+                    <div className="ob-npi-detail-grid">
+                      <div className="ob-npi-detail-cell">
+                        <div className="ob-npi-detail-label">PRIMARY TAXONOMY</div>
+                        <div className="ob-npi-detail-value">{npiPanelData.taxonomyDesc || '—'}</div>
+                      </div>
+                      <div className="ob-npi-detail-cell">
+                        <div className="ob-npi-detail-label">ENUMERATION DATE</div>
+                        <div className="ob-npi-detail-value ob-npi-detail-value--bold">{npiPanelData.enumerationDate || '—'}</div>
+                      </div>
+                      {npiPanelData.addr && (
+                        <div className="ob-npi-detail-cell ob-npi-detail-cell--full">
+                          <div className="ob-npi-detail-label">PRACTICE LOCATION</div>
+                          <div className="ob-npi-detail-value ob-npi-detail-value--bold">{npiPanelData.addr}</div>
+                        </div>
+                      )}
+                      <div className="ob-npi-detail-cell">
+                        <div className="ob-npi-detail-label">AUTHORIZED OFFICIAL</div>
+                        <div className="ob-npi-detail-value">{npiPanelData.authorizedOfficial}</div>
+                      </div>
+                      <div className="ob-npi-detail-cell">
+                        <div className="ob-npi-detail-label">NPI</div>
+                        <div className="ob-npi-detail-value ob-npi-detail-value--bold">{npiPanelData.npi}</div>
+                      </div>
+                    </div>
+
+                    {npiPanelData.suggestedPracticeType && (
+                      <p className="ob-npi-suggest-note">
+                        Practice Type:{' '}
+                        <strong>{PRACTICE_TYPES.find(p => p.id === npiPanelData.suggestedPracticeType)?.title}</strong>
+                      </p>
+                    )}
+
+                    <div className="ob-npi-panel-actions">
+                      <button type="button" className="ob-npi-confirm-btn" onClick={handleNpiConfirm}>
+                        ✓ Confirm — this is my practice
+                      </button>
+                      <button
+                        type="button"
+                        className="ob-npi-wrong-btn"
+                        onClick={() => { setShowNpiPanel(false); setPreviewNpiData(null); }}
+                      >
+                        Not the right entity?
+                      </button>
+                    </div>
+
+                    <div className="ob-npi-panel-footer">
+                      <ShieldCheck size={14} />
+                      <span>
+                        Sourced from the public NPPES API maintained by the Centers for Medicare &amp; Medicaid Services. No PHI is retrieved or stored.
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <p className="ob-practice-auto-label">
+              {formData.npiConfirmed && formData.practiceType
+                ? 'Your practice type (assigned from NPI)'
+                : 'Practice type (assigned automatically after NPI verification)'}
+            </p>
+            <div className={`ob-practice-grid ob-practice-grid-readonly${formData.practiceType ? ' ob-practice-grid-has-selection' : ''}`}>
+              {PRACTICE_TYPES.map(({ id, Icon, title, desc }) => (
+                <div
+                  key={id}
+                  className={`ob-practice-card${formData.practiceType === id ? ' ob-practice-selected' : ' ob-practice-unselected'}`}
                 >
                   <Icon size={32} strokeWidth={1.5} className="ob-practice-icon" />
                   <span className="ob-practice-title">{title}</span>
@@ -860,15 +1116,18 @@ const StepOverview: React.FC<StepOverviewProps> = ({
                   {formData.practiceType === id && (
                     <span className="ob-practice-check"><Check size={14} strokeWidth={3} /></span>
                   )}
-                </button>
+                </div>
               ))}
             </div>
           </div>
 
           {showSectionAContinue && (
             <div className="ob-section-footer ob-section-footer-fixed">
-              {!sectionAUnlocked && (
-                <span className="ob-footer-hint">Select a practice type to continue</span>
+              {!formData.npiConfirmed && (
+                <span className="ob-footer-hint">Verify and confirm your NPI to continue</span>
+              )}
+              {formData.npiConfirmed && !formData.practiceType && (
+                <span className="ob-footer-hint">Practice type could not be determined — try a different NPI</span>
               )}
               <button
                 className={`ob-btn-primary${!sectionAUnlocked ? ' ob-btn-disabled' : ''}`}
@@ -883,7 +1142,7 @@ const StepOverview: React.FC<StepOverviewProps> = ({
         </SectionCollapse>
       </div>
 
-      {/* Section B */}
+      {/* Section 2 */}
       <div
         id="section-b"
         className={`ob-section-card${sectionBOpen ? ' ob-section-expanded' : ''}${!formData.sectionAContinued ? ' ob-section-locked' : ''}${sectionBComplete ? ' ob-section-complete' : ''}`}
@@ -894,13 +1153,13 @@ const StepOverview: React.FC<StepOverviewProps> = ({
           disabled={!formData.sectionAContinued}
           type="button"
         >
-          <div className={`ob-section-badge${!formData.sectionAContinued ? ' ob-badge-locked' : sectionBComplete ? ' ob-badge-done' : ' ob-badge-pending'}`}>B</div>
+          <div className={`ob-section-badge${!formData.sectionAContinued ? ' ob-badge-locked' : sectionBComplete ? ' ob-badge-done' : ' ob-badge-pending'}`}>2</div>
           <div className="ob-section-meta">
             <span className="ob-section-title">YOUR ENROLLMENT PATHWAY</span>
             {!formData.sectionAContinued
-              ? <span className="ob-section-status ob-status-locked">COMPLETE SECTION A TO UNLOCK</span>
+              ? <span className="ob-section-status ob-status-locked">COMPLETE SECTION 1 TO UNLOCK</span>
               : sectionBComplete
-              ? <span className="ob-section-status ob-status-done">Reviewed — ready to begin enrollment</span>
+              ? <span className="ob-section-status ob-status-done">Reviewed</span>
               : <span className="ob-section-status ob-status-pending">Review your pathway to continue</span>
             }
           </div>
@@ -990,8 +1249,6 @@ interface StepScheduleCallProps {
   onNext: () => void;
   onBack: () => void;
   isSubmitting: boolean;
-  progressPct: number;
-  phaseIdx: number;
 }
 
 const isContactSectionValid = (d: OnboardingData) =>
@@ -1106,7 +1363,7 @@ const ScheduleCalendarView: React.FC<ScheduleCalendarViewProps> = ({
 };
 
 const StepScheduleCall: React.FC<StepScheduleCallProps> = ({
-  formData, set, setFormData, onNext, onBack, isSubmitting, progressPct, phaseIdx,
+  formData, set, setFormData, onNext, onBack, isSubmitting,
 }) => {
   const [sectionAOpen, setSectionAOpen] = useState(() => !formData.step2ContactContinued);
   const [sectionBOpen, setSectionBOpen] = useState(
@@ -1421,25 +1678,24 @@ const StepScheduleCall: React.FC<StepScheduleCallProps> = ({
 
   return (
     <div className="ob-step-content ob-step2-layout">
-      <div className="ob-step2-progress">
-        <EnrollmentProgressCard
-          progressPct={step2ProgressPct}
-          phaseIdx={phaseIdx}
-          sectionsComplete={step2DisplayComplete}
-          totalSections={5}
-        />
-      </div>
-
       <div className="ob-step-header">
         <h2 className="ob-step-title">Schedule Introduction Call</h2>
         <p className="ob-step-subtitle">Book a 30-minute introduction call</p>
       </div>
 
+      <div className="ob-step2-bar">
+        <EnrollmentSectionsBarRow
+          progressPct={step2ProgressPct}
+          sectionsComplete={step2DisplayComplete}
+          totalSections={5}
+        />
+      </div>
+
       <div className="ob-step2-sections">
-        {/* Section A — Contact Information */}
+        {/* Section 1 — Contact Information */}
         <div className={`ob-section-card${sectionAOpen ? ' ob-section-expanded' : ''}${statesOpen ? ' ob-states-panel-open' : ''}${formData.step2ContactContinued ? ' ob-section-complete' : ''}`}>
           {renderSectionHeader(
-            'A', 'Contact Information', true, formData.step2ContactContinued, sectionAOpen,
+            '1', 'Contact Information', true, formData.step2ContactContinued, sectionAOpen,
             '', () => formData.step2ContactContinued && setSectionAOpen(!sectionAOpen),
           )}
           <SectionCollapse open={sectionAOpen}>
@@ -1578,11 +1834,11 @@ const StepScheduleCall: React.FC<StepScheduleCallProps> = ({
           </SectionCollapse>
         </div>
 
-        {/* Section B — Organization Profile */}
+        {/* Section 2 — Organization Profile */}
         <div className={`ob-section-card${sectionBOpen ? ' ob-section-expanded' : ''}${!formData.step2ContactContinued ? ' ob-section-locked' : ''}${formData.step2OrgContinued ? ' ob-section-complete' : ''}`}>
           {renderSectionHeader(
-            'B', 'Organization Profile', formData.step2ContactContinued, formData.step2OrgContinued, sectionBOpen,
-            'Complete Section A to unlock',
+            '2', 'Organization Profile', formData.step2ContactContinued, formData.step2OrgContinued, sectionBOpen,
+            'Complete Section 1 to unlock',
             () => formData.step2OrgContinued && setSectionBOpen(!sectionBOpen),
           )}
           <SectionCollapse open={sectionBOpen}>
@@ -1622,11 +1878,11 @@ const StepScheduleCall: React.FC<StepScheduleCallProps> = ({
           </SectionCollapse>
         </div>
 
-        {/* Section C — Organization Footprint */}
+        {/* Section 3 — Organization Footprint */}
         <div className={`ob-section-card${sectionCOpen ? ' ob-section-expanded' : ''}${!formData.step2OrgContinued ? ' ob-section-locked' : ''}${formData.step2FootprintContinued ? ' ob-section-complete' : ''}`}>
           {renderSectionHeader(
-            'C', 'Organization Footprint', formData.step2OrgContinued, formData.step2FootprintContinued, sectionCOpen,
-            'Complete Section B to unlock',
+            '3', 'Organization Footprint', formData.step2OrgContinued, formData.step2FootprintContinued, sectionCOpen,
+            'Complete Section 2 to unlock',
             () => formData.step2FootprintContinued && setSectionCOpen(!sectionCOpen),
           )}
           <SectionCollapse open={sectionCOpen}>
@@ -1676,11 +1932,11 @@ const StepScheduleCall: React.FC<StepScheduleCallProps> = ({
           </SectionCollapse>
         </div>
 
-        {/* Section D — Schedule Your Call */}
+        {/* Section 4 — Schedule Your Call */}
         <div className={`ob-section-card${sectionDOpen ? ' ob-section-expanded' : ''}${!formData.step2FootprintContinued ? ' ob-section-locked' : ''}${formData.step2ScheduleContinued ? ' ob-section-complete' : ''}`}>
           {renderSectionHeader(
-            'D', 'Schedule Your Call', formData.step2FootprintContinued, formData.step2ScheduleContinued, sectionDOpen,
-            'Complete Section C to unlock',
+            '4', 'Schedule Your Call', formData.step2FootprintContinued, formData.step2ScheduleContinued, sectionDOpen,
+            'Complete Section 3 to unlock',
             () => formData.step2ScheduleContinued && setSectionDOpen(!sectionDOpen),
           )}
           <SectionCollapse open={sectionDOpen}>
@@ -1780,11 +2036,11 @@ const StepScheduleCall: React.FC<StepScheduleCallProps> = ({
           </SectionCollapse>
         </div>
 
-        {/* Section E — Prepare for Your Call */}
+        {/* Section 5 — Prepare for Your Call */}
         <div className={`ob-section-card${sectionEOpen ? ' ob-section-expanded' : ''}${!formData.step2ScheduleContinued ? ' ob-section-locked' : ''}${formData.step2PrepareComplete ? ' ob-section-complete' : ''}`}>
           {renderSectionHeader(
-            'E', 'Prepare for Your Call', formData.step2ScheduleContinued, formData.step2PrepareComplete, sectionEOpen,
-            'Complete Section D to unlock',
+            '5', 'Prepare for Your Call', formData.step2ScheduleContinued, formData.step2PrepareComplete, sectionEOpen,
+            'Complete Section 4 to unlock',
             () => formData.step2PrepareComplete && setSectionEOpen(!sectionEOpen),
           )}
           <SectionCollapse open={sectionEOpen}>

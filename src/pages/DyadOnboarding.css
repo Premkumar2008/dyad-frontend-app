@@ -171,10 +171,11 @@
 }
 
 .ob-step-item {
+  border-left: 4px solid transparent;
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 11px 24px;
+  padding: 12px 20px;
   cursor: pointer;
   transition: background 0.15s;
   user-select: none;
@@ -220,12 +221,13 @@
 }
 
 .ob-step-done .ob-step-num {
-  background: #0a2d6e;
+  background: #2E7D32;
   color: #ffffff;
 }
 
 .ob-step-lbl {
-  padding-top:2px;
+  font-weight: 500;
+  padding-top:1px;
   font-size: 0.88rem;
   color: #1A1A1A;
   line-height: 1.35;
@@ -296,12 +298,9 @@
 }
 
 .ob-progress-header {
-  background: #ffffff;
-  border-bottom: 1px solid #e5e8ef;
-  padding: 18px var(--ob-content-px) 16px;
-  position: sticky;
-  top: 0;
-  z-index: 50;
+ 
+  padding-top: 18px;
+  padding-bottom: 16px;
 }
 
 .ob-ph-top {
@@ -413,10 +412,13 @@
 }
 
 .ob-phase-name {
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   color: #9aa5bc;
   white-space: nowrap;
   font-weight: 500;
+  text-align: center;
+  max-width: 88px;
+  line-height: 1.25;
 }
 
 .ob-phase-active .ob-phase-name {
@@ -431,6 +433,20 @@
   border-top: 1px solid #e2e6ef;
   padding-top: 23px;
   margin-top: 0;
+}
+
+.ob-step1-bar .ob-ph-bar-row,
+.ob-step1-sections-bar .ob-ph-bar-row,
+.ob-step2-bar .ob-ph-bar-row {
+  border-top: none;
+  padding-top: 0;
+}
+
+.ob-step1-sections-bar {
+  padding: 14px 18px;
+  background: #f8fafc;
+  border: 1px solid #e2e6ef;
+  border-radius: 10px;
 }
 
 .ob-ph-bar-text {
@@ -464,12 +480,18 @@
 
 /* ─── Content Area ───────────────────────────────────────────────────────── */
 
+.ob-progress-header,
 .ob-content {
-  flex: 1;
   width: 100%;
   max-width: var(--ob-content-max);
-  padding: var(--ob-content-py) var(--ob-content-px);
+  margin-inline: auto;
+  padding-inline: var(--ob-content-px);
   box-sizing: border-box;
+}
+
+.ob-content {
+  flex: 1;
+  padding-block: var(--ob-content-py);
 }
 
 .ob-step-content {
@@ -485,9 +507,9 @@
   gap: 30px;
 }
 
-.ob-step1-welcome { order: 2; }
-.ob-step1-progress { order: 1; }
-.ob-step1-info { order: 3; }
+.ob-step1-welcome { order: 1; }
+.ob-step1-info { order: 2; }
+.ob-step1-sections-bar { order: 3; }
 .ob-step1-sections { order: 4; display: flex; flex-direction: column; gap: 20px; }
 .ob-step1-time { order: 5; }
 .ob-step1-footer {
@@ -550,7 +572,7 @@
 
 .ob-section-card {
   background: #ffffff;
-  border: 2px solid #e0e7f0;
+  border: 1px solid #e0e7f0;
   border-radius: 10px;
   overflow: hidden;
   transition: border-color 0.35s ease, box-shadow 0.35s ease;
@@ -627,7 +649,7 @@
 }
 
 .ob-section-card.ob-section-complete:not(.ob-section-expanded) {
-  border-color: #002855;
+  border-color: #2E7D32;
 }
 
 .ob-section-card.ob-section-locked {
@@ -679,7 +701,7 @@
 }
 
 .ob-badge-done {
-  background: #0a2d6e;
+  background: #2E7D32;
   color: white;
 }
 
@@ -704,10 +726,10 @@
 .ob-status-inprogress { color: #002855; }
 .ob-status-locked     { color: #9aa5bc; font-weight: 600; letter-spacing: 0.5px; font-size: 0.65rem; text-transform: uppercase; }
 .ob-status-pending    { color: #002855; }
-.ob-status-done       { color: #0a2d6e; }
+.ob-status-done       { color: #2E7D32; font-weight: 500; }
 
 .ob-check-green {
-  color: #0a2d6e;
+  color: #2E7D32;
 }
 
 .ob-section-collapse-open .ob-section-collapse-inner {
@@ -854,6 +876,143 @@
   color: #5a6a85;
   line-height: 1.65;
   margin: 20px 0 20px;
+}
+
+/* ─── Enrollment Process (Section 2) ─────────────────────────────────────── */
+
+.ob-enroll-process-card {
+  padding-bottom: 18px;
+}
+
+.ob-enroll-process-card .ob-enroll-process {
+  gap: 16px;
+}
+
+.ob-enroll-process-card .ob-enroll-process-progress {
+  background: transparent;
+  border: none;
+  padding: 0 0 4px;
+  grid-template-columns: 1fr auto;
+}
+
+.ob-enroll-process-card .ob-enroll-process-list {
+  border-radius: 10px;
+}
+
+.ob-enroll-process-progress {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto auto;
+  gap: 8px 12px;
+  align-items: center;
+  padding: 16px 18px;
+  background: #f8fafc;
+  border: 1px solid #e2e6ef;
+  border-radius: 10px;
+}
+
+.ob-enroll-process-progress-top {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.ob-enroll-process-progress-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #78909C;
+}
+
+.ob-enroll-process-progress-count {
+  font-size: 0.72rem;
+  color: #1A1A1A;
+  white-space: nowrap;
+}
+
+.ob-enroll-process-track {
+  grid-column: 1;
+  height: 6px;
+  background: #e8ecf2;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.ob-enroll-process-fill {
+  height: 100%;
+  background: #0a2d6e;
+  border-radius: 3px;
+  transition: width 0.4s ease;
+}
+
+.ob-enroll-process-pct {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #0a2d6e;
+  white-space: nowrap;
+}
+
+.ob-enroll-process-list {
+  margin-top: 0;
+}
+
+.ob-process-row-current {
+  background: #EEF6FB;
+}
+
+.ob-process-row-complete {
+  background: #fafdfb;
+}
+
+.ob-process-num-current {
+  background: #0a2d6e;
+  color: #ffffff;
+}
+
+.ob-process-num-complete {
+  background: #2E7D32;
+  color: #ffffff;
+}
+
+.ob-process-num-pending {
+  background: #f0f4f8;
+  color: #9aa5bc;
+}
+
+.ob-process-status {
+  flex-shrink: 0;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.ob-process-status-complete {
+  background: #e8f5e9;
+  color: #2E7D32;
+  border: 1px solid #c8e6c9;
+}
+
+.ob-process-status-current {
+  background: #eef2f8;
+  color: #0a2d6e;
+  border: 1px solid #c5d4ea;
+}
+
+.ob-process-status-pending {
+  background: #f4f6f8;
+  color: #9aa5bc;
+  border: 1px solid #e2e6ef;
+}
+
+.ob-process-row-current .ob-pathway-title {
+  color: #0a2d6e;
 }
 
 /* ─── Enrollment Pathway (Section B) ─────────────────────────────────────── */
@@ -1096,7 +1255,7 @@
 }
 
 .ob-label {
-  font-size: 0.78rem;
+  font-size: 0.88rem;
   font-weight: 600;
   color: #2d3a52;
 }
@@ -1107,9 +1266,9 @@
 }
 
 .ob-field-hint {
-  font-size: 0.72rem;
+  font-size: 0.82rem;
   color: #8b99b5;
-  margin: -2px 0 0;
+  margin: 2px 0 0;
 }
 
 .ob-field-error {
@@ -1393,11 +1552,8 @@
 }
 
 .ob-step-nav-footer {
-  position: sticky;
-  bottom: 0;
-  z-index: 40;
-  background: #ffffff;
-  padding-bottom: 4px;
+  background: #f8f9fa;
+  padding-bottom: 12px;
 }
 
 .ob-step2-layout .ob-step2-nav-footer {
@@ -1462,7 +1618,6 @@
     --ob-content-px: 24px;
     --ob-content-py: 32px;
     flex-direction: column;
-    padding-bottom: 100px;
   }
 
   .ob-sidebar {
@@ -1540,7 +1695,8 @@
   }
 
   .ob-progress-header {
-    padding: 14px var(--ob-content-px) 12px;
+    padding-top: 14px;
+    padding-bottom: 12px;
   }
 
   .ob-form-row,
@@ -1549,10 +1705,11 @@
     grid-template-columns: 1fr;
   }
 
-  /* Mobile step 1 order: welcome → progress → info */
+  /* Mobile step 1 order: welcome → info → sections bar → sections */
   .ob-step1-welcome { order: 1; }
-  .ob-step1-progress { order: 2; }
-  .ob-step1-info { order: 3; }
+  .ob-step1-info { order: 2; }
+  .ob-step1-sections-bar { order: 3; }
+  .ob-step1-sections { order: 4; }
 
   .ob-welcome-title {
     font-size: 1.35rem;
@@ -1615,8 +1772,15 @@
     min-width: 160px;
   }
 
+  .ob-process-status,
   .ob-pathway-time {
     margin-left: auto;
+  }
+
+  .ob-enroll-process-progress-top {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
   }
 
   .ob-pathway-footer {
@@ -1638,15 +1802,7 @@
     display: none;
   }
 
-  .ob-step-content {
-    padding-bottom: 100px;
-  }
-
   .ob-step-nav-footer {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
@@ -1654,8 +1810,6 @@
     margin-top: 0;
     padding: 12px 16px calc(16px + env(safe-area-inset-bottom, 0px));
     border-top: 1px solid #e8ecf2;
-    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.06);
-    z-index: 200;
   }
 
   .ob-step-nav-footer .ob-btn-ghost {
@@ -1760,14 +1914,14 @@
   }
 
   .ob-phase-step {
-    flex: 1 0 72px;
-    min-width: 72px;
+    flex: 1 0 68px;
+    min-width: 68px;
   }
 
   .ob-phases-connector {
     left: 11px;
     right: 11px;
-    min-width: calc(72px * 5 - 22px);
+    min-width: calc(68px * 6 - 22px);
   }
 
   .ob-mobile-subheader {
@@ -1785,11 +1939,11 @@
   gap: 30px;
 }
 
-.ob-step2-progress {
+.ob-step2-layout .ob-step-header {
   order: 1;
 }
 
-.ob-step2-layout .ob-step-header {
+.ob-step2-bar {
   order: 2;
 }
 
@@ -2224,5 +2378,394 @@
     display: block;
     margin-left: 0;
     margin-top: 2px;
+  }
+}
+
+/* ─── NPI Lookup (Overview Step 1) ─────────────────────────────────────────── */
+
+.ob-npi-field {
+  margin-bottom: 0;
+}
+
+.ob-npi-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.ob-npi-row .ob-input {
+  flex: 1;
+  margin: 0;
+}
+
+.ob-input.ob-npi-success {
+  background: #f0fdf4;
+ 
+}
+
+.ob-npi-verify-btn {
+  padding: 11px 20px;
+  background: #0a2d6e;
+  color: #ffffff;
+  border: 1px solid #0a2d6e;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  font-family: inherit;
+  transition: background 0.2s ease;
+}
+
+.ob-npi-verify-btn:disabled {
+  background: #c5cdd8;
+  border-color: #c5cdd8;
+  color: #ffffff;
+  cursor: not-allowed;
+  opacity: 0.85;
+}
+
+.ob-npi-row .ob-input:disabled {
+  background: #f8f9fa;
+  color: #6b7280;
+  cursor: not-allowed;
+}
+
+.ob-npi-panel {
+  margin-top: 16px;
+  border: 1px solid #e2e6ef;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #ffffff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+
+.ob-npi-panel-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  border-bottom: 1px solid #f0f3f8;
+  background: #fafbfc;
+}
+
+.ob-npi-cms-badge {
+  width: 34px;
+  height: 34px;
+  background: #0a2d6e;
+  color: #ffffff;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
+}
+
+.ob-npi-panel-title-area {
+  flex: 1;
+  min-width: 0;
+}
+
+.ob-npi-panel-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  line-height: 1.2;
+}
+
+.ob-npi-panel-subtitle {
+  font-size: 0.75rem;
+  color: #9aa5bc;
+  margin-top: 2px;
+}
+
+.ob-npi-match-badge {
+  background: #f0fdf4;
+  color: #2E7D32;
+  border: 1px solid #bbf7d0;
+  border-radius: 20px;
+  padding: 5px 12px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.ob-npi-panel-body {
+  padding: 18px;
+}
+
+.ob-npi-provider-name {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0 0 10px;
+}
+
+.ob-npi-type-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.ob-npi-type-badge {
+  background: #eef2f8;
+  color: #0a2d6e;
+  border: 1px solid #c5d4ea;
+  border-radius: 4px;
+  padding: 3px 10px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.ob-npi-status-text {
+  font-size: 0.8rem;
+  color: #78909C;
+}
+
+.ob-npi-detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  border: 1px solid #e2e6ef;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.ob-npi-detail-cell {
+  padding: 12px 16px;
+  background: #ffffff;
+  border-right: 1px solid #e2e6ef;
+  border-bottom: 1px solid #e2e6ef;
+}
+
+.ob-npi-detail-cell:nth-child(2n) {
+  border-right: none;
+}
+
+.ob-npi-detail-cell--full {
+  grid-column: 1 / -1;
+  border-right: none;
+}
+
+.ob-npi-detail-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #0a2d6e;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.ob-npi-detail-value {
+  font-size: 0.88rem;
+  color: #374151;
+}
+
+.ob-npi-detail-value--bold {
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.ob-npi-suggest-note {
+  font-size: 0.82rem;
+  color: #002855;
+  background: #eef6fb;
+  border: 1px solid #c5d4ea;
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin: 0 0 16px;
+}
+
+.ob-npi-panel-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.ob-npi-confirm-btn {
+  padding: 12px 18px;
+  background: #0a2d6e;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.ob-npi-wrong-btn {
+  background: none;
+  border: none;
+  color: #78909C;
+  font-size: 0.82rem;
+  cursor: pointer;
+  text-decoration: underline;
+  font-family: inherit;
+  padding: 0;
+}
+
+.ob-npi-panel-footer {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 0.72rem;
+  color: #9aa5bc;
+  line-height: 1.45;
+}
+
+.ob-npi-panel-footer svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+  opacity: 0.6;
+}
+
+.ob-npi-verified-panel {
+  margin-top: 12px;
+  padding: 12px 14px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+}
+
+.ob-npi-verified-left {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.ob-npi-verified-icon {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.ob-npi-verified-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #2E7D32;
+}
+
+.ob-npi-verified-sub {
+  font-size: 0.78rem;
+  color: #374151;
+  margin-top: 2px;
+  line-height: 1.4;
+}
+
+.ob-npi-change-btn {
+  background: none;
+  border: none;
+  color: #0a2d6e;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  margin-left: 8px;
+  font-family: inherit;
+  padding: 0;
+}
+
+.ob-practice-grid-readonly .ob-practice-card {
+  cursor: default;
+  pointer-events: none;
+}
+
+.ob-practice-grid-readonly .ob-practice-card:hover {
+  border-color: #E0E0E0;
+  background: #ffffff;
+  transform: none;
+  box-shadow: none;
+}
+
+.ob-practice-grid-readonly .ob-practice-card.ob-practice-selected:hover {
+  border-color: #0a2d6e;
+  background: #EEF6FB;
+  box-shadow: 0 0 0 3px rgba(10, 45, 110, 0.1);
+}
+
+.ob-practice-grid-readonly:not(.ob-practice-grid-has-selection) .ob-practice-card {
+  opacity: 0.55;
+  background: #f8f9fa;
+  border-color: #e8ecf2;
+  border-style: dashed;
+}
+
+.ob-practice-grid-readonly:not(.ob-practice-grid-has-selection) .ob-practice-card .ob-practice-icon,
+.ob-practice-grid-readonly:not(.ob-practice-grid-has-selection) .ob-practice-card .ob-practice-title,
+.ob-practice-grid-readonly:not(.ob-practice-grid-has-selection) .ob-practice-card .ob-practice-desc {
+  color: #9aa5bc;
+}
+
+.ob-practice-grid-readonly .ob-practice-card.ob-practice-unselected {
+  opacity: 0.85;
+  background: #f8f9fa;
+  border-color: #e8ecf2;
+  border-style: dashed;
+}
+
+.ob-practice-grid-readonly .ob-practice-card.ob-practice-unselected .ob-practice-icon {
+  color: #9aa5bc;
+}
+
+.ob-practice-grid-readonly .ob-practice-card.ob-practice-unselected .ob-practice-title,
+.ob-practice-grid-readonly .ob-practice-card.ob-practice-unselected .ob-practice-desc {
+  color: #9aa5bc;
+}
+
+.ob-practice-auto-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #002855;
+  margin: 24px 0 12px;
+  letter-spacing: 0.02em;
+}
+
+@media (max-width: 768px) {
+  .ob-npi-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .ob-npi-verify-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .ob-npi-panel-header {
+    flex-wrap: wrap;
+  }
+
+  .ob-npi-match-badge {
+    width: 100%;
+    text-align: center;
+  }
+
+  .ob-npi-detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .ob-npi-detail-cell:nth-child(2n) {
+    border-right: none;
+  }
+
+  .ob-npi-panel-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .ob-npi-confirm-btn {
+    width: 100%;
   }
 }
