@@ -58,12 +58,24 @@ export interface CalendarEventData {
   name: string;
   date: string;
   time: string;
+  contactName?: string;
+  email?: string;
+  phone?: string;
+  organization?: string;
+  summary?: string;
+  title?: string;
+  description?: string;
+  addGoogleMeet?: boolean;
+  isOnboarding?: boolean;
+  attendees?: Array<{ email: string; displayName?: string }>;
+  guestEmail?: string;
 }
 
 export interface CalendarEventResponse {
   success: boolean;
   message: string;
   eventId?: string;
+  meetingLink?: string;
 }
 
 export interface FooterColumn {

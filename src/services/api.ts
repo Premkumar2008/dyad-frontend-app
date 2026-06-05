@@ -230,6 +230,20 @@ export const sendEarlyAccessConfirmation = async (
   return api.post('/send-early-access-confirmation', data);
 };
 
+export interface SendOnboardingScheduleConfirmationRequest {
+  to: string;
+  contactName: string;
+  subject: string;
+  html: string;
+  text: string;
+}
+
+export const sendOnboardingScheduleConfirmation = async (
+  data: SendOnboardingScheduleConfirmationRequest,
+): Promise<AxiosResponse<{ success: boolean }>> => {
+  return api.post('/send-onboarding-schedule-confirmation', data);
+};
+
 // Error handling utility
 export const handleApiError = (error: any): string => {
   if (error.response) {

@@ -12,19 +12,145 @@
  *   - GOOGLE_CALENDAR_ID env var (your Gmail address or calendar ID)
  */
 
-import api, { handleApiError } from './api';
+import api from './api';
 import { CalendarService } from './calendarService';
 import { formatDateTimeForAPI } from '../utils/dateTimeUtils';
+import { extractMeetingLinkFromResponse } from '../utils/calendarMeetLink';
 
 export interface ScheduleBookingPayload {
   name: string;
+  firstName?: string;
+  lastName?: string;
   email: string;
   phone: string;
   organization: string;
+  titleRole?: string;
+  primarySpecialty?: string;
+  selectedStates?: string[];
+  organizationType?: string;
+  billableProviders?: string;
+  locationsFacilities?: string;
+  engagementTimeline?: string;
+  engagementTimelineLabel?: string;
+  npi?: string;
+  practiceType?: string;
   date: string;
   time: string;
-  engagementTimeline?: string;
 }
+
+const DEFAULT_MEET_LINK = (import.meta.env.VITE_ONBOARDING_MEET_LINK as string | undefined)?.trim() || '';
+
+export type ScheduleBookingResult = {
+  success: boolean;
+  message: string;
+  eventId?: string;
+  meetingLink?: string;
+};
+
+/** Calendar event title for client onboarding intro calls */
+export const buildOnboardingEventTitle = (name: string): string => {
+  const displayName = name.trim() || 'Client';
+  return `Onboarding Request from ${displayName}`;
+};
+
+export const resolveScheduleContactName = (payload: ScheduleBookingPayload): string => {
+  const fromParts = [payload.firstName, payload.lastName].filter(Boolean).join(' ').trim();
+  return payload.name.trim() || fromParts || 'Client';
+};
+
+export const buildOnboardingEventDescription = (
+  payload: ScheduleBookingPayload,
+  meetingLink?: string,
+): string => {
+  const contactName = resolveScheduleContactName(payload);
+  const link = (meetingLink || DEFAULT_MEET_LINK).trim();
+  const lines = [
+    'Dyad Client Onboarding — Introduction Call',
+    '',
+    `Name: ${contactName}`,
+    payload.titleRole ? `Title / Role: ${payload.titleRole}` : '',
+    `Email: ${payload.email}`,
+    `Phone: ${payload.phone}`,
+    `Organization: ${payload.organization}`,
+    payload.primarySpecialty ? `Primary Specialty: ${payload.primarySpecialty}` : '',
+    payload.npi ? `NPI: ${payload.npi}` : '',
+    payload.practiceType ? `Practice Type: ${payload.practiceType}` : '',
+    payload.organizationType ? `Organization Type: ${payload.organizationType}` : '',
+    payload.billableProviders ? `Billable Providers: ${payload.billableProviders}` : '',
+    payload.locationsFacilities ? `Locations / Facilities: ${payload.locationsFacilities}` : '',
+    payload.selectedStates?.length
+      ? `States of Operation: ${payload.selectedStates.join(', ')}`
+      : '',
+    payload.engagementTimelineLabel || payload.engagementTimeline
+      ? `Engagement Timeline: ${payload.engagementTimelineLabel || payload.engagementTimeline}`
+      : '',
+    '',
+    `Scheduled: ${payload.date} at ${payload.time} PT`,
+    '',
+    link
+      ? `Meeting link: ${link}`
+      : 'A Google Meet link will be included in your calendar invite.',
+  ];
+  return lines.filter(line => line !== '').join('\n');
+};
+
+export const buildOnboardingCreateEventBody = (
+  payload: ScheduleBookingPayload,
+  meetingLink?: string,
+) => {
+  const contactName = resolveScheduleContactName(payload);
+  const title = buildOnboardingEventTitle(contactName);
+  const linkForDescription = meetingLink || DEFAULT_MEET_LINK;
+  const description = buildOnboardingEventDescription(
+    { ...payload, name: contactName },
+    linkForDescription,
+  );
+  const attendeeEmail = payload.email.trim();
+
+  return {
+    name: contactName,
+    firstName: payload.firstName?.trim() ?? '',
+    lastName: payload.lastName?.trim() ?? '',
+    email: attendeeEmail,
+    phone: payload.phone.trim(),
+    phoneNumber: payload.phone.trim(),
+    organization: payload.organization.trim(),
+    titleRole: payload.titleRole?.trim() ?? '',
+    primarySpecialty: payload.primarySpecialty?.trim() ?? '',
+    selectedStates: payload.selectedStates ?? [],
+    organizationType: payload.organizationType?.trim() ?? '',
+    billableProviders: payload.billableProviders?.trim() ?? '',
+    locationsFacilities: payload.locationsFacilities?.trim() ?? '',
+    engagementTimeline: payload.engagementTimeline?.trim() ?? '',
+    engagementTimelineLabel: payload.engagementTimelineLabel?.trim() ?? '',
+    npi: payload.npi?.trim() ?? '',
+    practiceType: payload.practiceType?.trim() ?? '',
+    date: payload.date,
+    time: payload.time,
+    dateTime: formatDateTimeForAPI(payload.date, payload.time),
+    summary: title,
+    title,
+    eventTitle: title,
+    calendarSummary: title,
+    subject: title,
+    useCustomTitle: true,
+    useSummaryAsTitle: true,
+    description,
+    durationMinutes: 30,
+    timezone: 'America/Los_Angeles',
+    source: 'client-onboarding',
+    eventType: 'onboarding',
+    addGoogleMeet: true,
+    createGoogleMeet: true,
+    createConference: true,
+    conferenceType: 'hangoutsMeet',
+    sendUpdates: 'all',
+    inviteAttendee: true,
+    guestEmail: attendeeEmail,
+    attendees: [{ email: attendeeEmail, displayName: contactName }],
+    ...(linkForDescription ? { meetingLink: linkForDescription } : {}),
+  };
+};
 
 const PT_SLOT_START_HOUR = 9;
 const PT_SLOT_END_HOUR = 16;
@@ -180,49 +306,49 @@ export const fetchAvailableTimeSlots = async (date: string): Promise<string[]> =
 
 export const bookIntroductionCall = async (
   payload: ScheduleBookingPayload,
-): Promise<{ success: boolean; message: string; eventId?: string }> => {
+): Promise<ScheduleBookingResult> => {
+  const contactName = resolveScheduleContactName(payload);
+  const eventBody = buildOnboardingCreateEventBody({ ...payload, name: contactName });
+
   try {
-    const dateTime = formatDateTimeForAPI(payload.date, payload.time);
-    const response = await api.post<{ success: boolean; message: string; eventId?: string }>(
-      '/create-event',
-      {
-        name: payload.name.trim(),
-        email: payload.email.trim(),
-        phone: payload.phone.trim(),
-        organization: payload.organization.trim(),
-        date: payload.date,
-        time: payload.time,
-        dateTime,
-        summary: 'Dyad Introduction Call — Enrollment',
-        description: [
-          `Contact: ${payload.name}`,
-          `Email: ${payload.email}`,
-          `Phone: ${payload.phone}`,
-          `Organization: ${payload.organization}`,
-          payload.engagementTimeline ? `Engagement timeline: ${payload.engagementTimeline}` : '',
-        ].filter(Boolean).join('\n'),
-        durationMinutes: 30,
-        timezone: 'America/Los_Angeles',
-      },
-    );
+    const response = await api.post<Record<string, unknown>>('/create-event', eventBody);
+    const data = response.data ?? {};
+    const meetingLink =
+      extractMeetingLinkFromResponse(data) || DEFAULT_MEET_LINK || undefined;
+
     return {
-      success: response.data.success ?? true,
-      message: response.data.message || 'Introduction call scheduled',
-      eventId: response.data.eventId,
+      success: (data.success as boolean | undefined) ?? true,
+      message: (data.message as string) || 'Introduction call scheduled',
+      eventId: data.eventId as string | undefined,
+      meetingLink,
     };
   } catch (error) {
     const validation = CalendarService.validateData({
-      name: payload.name,
+      name: contactName,
       date: payload.date,
       time: payload.time,
     });
     if (!validation.isValid) {
       return { success: false, message: (Object.values(validation.errors) as string[])[0] || 'Invalid schedule' };
     }
-    return CalendarService.createEvent({
-      name: payload.name,
+    const fallback = await CalendarService.createEvent({
+      name: contactName,
       date: payload.date,
       time: payload.time,
+      email: payload.email,
+      phone: payload.phone,
+      organization: payload.organization,
+      summary: eventBody.summary as string,
+      title: eventBody.title as string,
+      description: eventBody.description as string,
+      addGoogleMeet: true,
+      isOnboarding: true,
+      attendees: eventBody.attendees as Array<{ email: string; displayName?: string }>,
+      guestEmail: eventBody.guestEmail as string,
     });
+    return {
+      ...fallback,
+      meetingLink: fallback.meetingLink || DEFAULT_MEET_LINK || undefined,
+    };
   }
 };

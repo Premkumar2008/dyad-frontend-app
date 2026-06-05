@@ -59,6 +59,7 @@ export interface NpiApiData {
   status: string;
   authorizedOfficial: string;
   suggestedPracticeType: OnboardingPracticeTypeId;
+  suggestedPracticeTypes: OnboardingPracticeTypeId[];
   suggestedPrimarySpecialty: string;
 }
 
@@ -98,6 +99,57 @@ export const mapTaxonomyToPracticeType = (
   if (enumType === 'NPI-2' && /clinic|center|facility|hospital/.test(descBlob)) return 'asc';
 
   return '';
+};
+
+const mapDescSegmentToPracticeType = (segment: string): OnboardingPracticeTypeId => {
+  const d = segment.toLowerCase().trim();
+  if (!d) return '';
+  if (/ambulatory surgical|surgery center|surgical center/.test(d)) return 'asc';
+  if (/anesthesi|nurse anesthetist|crna/.test(d)) return 'anesthesiology';
+  if (/pain medicine|interventional pain|pain management|pain clinic|\bpain\b/.test(d)) return 'pain';
+  if (/surgeon|surgery|surgical|ophthalmol|otolaryngol|urolog|orthop|gastroenterol|cardiol|podiatr|plastic surgery|vascular/.test(d)) {
+    return 'surgical';
+  }
+  return '';
+};
+
+/** Maps one taxonomy — splits comma-separated descriptions (e.g. "Anesthesiology, Pain Medicine"). */
+export const mapSingleTaxonomyToPracticeTypes = (
+  taxonomy: NpiTaxonomy,
+  enumType = '',
+): OnboardingPracticeTypeId[] => {
+  const desc = taxonomy.desc || '';
+  const segments = desc.split(',').map(s => s.trim()).filter(Boolean);
+
+  if (segments.length >= 2) {
+    const segmentTypes = segments
+      .map(seg => mapDescSegmentToPracticeType(seg))
+      .filter((t): t is OnboardingPracticeTypeId => t !== '');
+    if (segmentTypes.length > 0) {
+      return [...new Set(segmentTypes)];
+    }
+  }
+
+  const single = mapTaxonomyToPracticeType([taxonomy], enumType);
+  return single ? [single] : [];
+};
+
+export const mapTaxonomiesToPracticeTypes = (
+  taxonomies: NpiTaxonomy[],
+  enumType = '',
+): OnboardingPracticeTypeId[] => {
+  const types = taxonomies.flatMap(t => mapSingleTaxonomyToPracticeTypes(t, enumType));
+  return [...new Set(types)];
+};
+
+export const getSuggestedPracticeTypes = (
+  taxonomies: NpiTaxonomy[],
+  enumType = '',
+): OnboardingPracticeTypeId[] => {
+  const fromEach = mapTaxonomiesToPracticeTypes(taxonomies, enumType);
+  if (fromEach.length > 0) return fromEach;
+  const combined = mapTaxonomyToPracticeType(taxonomies, enumType);
+  return combined ? [combined] : [];
 };
 
 export const mapTaxonomyToPrimarySpecialty = (taxonomyDesc: string): string => {
@@ -181,7 +233,8 @@ const parseRegistryResponse = (npi: string, data: Record<string, unknown>): NpiA
     title = credential;
   }
 
-  const suggestedPracticeType = mapTaxonomyToPracticeType(taxonomies, enumType);
+  const suggestedPracticeTypes = getSuggestedPracticeTypes(taxonomies, enumType);
+  const suggestedPracticeType = suggestedPracticeTypes[0] || '';
   const suggestedPrimarySpecialty = mapTaxonomyToPrimarySpecialty(taxonomyDesc);
 
   return {
@@ -211,6 +264,7 @@ const parseRegistryResponse = (npi: string, data: Record<string, unknown>): NpiA
     status: basic.status || 'Active',
     authorizedOfficial: enumType === 'NPI-2' ? (contactName || '—') : '— (Type 1 NPI)',
     suggestedPracticeType,
+    suggestedPracticeTypes,
     suggestedPrimarySpecialty,
   };
 };
@@ -232,7 +286,12 @@ export const buildPrefillFromNpiData = (npiData: NpiApiData) => {
     npiEnumerationType: npiData.enumType,
     npiConfirmed: true,
     npiApiData: npiData,
-    practiceType: npiData.suggestedPracticeType || '',
+    practiceType: npiData.suggestedPracticeTypes[0] || npiData.suggestedPracticeType || '',
+    selectedPracticeTypes: npiData.suggestedPracticeTypes.length > 0
+      ? npiData.suggestedPracticeTypes
+      : npiData.suggestedPracticeType
+        ? [npiData.suggestedPracticeType]
+        : [],
     firstName: npiData.firstName,
     lastName: npiData.lastName,
     titleRole: npiData.title,
@@ -254,6 +313,7 @@ export const clearNpiDerivedFields = () => ({
   npiEnumerationType: '',
   npiApiData: null as NpiApiData | null,
   practiceType: '',
+  selectedPracticeTypes: [] as OnboardingPracticeTypeId[],
   confirmedPracticeType: '',
   sectionAContinued: false,
   enrollmentPathwayViewed: false,

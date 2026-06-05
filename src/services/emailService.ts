@@ -178,6 +178,34 @@ This message confirms receipt of your early access request. No action is require
   }
 
   /**
+   * Send a pre-built email template (e.g. onboarding schedule confirmation)
+   */
+  async sendCustomEmail(email: string, template: EmailTemplate): Promise<{ success: boolean; error?: string }> {
+    try {
+      switch (this.config.service) {
+        case 'smtp':
+          return this.sendViaSMTP(email, template);
+        case 'sendgrid':
+          return this.sendViaSendGrid(email, template);
+        case 'ses':
+          return this.sendViaSES(email, template);
+        case 'mailgun':
+          return this.sendViaMailgun(email, template);
+        case 'brevo':
+          return this.sendViaBrevo(email, template);
+        default:
+          throw new Error('Email service not configured');
+      }
+    } catch (error) {
+      console.error('Failed to send email:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to send email',
+      };
+    }
+  }
+
+  /**
    * Send OTP email
    */
   async sendOTP(email: string, otp: string): Promise<{ success: boolean; error?: string }> {

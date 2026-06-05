@@ -7,6 +7,7 @@ import api, { handleApiError } from './api';
 import { CalendarEventData, CalendarEventResponse } from '../types/landing';
 import { log } from '../utils/logger';
 import { formatDateTimeForAPI } from '../utils/dateTimeUtils';
+import { extractMeetingLinkFromResponse } from '../utils/calendarMeetLink';
 
 /**
  * Validates calendar event data before API submission
@@ -75,26 +76,64 @@ export const createCalendarEvent = async (
     // Format date and time for API
     const formattedDateTime = formatDateTimeForAPI(eventData.date, eventData.time);
 
-    // Prepare API payload
+    const contactName = (eventData.contactName ?? eventData.name).trim();
+    const customTitle = eventData.summary || eventData.title;
+    const isOnboarding = eventData.isOnboarding
+      || !!customTitle?.startsWith('Onboarding Request');
+
+    // Omit contactName for onboarding — legacy backends build "Contact Request from …" from it
     const apiPayload = {
-      name: eventData.name.trim(),
+      name: contactName,
+      ...(isOnboarding ? {} : { contactName }),
       date: eventData.date,
       time: eventData.time,
-      dateTime: formattedDateTime, // Additional formatted datetime for backend convenience
+      dateTime: formattedDateTime,
+      ...(eventData.email ? { email: eventData.email.trim() } : {}),
+      ...(eventData.phone ? { phone: eventData.phone.trim(), phoneNumber: eventData.phone.trim() } : {}),
+      ...(eventData.organization ? { organization: eventData.organization.trim() } : {}),
+      ...(customTitle
+        ? {
+          summary: customTitle,
+          title: customTitle,
+          eventTitle: customTitle,
+          calendarSummary: customTitle,
+          subject: customTitle,
+          useCustomTitle: true,
+          useSummaryAsTitle: true,
+        }
+        : {}),
+      ...(eventData.description ? { description: eventData.description } : {}),
+      ...(isOnboarding ? { source: 'client-onboarding', eventType: 'onboarding' } : {}),
+      ...(eventData.addGoogleMeet
+        ? {
+          addGoogleMeet: true,
+          createGoogleMeet: true,
+          createConference: true,
+          conferenceType: 'hangoutsMeet',
+          sendUpdates: 'all',
+          inviteAttendee: true,
+        }
+        : {}),
+      ...(eventData.guestEmail ? { guestEmail: eventData.guestEmail } : {}),
+      ...(eventData.attendees?.length ? { attendees: eventData.attendees } : {}),
     };
 
     // Make API call
-    const response = await api.post<CalendarEventResponse>('/create-event', apiPayload);
-    
-    log.info('Calendar event created successfully', 'calendarService', { 
-      eventId: response.data.eventId,
-      name: eventData.name 
+    const response = await api.post<Record<string, unknown>>('/create-event', apiPayload);
+    const data = response.data ?? {};
+    const meetingLink = extractMeetingLinkFromResponse(data);
+
+    log.info('Calendar event created successfully', 'calendarService', {
+      eventId: data.eventId,
+      name: eventData.name,
+      hasMeetingLink: !!meetingLink,
     });
 
     return {
-      success: true,
-      message: response.data.message || 'Event added to calendar',
-      eventId: response.data.eventId,
+      success: (data.success as boolean | undefined) ?? true,
+      message: (data.message as string) || 'Event added to calendar',
+      eventId: data.eventId as string | undefined,
+      meetingLink,
     };
     
   } catch (error) {

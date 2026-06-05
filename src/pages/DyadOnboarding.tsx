@@ -4,7 +4,7 @@ import {
   Stethoscope, Scissors, Activity, Building2,
   ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Clock, AlertCircle,
   CheckCircle2, Calendar, FileText, CreditCard,
-  ArrowRight, ArrowLeft, Eye, EyeOff,
+  ArrowLeft,
   Phone, Mail, User, MapPin, Hash, DollarSign,
   Landmark, Check, Zap, Save, ShieldCheck, BarChart3, Briefcase
 } from 'lucide-react';
@@ -26,17 +26,30 @@ import {
   resetAllowedTaxonomiesCache,
 } from '../services/npiRegistryService';
 import { formatDateForDisplay, formatTimeForDisplay } from '../utils/dateTimeUtils';
+import { sendOnboardingScheduleConfirmationEmail } from '../services/onboardingScheduleEmailService';
+import { EnrollmentSaveNotice } from '../components/onboarding/EnrollmentSaveNotice';
+import { EnrollmentSectionsBarRow } from '../components/onboarding/EnrollmentSectionsBarRow';
+import { ObArrowRight, ObBackButtonLabel, ObForwardButtonLabel } from '../components/onboarding/ObBtnArrow';
+import { StepSignAgreements } from '../components/onboarding/step3/StepSignAgreements';
+import { StepDueDiligence } from '../components/onboarding/step4/StepDueDiligence';
+import { StepCommercialAlignment } from '../components/onboarding/step5/StepCommercialAlignment';
+import { StepBankingPaymentSetup } from '../components/onboarding/step6/StepBankingPaymentSetup';
+import { emptyKycDocuments, type KycDocMeta } from '../components/onboarding/step6/bankingConstants';
+import type { CommercialDecision } from '../components/onboarding/step5/commercialConstants';
+import type { DueDiligenceDocMeta } from '../components/onboarding/step4/dueDiligenceConstants';
+import { emptyDueDiligenceDocuments } from '../components/onboarding/step4/dueDiligenceConstants';
 import './DyadOnboarding.css';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
-interface OnboardingData {
+export interface OnboardingData {
   // Step 1
   npi: string;
   npiConfirmed: boolean;
   npiEnumerationType: string;
   npiApiData: NpiApiData | null;
   practiceType: string;
+  selectedPracticeTypes: string[];
   confirmedPracticeType: string;
   sectionAContinued: boolean;
   enrollmentPathwayViewed: boolean;
@@ -61,14 +74,36 @@ interface OnboardingData {
   step2PrepareComplete: boolean;
   callDate: string;
   callTime: string;
+  callMeetingLink: string;
   callerName: string;
   callerEmail: string;
   callerPhone: string;
-  // Step 3
+  // Step 3 — Sign Agreements
+  step3EntityComplete: boolean;
+  step3NdaComplete: boolean;
+  step3BaaComplete: boolean;
+  signerEmailVerified: boolean;
+  entityLegalName: string;
+  entityType: string;
+  entityFormationState: string;
+  entityStreet: string;
+  entityCity: string;
+  entityAddrState: string;
+  entityZip: string;
+  signerFirstName: string;
+  signerLastName: string;
+  signerTitle: string;
+  signerEmail: string;
+  ndaFields: Record<string, string>;
+  baaFields: Record<string, string>;
+  ndaAcceptedRecordId: string;
+  ndaAcceptedAt: string;
+  baaAcceptedRecordId: string;
+  baaAcceptedAt: string;
   confidentialityAgreed: boolean;
   baaAgreed: boolean;
   baaSignature: string;
-  // Step 4
+  // Step 4 — Due Diligence
   groupLegalName: string;
   taxId: string;
   providerCount: string;
@@ -77,13 +112,96 @@ interface OnboardingData {
   state: string;
   zip: string;
   website: string;
-  // Step 5
+  step4ProviderConfirmed: boolean;
+  step4FinancialConfirmed: boolean;
+  step4DocsConfirmed: boolean;
+  ddMidLevelProviders: string;
+  ddAllProvidersCredentialed: string;
+  ddFacilityId: string;
+  ddFacilityTin: string;
+  ddOperatingRooms: string;
+  ddCredentialedProviders: string;
+  ddSpecialtiesPerformed: string;
+  ddFacilityOwnership: string;
+  annualCaseVolume: string;
+  annualGrossCollections: string;
+  inNetworkPayerContracts: string;
+  ddPayerCommercial: string;
+  ddPayerMedicare: string;
+  ddPayerPI: string;
+  ddPayerCash: string;
+  reportAvailabilityNotes: string;
+  ddDocuments: Record<string, DueDiligenceDocMeta | null>;
+  // Step 5 — Commercial Alignment & MSA
+  proposalReviewed: boolean;
+  commercialDecision: CommercialDecision;
+  discussQuestions: string;
+  discussContactPref: '' | 'email' | 'call';
+  step5EntityComplete: boolean;
+  step5MsaAttested: boolean;
+  step5ExhibitCAttested: boolean;
+  step5FeeScheduleAttested: boolean;
+  msaFields: Record<string, string>;
+  exhibitCFields: Record<string, string>;
+  feeScheduleFields: Record<string, string>;
+  msaAttestMeta: string;
+  msaAttestRecordId: string;
+  exhibitCAttestMeta: string;
+  exhibitCAttestRecordId: string;
+  feeScheduleAttestMeta: string;
+  feeScheduleAttestRecordId: string;
+  msaPackageAgreed: boolean;
+  msaPackageExecuted: boolean;
+  msaPackageRecordId: string;
+  msaPackageExecutedAt: string;
   estimatedMonthlyClaims: string;
   primaryPayerMix: string;
   msaAgreed: boolean;
   msaSignature: string;
   contractStartDate: string;
-  // Step 6
+  // Step 6 — Banking & Payment Setup
+  step6Sec1Attested: boolean;
+  step6CipDob: string;
+  step6CipSsn: string;
+  step6CipCitizenship: string;
+  step6CipResAddress: string;
+  step6CipResCity: string;
+  step6CipResState: string;
+  step6CipResZip: string;
+  step6Sec2Attested: boolean;
+  w9Line1: string;
+  w9Line2: string;
+  w9TaxClass: string;
+  w9LlcClass: string;
+  w9OtherDesc: string;
+  w9Line5: string;
+  w9Line6: string;
+  w9TinType: 'EIN' | 'SSN' | '';
+  w9Tin: string;
+  w9EsignConsent: boolean;
+  w9IrsCert: boolean;
+  w9AuthDist: boolean;
+  w9Signature: string;
+  w9Signed: boolean;
+  w9SignedAt: string;
+  w9SignedHash: string;
+  w9Item2Flagged: boolean;
+  achBankPhone: string;
+  achBankAddress: string;
+  achMandateActive: boolean;
+  achMandateId: string;
+  achMandateActivatedAt: string;
+  step6Sec4Attested: boolean;
+  sweepUseSection4: boolean;
+  sweepOtherBankName: string;
+  sweepOtherAcctType: string;
+  sweepOtherRouting: string;
+  sweepOtherAccount: string;
+  step6Sec5Attested: boolean;
+  kycDocuments: Record<string, KycDocMeta | null>;
+  step6Sec6Attested: boolean;
+  step6EnrollmentComplete: boolean;
+  step6ConfirmationId: string;
   accountHolderName: string;
   bankName: string;
   routingNumber: string;
@@ -97,6 +215,7 @@ const INITIAL_DATA: OnboardingData = {
   npiEnumerationType: '',
   npiApiData: null,
   practiceType: '',
+  selectedPracticeTypes: [],
   confirmedPracticeType: '',
   sectionAContinued: false,
   enrollmentPathwayViewed: false,
@@ -120,9 +239,31 @@ const INITIAL_DATA: OnboardingData = {
   step2PrepareComplete: false,
   callDate: '',
   callTime: '',
+  callMeetingLink: '',
   callerName: '',
   callerEmail: '',
   callerPhone: '',
+  step3EntityComplete: false,
+  step3NdaComplete: false,
+  step3BaaComplete: false,
+  signerEmailVerified: false,
+  entityLegalName: '',
+  entityType: '',
+  entityFormationState: '',
+  entityStreet: '',
+  entityCity: '',
+  entityAddrState: '',
+  entityZip: '',
+  signerFirstName: '',
+  signerLastName: '',
+  signerTitle: '',
+  signerEmail: '',
+  ndaFields: {},
+  baaFields: {},
+  ndaAcceptedRecordId: '',
+  ndaAcceptedAt: '',
+  baaAcceptedRecordId: '',
+  baaAcceptedAt: '',
   confidentialityAgreed: false,
   baaAgreed: false,
   baaSignature: '',
@@ -134,11 +275,94 @@ const INITIAL_DATA: OnboardingData = {
   state: '',
   zip: '',
   website: '',
+  step4ProviderConfirmed: false,
+  step4FinancialConfirmed: false,
+  step4DocsConfirmed: false,
+  ddMidLevelProviders: '',
+  ddAllProvidersCredentialed: '',
+  ddFacilityId: '',
+  ddFacilityTin: '',
+  ddOperatingRooms: '',
+  ddCredentialedProviders: '',
+  ddSpecialtiesPerformed: '',
+  ddFacilityOwnership: '',
+  annualCaseVolume: '',
+  annualGrossCollections: '',
+  inNetworkPayerContracts: '',
+  ddPayerCommercial: '',
+  ddPayerMedicare: '',
+  ddPayerPI: '',
+  ddPayerCash: '',
+  reportAvailabilityNotes: '',
+  ddDocuments: emptyDueDiligenceDocuments(),
+  proposalReviewed: false,
+  commercialDecision: '',
+  discussQuestions: '',
+  discussContactPref: '',
+  step5EntityComplete: false,
+  step5MsaAttested: false,
+  step5ExhibitCAttested: false,
+  step5FeeScheduleAttested: false,
+  msaFields: {},
+  exhibitCFields: {},
+  feeScheduleFields: {},
+  msaAttestMeta: '',
+  msaAttestRecordId: '',
+  exhibitCAttestMeta: '',
+  exhibitCAttestRecordId: '',
+  feeScheduleAttestMeta: '',
+  feeScheduleAttestRecordId: '',
+  msaPackageAgreed: false,
+  msaPackageExecuted: false,
+  msaPackageRecordId: '',
+  msaPackageExecutedAt: '',
   estimatedMonthlyClaims: '',
   primaryPayerMix: '',
   msaAgreed: false,
   msaSignature: '',
   contractStartDate: '',
+  step6Sec1Attested: false,
+  step6CipDob: '',
+  step6CipSsn: '',
+  step6CipCitizenship: '',
+  step6CipResAddress: '',
+  step6CipResCity: '',
+  step6CipResState: '',
+  step6CipResZip: '',
+  step6Sec2Attested: false,
+  w9Line1: '',
+  w9Line2: '',
+  w9TaxClass: '',
+  w9LlcClass: '',
+  w9OtherDesc: '',
+  w9Line5: '',
+  w9Line6: '',
+  w9TinType: 'EIN',
+  w9Tin: '',
+  w9EsignConsent: false,
+  w9IrsCert: false,
+  w9AuthDist: false,
+  w9Signature: '',
+  w9Signed: false,
+  w9SignedAt: '',
+  w9SignedHash: '',
+  w9Item2Flagged: false,
+  achBankPhone: '',
+  achBankAddress: '',
+  achMandateActive: false,
+  achMandateId: '',
+  achMandateActivatedAt: '',
+  step6Sec4Attested: false,
+  sweepUseSection4: true,
+  sweepOtherBankName: '',
+  sweepOtherAcctType: '',
+  sweepOtherRouting: '',
+  sweepOtherAccount: '',
+  step6Sec5Attested: false,
+  kycDocuments: emptyKycDocuments(),
+  step6Sec6Attested: false,
+  step6EnrollmentComplete: false,
+  step6ConfirmationId: '',
   accountHolderName: '',
   bankName: '',
   routingNumber: '',
@@ -148,6 +372,7 @@ const INITIAL_DATA: OnboardingData = {
 
 const STORAGE_KEY = 'dyad_onboarding_v1';
 const STEP_KEY = 'dyad_onboarding_step_v1';
+const HIGHEST_STEP_KEY = 'dyad_onboarding_highest_step_v1';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -178,6 +403,20 @@ const PRACTICE_TYPES = [
   },
 ];
 
+const sortPracticeTypeIds = (ids: string[]) =>
+  PRACTICE_TYPES.map(p => p.id).filter(id => ids.includes(id));
+
+const formatPracticeTypeTitles = (ids: string[]) =>
+  sortPracticeTypeIds(ids)
+    .map(id => PRACTICE_TYPES.find(p => p.id === id)?.title)
+    .filter(Boolean)
+    .join(', ');
+
+const getPracticeTypeLabel = (data: Pick<OnboardingData, 'selectedPracticeTypes' | 'practiceType' | 'confirmedPracticeType'>) =>
+  data.selectedPracticeTypes.length > 1
+    ? formatPracticeTypeTitles(data.selectedPracticeTypes)
+    : data.practiceType || data.confirmedPracticeType;
+
 const SIDEBAR_STEPS = [
   { id: 1, label: 'Overview' },
   { id: 2, label: 'Schedule Intro Call' },
@@ -195,6 +434,48 @@ const PHASES = [
   'Align on Terms',
   'Enrollment Complete',
 ];
+
+const isEnrollmentStepComplete = (
+  step: number,
+  data: OnboardingData,
+  sectionAComplete: boolean,
+  sectionBComplete: boolean,
+): boolean => {
+  switch (step) {
+    case 1: return sectionAComplete && sectionBComplete;
+    case 2: return data.step2PrepareComplete;
+    case 3: return data.step3NdaComplete && data.step3BaaComplete;
+    case 4: return data.step4DocsConfirmed;
+    case 5: return data.msaPackageExecuted
+      || data.commercialDecision === 'discuss'
+      || data.commercialDecision === 'decline';
+    case 6: return data.step6EnrollmentComplete || (
+      data.step6Sec1Attested
+      && data.step6Sec2Attested
+      && data.w9Signed
+      && data.step6Sec4Attested
+      && data.step6Sec5Attested
+      && data.step6Sec6Attested
+    );
+    default: return false;
+  }
+};
+
+const deriveHighestStepReached = (
+  storedHighest: number,
+  current: number,
+  data: OnboardingData,
+  sectionAComplete: boolean,
+  sectionBComplete: boolean,
+): number => {
+  let highest = Math.max(storedHighest, current);
+  for (const s of SIDEBAR_STEPS) {
+    if (isEnrollmentStepComplete(s.id, data, sectionAComplete, sectionBComplete)) {
+      highest = Math.max(highest, Math.min(s.id + 1, SIDEBAR_STEPS.length));
+    }
+  }
+  return Math.min(highest, SIDEBAR_STEPS.length);
+};
 
 const PATHWAY_STEPS = [
   {
@@ -319,20 +600,13 @@ const STEP2_PREP_ITEMS = [
   'Any relevant contracts or agreements that may be in transition (billing vendors, payer contracts, etc.)',
 ];
 
-const getPhaseFromStep = (
-  step: number,
-  sectionAComplete = false,
-  sectionBComplete = false,
+const getProgressPct = (
+  phasesComplete: number,
+  currentStep: number,
+  sectionAComplete: boolean,
+  sectionBComplete: boolean,
 ) => {
-  if (step === 1) {
-    if (sectionAComplete && sectionBComplete) return 1;
-    return 0;
-  }
-  return Math.min(step - 1, PHASES.length - 1);
-};
-
-const getProgressPct = (step: number, sectionAComplete: boolean, sectionBComplete: boolean) => {
-  if (step === 1) {
+  if (currentStep === 1 && phasesComplete === 0) {
     if (sectionAComplete && sectionBComplete) {
       return Math.round((1 / PHASES.length) * 100);
     }
@@ -341,7 +615,7 @@ const getProgressPct = (step: number, sectionAComplete: boolean, sectionBComplet
     }
     return 0;
   }
-  return Math.round(((step - 1) / (PHASES.length - 1)) * 100);
+  return Math.round((phasesComplete / PHASES.length) * 100);
 };
 
 const getStep2SectionsComplete = (data: OnboardingData) =>
@@ -359,58 +633,64 @@ const getOverviewSectionsComplete = (sectionAComplete: boolean, sectionBComplete
 
 // ─── Progress Card ───────────────────────────────────────────────────────────
 
-interface EnrollmentSectionsBarRowProps {
-  progressPct: number;
-  sectionsComplete: number;
-  totalSections: number;
-}
-
-const EnrollmentSectionsBarRow: React.FC<EnrollmentSectionsBarRowProps> = ({
-  progressPct, sectionsComplete, totalSections,
-}) => (
-  <div className="ob-ph-bar-row">
-    <span className="ob-ph-bar-text">{sectionsComplete} of {totalSections} sections complete</span>
-    <div className="ob-ph-track">
-      <div className="ob-ph-fill" style={{ width: `${progressPct}%` }} />
-    </div>
-    <span className="ob-ph-bar-pct">{progressPct}%</span>
-  </div>
-);
-
 const getEnrollmentPhasesComplete = (
-  step: number,
+  data: OnboardingData,
   sectionAComplete: boolean,
   sectionBComplete: boolean,
 ) => {
-  if (step > 1) return step - 1;
-  if (sectionAComplete && sectionBComplete) return 1;
-  return 0;
+  let consecutive = 0;
+  for (const s of SIDEBAR_STEPS) {
+    if (isEnrollmentStepComplete(s.id, data, sectionAComplete, sectionBComplete)) consecutive++;
+    else break;
+  }
+  return consecutive;
 };
 
-const getPhaseConnectorFillPct = (completedPhases: number, totalPhases: number) =>
-  totalPhases > 1 ? (completedPhases / (totalPhases - 1)) * 100 : 0;
+/** Solid line ends at the dot for the current reached step. */
+const getPhaseConnectorFillPct = (
+  completedPhases: number,
+  currentStep: number,
+  totalPhases: number,
+) => {
+  if (totalPhases <= 1) return 0;
+
+  let targetDotIndex = completedPhases > 0 ? completedPhases - 1 : 0;
+  if (currentStep > completedPhases && currentStep <= totalPhases) {
+    targetDotIndex = currentStep - 1;
+  }
+
+  if (completedPhases >= totalPhases || targetDotIndex >= totalPhases - 1) return 100;
+  if (targetDotIndex <= 0) return 0;
+  return (targetDotIndex / (totalPhases - 1)) * 100;
+};
 
 interface EnrollmentProgressCardProps {
   progressPct: number;
-  phaseIdx: number;
   sectionsComplete: number;
+  currentStep: number;
   totalSections: number;
   className?: string;
   showBarRow?: boolean;
 }
 
 const EnrollmentProgressCard: React.FC<EnrollmentProgressCardProps> = ({
-  progressPct, phaseIdx, sectionsComplete, totalSections, className = '', showBarRow = true,
+  progressPct, sectionsComplete, currentStep, totalSections, className = '', showBarRow = true,
 }) => {
-  const connectorFillPct = getPhaseConnectorFillPct(sectionsComplete, totalSections);
+  const connectorFillPct = getPhaseConnectorFillPct(sectionsComplete, currentStep, totalSections);
+  const pendingIdx = sectionsComplete < totalSections ? sectionsComplete : -1;
 
   return (
   <div className={`ob-progress-card${className ? ` ${className}` : ''}`}>
-    <div className="ob-ph-top">
-      <span className="ob-ph-label">ENROLLMENT PROGRESS</span>
+    <div className="ob-ph-header">
+      <h2 className="ob-ph-title">Enrollment Progress</h2>
     </div>
 
-    <div className="ob-phases">
+    <div className="ob-ph-divider" aria-hidden="true" />
+
+    <div
+      className="ob-phases"
+      style={{ '--ob-phase-count': totalSections } as React.CSSProperties}
+    >
       <div className="ob-phases-connector" aria-hidden="true">
         <div className="ob-phases-connector-bg" />
         <div
@@ -418,31 +698,44 @@ const EnrollmentProgressCard: React.FC<EnrollmentProgressCardProps> = ({
           style={{ width: `${connectorFillPct}%` }}
         />
       </div>
-      {PHASES.map((ph, i) => (
-        <div
-          key={ph}
-          className={`ob-phase-step${i < sectionsComplete ? ' ob-phase-done' : ''}${i === phaseIdx ? ' ob-phase-active' : ''}`}
-        >
-          <div className="ob-phase-dot">
-            {i < sectionsComplete
-              ? <Check size={10} strokeWidth={3} />
-              : <span className="ob-phase-dot-inner" />}
+      {PHASES.map((ph, i) => {
+        const isDone = i < sectionsComplete;
+        const isPending = i === pendingIdx;
+        const isUpcoming = i > sectionsComplete;
+
+        return (
+          <div
+            key={ph}
+            className={`ob-phase-step${isDone ? ' ob-phase-done' : ''}${isPending ? ' ob-phase-pending' : ''}${isUpcoming ? ' ob-phase-upcoming' : ''}`}
+          >
+            <div className="ob-phase-dot">
+              {isDone
+                ? <Check size={12} strokeWidth={3} />
+                : <span className="ob-phase-dot-num">{i + 1}</span>}
+            </div>
+            <span className="ob-phase-name">{ph}</span>
           </div>
-          <span className="ob-phase-name">{ph}</span>
-        </div>
-      ))}
+        );
+      })}
     </div>
 
     {showBarRow && (
-      <EnrollmentSectionsBarRow
-        progressPct={progressPct}
-        sectionsComplete={sectionsComplete}
-        totalSections={totalSections}
-      />
+      <>
+        <div className="ob-ph-divider ob-ph-divider-footer" aria-hidden="true" />
+        <EnrollmentSectionsBarRow
+          progressPct={progressPct}
+          sectionsComplete={sectionsComplete}
+          totalSections={totalSections}
+        />
+      </>
     )}
   </div>
   );
 };
+
+const BeginEnrollmentButtonLabel: React.FC<{ isSubmitting: boolean }> = ({ isSubmitting }) => (
+  <ObForwardButtonLabel label="Begin Enrollment" loading={isSubmitting} loadingLabel="Starting…" />
+);
 
 // ─── Main Component ──────────────────────────────────────────────────────────
 
@@ -451,6 +744,14 @@ const DyadOnboarding: React.FC = () => {
 
   const [currentStep, setCurrentStep] = useState<number>(() => {
     try { return parseInt(localStorage.getItem(STEP_KEY) || '1', 10) || 1; } catch { return 1; }
+  });
+
+  const [highestStepReached, setHighestStepReached] = useState<number>(() => {
+    try {
+      const cur = parseInt(localStorage.getItem(STEP_KEY) || '1', 10) || 1;
+      const stored = parseInt(localStorage.getItem(HIGHEST_STEP_KEY) || String(cur), 10) || cur;
+      return Math.max(stored, cur);
+    } catch { return 1; }
   });
 
   const [formData, setFormData] = useState<OnboardingData>(() => {
@@ -470,9 +771,14 @@ const DyadOnboarding: React.FC = () => {
       if (!parsed.npiApiData) {
         parsed.npiApiData = null;
       }
+      if (!Array.isArray(parsed.selectedPracticeTypes)) {
+        parsed.selectedPracticeTypes = parsed.practiceType ? [parsed.practiceType] : [];
+      }
       if (parsed.sectionAContinued && parsed.practiceType && !parsed.confirmedPracticeType) {
         parsed.confirmedPracticeType = parsed.practiceType;
       }
+      parsed.ddDocuments = { ...emptyDueDiligenceDocuments(), ...(parsed.ddDocuments || {}) };
+      parsed.kycDocuments = { ...emptyKycDocuments(), ...(parsed.kycDocuments || {}) };
       return parsed;
     } catch { return INITIAL_DATA; }
   });
@@ -483,16 +789,31 @@ const DyadOnboarding: React.FC = () => {
   );
   const [savedBadge, setSavedBadge] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showAccNum, setShowAccNum] = useState(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isInitialSave = useRef(true);
 
-  const sectionAUnlocked = formData.npiConfirmed && !!formData.practiceType;
+  const sectionAUnlocked = formData.npiConfirmed && formData.selectedPracticeTypes.length > 0;
   const sectionAComplete = formData.sectionAContinued;
   const sectionBComplete = formData.enrollmentPathwayViewed;
   const canBeginEnrollment = sectionAComplete && sectionBComplete;
   const overviewSectionsComplete = getOverviewSectionsComplete(sectionAComplete, sectionBComplete);
-  const progressPct = getProgressPct(currentStep, sectionAComplete, sectionBComplete);
+
+  const effectiveHighestStep = deriveHighestStepReached(
+    highestStepReached, currentStep, formData, sectionAComplete, sectionBComplete,
+  );
+
+  useEffect(() => {
+    if (effectiveHighestStep > highestStepReached) {
+      setHighestStepReached(effectiveHighestStep);
+    }
+  }, [effectiveHighestStep, highestStepReached]);
+
+  const enrollmentPhasesComplete = getEnrollmentPhasesComplete(
+    formData, sectionAComplete, sectionBComplete,
+  );
+  const progressPct = getProgressPct(
+    enrollmentPhasesComplete, currentStep, sectionAComplete, sectionBComplete,
+  );
 
   // Auto-save: debounced write to localStorage
   useEffect(() => {
@@ -501,6 +822,7 @@ const DyadOnboarding: React.FC = () => {
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(formData));
         localStorage.setItem(STEP_KEY, String(currentStep));
+        localStorage.setItem(HIGHEST_STEP_KEY, String(effectiveHighestStep));
         if (isInitialSave.current) {
           isInitialSave.current = false;
           return;
@@ -510,14 +832,24 @@ const DyadOnboarding: React.FC = () => {
       } catch { /* ignore */ }
     }, 500);
     return () => { if (saveTimer.current) clearTimeout(saveTimer.current); };
-  }, [formData, currentStep]);
+  }, [formData, currentStep, effectiveHighestStep]);
 
   const set = useCallback(<K extends keyof OnboardingData>(k: K, v: OnboardingData[K]) => {
     setFormData(prev => ({ ...prev, [k]: v }));
   }, []);
 
+  const bumpHighestStep = useCallback((n: number) => {
+    setHighestStepReached(prev => {
+      const next = Math.max(prev, n);
+      return next <= SIDEBAR_STEPS.length ? next : SIDEBAR_STEPS.length;
+    });
+  }, []);
+
   const goToStep = (n: number) => {
-    if (n >= 1 && n <= SIDEBAR_STEPS.length) {
+    const maxReach = deriveHighestStepReached(
+      highestStepReached, currentStep, formData, sectionAComplete, sectionBComplete,
+    );
+    if (n >= 1 && n <= SIDEBAR_STEPS.length && n <= maxReach) {
       setCurrentStep(n);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -538,11 +870,12 @@ const DyadOnboarding: React.FC = () => {
     }
     setIsSubmitting(true);
     await submitStep(1, {
-      practiceType: formData.practiceType,
+      practiceType: getPracticeTypeLabel(formData),
       npi: formData.npi,
       npiApiData: formData.npiApiData,
     });
     setIsSubmitting(false);
+    bumpHighestStep(2);
     goToStep(2);
   };
 
@@ -564,32 +897,91 @@ const DyadOnboarding: React.FC = () => {
         calendlyScheduled: formData.calendlyScheduled,
         callDate: formData.callDate,
         callTime: formData.callTime,
+        callMeetingLink: formData.callMeetingLink,
         engagementTimeline: formData.engagementTimeline,
         callerName: `${formData.firstName} ${formData.lastName}`.trim(),
         callerEmail: formData.contactEmail,
         callerPhone: formData.contactPhone,
       },
-      3: { confidentialityAgreed: formData.confidentialityAgreed, baaAgreed: formData.baaAgreed, baaSignature: formData.baaSignature },
-      4: { npi: formData.npi, groupLegalName: formData.groupLegalName, taxId: formData.taxId, providerCount: formData.providerCount, practiceAddress: formData.practiceAddress, city: formData.city, state: formData.state, zip: formData.zip },
-      5: { estimatedMonthlyClaims: formData.estimatedMonthlyClaims, primaryPayerMix: formData.primaryPayerMix, msaAgreed: formData.msaAgreed, msaSignature: formData.msaSignature },
-      6: { accountHolderName: formData.accountHolderName, bankName: formData.bankName, routingNumber: formData.routingNumber, accountNumber: formData.accountNumber, accountType: formData.accountType },
+      3: {
+        step3EntityComplete: formData.step3EntityComplete,
+        step3NdaComplete: formData.step3NdaComplete,
+        step3BaaComplete: formData.step3BaaComplete,
+        entityLegalName: formData.entityLegalName,
+        entityType: formData.entityType,
+        confidentialityAgreed: formData.confidentialityAgreed,
+        baaAgreed: formData.baaAgreed,
+        baaSignature: formData.baaSignature,
+        ndaFields: formData.ndaFields,
+        baaFields: formData.baaFields,
+        ndaAcceptedRecordId: formData.ndaAcceptedRecordId,
+        baaAcceptedRecordId: formData.baaAcceptedRecordId,
+      },
+      4: {
+        taxId: formData.taxId,
+        website: formData.website,
+        step4ProviderConfirmed: formData.step4ProviderConfirmed,
+        step4FinancialConfirmed: formData.step4FinancialConfirmed,
+        step4DocsConfirmed: formData.step4DocsConfirmed,
+        annualCaseVolume: formData.annualCaseVolume,
+        annualGrossCollections: formData.annualGrossCollections,
+        inNetworkPayerContracts: formData.inNetworkPayerContracts,
+        ddPayerCommercial: formData.ddPayerCommercial,
+        ddPayerMedicare: formData.ddPayerMedicare,
+        ddPayerPI: formData.ddPayerPI,
+        ddPayerCash: formData.ddPayerCash,
+        reportAvailabilityNotes: formData.reportAvailabilityNotes,
+        ddDocuments: formData.ddDocuments,
+      },
+      5: {
+        proposalReviewed: formData.proposalReviewed,
+        commercialDecision: formData.commercialDecision,
+        discussQuestions: formData.discussQuestions,
+        discussContactPref: formData.discussContactPref,
+        step5EntityComplete: formData.step5EntityComplete,
+        step5MsaAttested: formData.step5MsaAttested,
+        step5ExhibitCAttested: formData.step5ExhibitCAttested,
+        step5FeeScheduleAttested: formData.step5FeeScheduleAttested,
+        msaFields: formData.msaFields,
+        exhibitCFields: formData.exhibitCFields,
+        feeScheduleFields: formData.feeScheduleFields,
+        msaPackageExecuted: formData.msaPackageExecuted,
+        msaPackageRecordId: formData.msaPackageRecordId,
+        msaAgreed: formData.msaAgreed,
+        msaSignature: formData.msaSignature,
+      },
+      6: {
+        step6Sec1Attested: formData.step6Sec1Attested,
+        step6Sec2Attested: formData.step6Sec2Attested,
+        w9Signed: formData.w9Signed,
+        step6Sec4Attested: formData.step6Sec4Attested,
+        step6Sec5Attested: formData.step6Sec5Attested,
+        step6Sec6Attested: formData.step6Sec6Attested,
+        step6EnrollmentComplete: formData.step6EnrollmentComplete,
+        step6ConfirmationId: formData.step6ConfirmationId,
+        accountHolderName: formData.accountHolderName,
+        bankName: formData.bankName,
+        routingNumber: formData.routingNumber,
+        accountNumber: formData.accountNumber,
+        accountType: formData.accountType,
+        achMandateActive: formData.achMandateActive,
+        kycDocuments: formData.kycDocuments,
+      },
     };
     await submitStep(currentStep, payloads[currentStep] || {});
     setIsSubmitting(false);
     if (currentStep < SIDEBAR_STEPS.length) {
+      bumpHighestStep(currentStep + 1);
       goToStep(currentStep + 1);
     } else {
       toast.success('Enrollment complete! Welcome to Dyad Practice Solutions.');
       localStorage.removeItem(STORAGE_KEY);
       localStorage.removeItem(STEP_KEY);
+      localStorage.removeItem(HIGHEST_STEP_KEY);
       navigate('/');
     }
   };
 
-  const phaseIdx = getPhaseFromStep(currentStep, sectionAComplete, sectionBComplete);
-  const enrollmentPhasesComplete = getEnrollmentPhasesComplete(
-    currentStep, sectionAComplete, sectionBComplete,
-  );
   const stepLabel = SIDEBAR_STEPS.find(s => s.id === currentStep)?.label.toUpperCase() ?? 'OVERVIEW';
   const mobileStepDisplay = currentStep - 1;
 
@@ -638,17 +1030,21 @@ const DyadOnboarding: React.FC = () => {
 
           <ul className="ob-steps-list">
             {SIDEBAR_STEPS.map(s => {
-              const done = currentStep > s.id;
+              const stepComplete = isEnrollmentStepComplete(
+                s.id, formData, sectionAComplete, sectionBComplete,
+              );
               const active = currentStep === s.id;
-              const locked = currentStep < s.id;
+              const locked = s.id > effectiveHighestStep;
+              const done = stepComplete || s.id < effectiveHighestStep;
+              const clickable = !locked;
               return (
                 <li
                   key={s.id}
-                  className={`ob-step-item${active ? ' ob-step-active' : ''}${done ? ' ob-step-done' : ''}${locked ? ' ob-step-locked' : ''}`}
-                  onClick={() => !locked && goToStep(s.id)}
+                  className={`ob-step-item${active ? ' ob-step-active' : ''}${done ? ' ob-step-done' : ''}${locked ? ' ob-step-locked' : ''}${clickable ? ' ob-step-clickable' : ''}`}
+                  onClick={() => clickable && goToStep(s.id)}
                   role="button"
-                  tabIndex={locked ? -1 : 0}
-                  onKeyDown={e => e.key === 'Enter' && !locked && goToStep(s.id)}
+                  tabIndex={clickable ? 0 : -1}
+                  onKeyDown={e => e.key === 'Enter' && clickable && goToStep(s.id)}
                 >
                   <span className="ob-step-num">
                     {done ? <Check size={12} strokeWidth={3} /> : s.id}
@@ -673,8 +1069,8 @@ const DyadOnboarding: React.FC = () => {
         <div className="ob-progress-header">
           <EnrollmentProgressCard
             progressPct={progressPct}
-            phaseIdx={phaseIdx}
             sectionsComplete={enrollmentPhasesComplete}
+            currentStep={currentStep}
             totalSections={PHASES.length}
           />
         </div>
@@ -709,12 +1105,26 @@ const DyadOnboarding: React.FC = () => {
             />
           )}
           {currentStep === 3 && (
-            <StepBAA
+            <StepSignAgreements
               formData={formData}
               set={set}
+              setFormData={setFormData}
               onNext={handleNextFromStep}
               onBack={() => goToStep(2)}
               isSubmitting={isSubmitting}
+              renderNavBar={props => (
+                <div className="ob-step-bottom-zone">
+                  <EnrollmentSaveNotice />
+                  <StepNavBar
+                    className="ob-step3-nav-footer"
+                    onBack={props.onBack}
+                    onNext={props.onNext}
+                    isSubmitting={isSubmitting}
+                    canProceed={props.canProceed}
+                    nextLabel={props.nextLabel}
+                  />
+                </div>
+              )}
             />
           )}
           {currentStep === 4 && (
@@ -724,23 +1134,43 @@ const DyadOnboarding: React.FC = () => {
               onNext={handleNextFromStep}
               onBack={() => goToStep(3)}
               isSubmitting={isSubmitting}
+              practiceTypeTitle={
+                formData.selectedPracticeTypes.length > 1
+                  ? formatPracticeTypeTitles(formData.selectedPracticeTypes)
+                  : PRACTICE_TYPES.find(p => p.id === (formData.confirmedPracticeType || formData.practiceType))?.title ?? 'Practice'
+              }
+              onChangePracticeType={() => {
+                if (window.confirm('Changing your practice type will reset subsequent enrollment sections. Continue to Overview?')) {
+                  goToStep(1);
+                }
+              }}
             />
           )}
           {currentStep === 5 && (
-            <StepCommercial
+            <StepCommercialAlignment
               formData={formData}
               set={set}
               onNext={handleNextFromStep}
               onBack={() => goToStep(4)}
               isSubmitting={isSubmitting}
+              practiceTypeTitle={
+                formData.selectedPracticeTypes.length > 1
+                  ? formatPracticeTypeTitles(formData.selectedPracticeTypes)
+                  : PRACTICE_TYPES.find(p => p.id === (formData.confirmedPracticeType || formData.practiceType))?.title ?? 'Practice'
+              }
+              specialtyTitle={formData.primarySpecialty}
+              showSpecialtyPlatform={(() => {
+                const selected = formData.selectedPracticeTypes.length > 0
+                  ? formData.selectedPracticeTypes
+                  : [formData.confirmedPracticeType || formData.practiceType].filter(Boolean);
+                return !(selected.length === 1 && selected[0] === 'asc');
+              })()}
             />
           )}
           {currentStep === 6 && (
-            <StepBankSetup
+            <StepBankingPaymentSetup
               formData={formData}
               set={set}
-              showAccNum={showAccNum}
-              setShowAccNum={setShowAccNum}
               onNext={handleNextFromStep}
               onBack={() => goToStep(5)}
               isSubmitting={isSubmitting}
@@ -759,7 +1189,7 @@ const DyadOnboarding: React.FC = () => {
             disabled={!canBeginEnrollment || isSubmitting}
             type="button"
           >
-            {isSubmitting ? 'Starting…' : 'Begin Enrollment'} <ArrowRight size={16} />
+            <BeginEnrollmentButtonLabel isSubmitting={isSubmitting} />
           </button>
         </div>
       )}
@@ -816,6 +1246,9 @@ const StepOverview: React.FC<StepOverviewProps> = ({
   const showSectionBReview = formData.sectionAContinued && !sectionBComplete;
   const npiPanelData = previewNpiData;
   const verifiedNpiData = formData.npiApiData;
+  const suggestedPracticeTypeIds = formData.npiApiData?.suggestedPracticeTypes ?? [];
+  const isMultiPracticeTypeEditable =
+    formData.npiConfirmed && suggestedPracticeTypeIds.length >= 2;
 
   const handleNpiInputChange = (value: string) => {
     const digits = value.replace(/\D/g, '').slice(0, 10);
@@ -870,11 +1303,31 @@ const StepOverview: React.FC<StepOverviewProps> = ({
     setShowNpiPanel(false);
     setPreviewNpiData(null);
     setNpiApiError('');
-    if (prefill.practiceType) {
-      toast.success('Practice type assigned from your NPI taxonomy');
+    if (prefill.selectedPracticeTypes.length > 0) {
+      const label = formatPracticeTypeTitles(prefill.selectedPracticeTypes);
+      toast.success(
+        prefill.selectedPracticeTypes.length > 1
+          ? `Practice types assigned from your NPI taxonomy: ${label}`
+          : 'Practice type assigned from your NPI taxonomy',
+      );
     } else {
       toast.error('We could not determine a practice type from this NPI. Please try a different NPI.');
     }
+  };
+
+  const handlePracticeTypeToggle = (id: string) => {
+    if (!isMultiPracticeTypeEditable || !(suggestedPracticeTypeIds as string[]).includes(id)) return;
+    const current = formData.selectedPracticeTypes;
+    const isSelected = current.includes(id);
+    if (isSelected && current.length <= 1) {
+      toast.error('At least one practice type must remain selected');
+      return;
+    }
+    const next = isSelected
+      ? current.filter(t => t !== id)
+      : sortPracticeTypeIds([...current, id]);
+    set('selectedPracticeTypes', next);
+    set('practiceType', next[0] || '');
   };
 
   const handleContinueToPathway = () => {
@@ -882,7 +1335,7 @@ const StepOverview: React.FC<StepOverviewProps> = ({
       toast.error('Please verify and confirm your NPI before continuing');
       return;
     }
-    if (!formData.practiceType) {
+    if (formData.selectedPracticeTypes.length === 0) {
       toast.error('Practice type could not be determined from your NPI. Please try a different NPI.');
       return;
     }
@@ -920,14 +1373,8 @@ const StepOverview: React.FC<StepOverviewProps> = ({
         </p>
       </div>
 
-      <div className="ob-step1-info">
-        <div className="ob-info-callout">
-          <AlertCircle size={16} className="ob-callout-icon" />
-          <span>Both sections below must be completed before you can begin enrollment. Each section will unlock sequentially as you progress.</span>
-        </div>
-      </div>
-
-      <div className="ob-step1-sections-bar">
+     
+      <div className="ob-step-sections-bar ob-step1-sections-bar">
         <EnrollmentSectionsBarRow
           progressPct={overviewSectionsComplete * 50}
           sectionsComplete={overviewSectionsComplete}
@@ -997,7 +1444,7 @@ const StepOverview: React.FC<StepOverviewProps> = ({
                   onClick={handleNpiVerify}
                   disabled={isNpiValidating || formData.npiConfirmed || formData.npi.length !== 10}
                 >
-                  {isNpiValidating ? 'Verifying…' : 'Verify NPI'}
+                  <ObForwardButtonLabel label="Verify NPI" loading={isNpiValidating} loadingLabel="Verifying…" showArrow={false} />
                 </button>
               </div>
               {npiApiError && <span className="ob-field-error">{npiApiError}</span>}
@@ -1068,16 +1515,16 @@ const StepOverview: React.FC<StepOverviewProps> = ({
                       </div>
                     </div>
 
-                    {npiPanelData.suggestedPracticeType && (
+                    {npiPanelData.suggestedPracticeTypes.length > 0 && (
                       <p className="ob-npi-suggest-note">
-                        Practice Type:{' '}
-                        <strong>{PRACTICE_TYPES.find(p => p.id === npiPanelData.suggestedPracticeType)?.title}</strong>
+                        Practice Type{npiPanelData.suggestedPracticeTypes.length > 1 ? 's' : ''}:{' '}
+                        <strong>{formatPracticeTypeTitles(npiPanelData.suggestedPracticeTypes)}</strong>
                       </p>
                     )}
 
                     <div className="ob-npi-panel-actions">
                       <button type="button" className="ob-npi-confirm-btn" onClick={handleNpiConfirm}>
-                        ✓ Confirm — this is my practice
+                        Confirm — this is my practice <ObArrowRight />
                       </button>
                       <button
                         type="button"
@@ -1100,24 +1547,49 @@ const StepOverview: React.FC<StepOverviewProps> = ({
             </div>
 
             <p className="ob-practice-auto-label">
-              {formData.npiConfirmed && formData.practiceType
-                ? 'Your practice type (assigned from NPI)'
+              {formData.npiConfirmed && formData.selectedPracticeTypes.length > 0
+                ? isMultiPracticeTypeEditable
+                  ? 'Your practice types (assigned from NPI — uncheck any that do not apply)'
+                  : 'Your practice type (assigned from NPI)'
                 : 'Practice type (assigned automatically after NPI verification)'}
             </p>
-            <div className={`ob-practice-grid ob-practice-grid-readonly${formData.practiceType ? ' ob-practice-grid-has-selection' : ''}`}>
-              {PRACTICE_TYPES.map(({ id, Icon, title, desc }) => (
-                <div
-                  key={id}
-                  className={`ob-practice-card${formData.practiceType === id ? ' ob-practice-selected' : ' ob-practice-unselected'}`}
-                >
-                  <Icon size={32} strokeWidth={1.5} className="ob-practice-icon" />
-                  <span className="ob-practice-title">{title}</span>
-                  <span className="ob-practice-desc">{desc}</span>
-                  {formData.practiceType === id && (
-                    <span className="ob-practice-check"><Check size={14} strokeWidth={3} /></span>
-                  )}
-                </div>
-              ))}
+            <div
+              className={`ob-practice-grid${
+                isMultiPracticeTypeEditable ? ' ob-practice-grid-selectable' : ' ob-practice-grid-readonly'
+              }${formData.selectedPracticeTypes.length > 0 ? ' ob-practice-grid-has-selection' : ''}`}
+            >
+              {PRACTICE_TYPES.map(({ id, Icon, title, desc }) => {
+                const isSelected = formData.selectedPracticeTypes.includes(id);
+                const isToggleable =
+                  isMultiPracticeTypeEditable && (suggestedPracticeTypeIds as string[]).includes(id);
+                return (
+                  <div
+                    key={id}
+                    role={isToggleable ? 'checkbox' : undefined}
+                    aria-checked={isToggleable ? isSelected : undefined}
+                    tabIndex={isToggleable ? 0 : undefined}
+                    className={`ob-practice-card${isSelected ? ' ob-practice-selected' : ' ob-practice-unselected'}${isToggleable ? ' ob-practice-card-toggleable' : ''}`}
+                    onClick={isToggleable ? () => handlePracticeTypeToggle(id) : undefined}
+                    onKeyDown={
+                      isToggleable
+                        ? e => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
+                              handlePracticeTypeToggle(id);
+                            }
+                          }
+                        : undefined
+                    }
+                  >
+                    <Icon size={32} strokeWidth={1.5} className="ob-practice-icon" />
+                    <span className="ob-practice-title">{title}</span>
+                    <span className="ob-practice-desc">{desc}</span>
+                    {isSelected && (
+                      <span className="ob-practice-check"><Check size={14} strokeWidth={3} /></span>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
 
@@ -1126,7 +1598,7 @@ const StepOverview: React.FC<StepOverviewProps> = ({
               {!formData.npiConfirmed && (
                 <span className="ob-footer-hint">Verify and confirm your NPI to continue</span>
               )}
-              {formData.npiConfirmed && !formData.practiceType && (
+              {formData.npiConfirmed && formData.selectedPracticeTypes.length === 0 && (
                 <span className="ob-footer-hint">Practice type could not be determined — try a different NPI</span>
               )}
               <button
@@ -1135,7 +1607,7 @@ const StepOverview: React.FC<StepOverviewProps> = ({
                 disabled={!sectionAUnlocked}
                 type="button"
               >
-                Continue to Enrollment Pathway <ArrowRight size={16} />
+                <ObForwardButtonLabel label="Continue to Enrollment Pathway" />
               </button>
             </div>
           )}
@@ -1207,7 +1679,7 @@ const StepOverview: React.FC<StepOverviewProps> = ({
               onClick={handlePathwayReviewed}
               type="button"
             >
-              I have reviewed the Enrollment Pathway <ArrowRight size={16} />
+              <ObForwardButtonLabel label="I have reviewed the Enrollment Pathway" />
             </button>
           </div>
         </SectionCollapse>
@@ -1224,17 +1696,20 @@ const StepOverview: React.FC<StepOverviewProps> = ({
         </div>
       </div>
 
-      {/* Desktop Footer */}
-      <div className="ob-step1-footer ob-step-footer">
-        <span className="ob-footer-note">Complete both sections above to unlock the option to begin enrollment.</span>
-        <button
-          className={`ob-btn-cta${!(sectionAComplete && sectionBComplete) ? ' ob-btn-disabled' : ''}`}
-          onClick={onBeginEnrollment}
-          disabled={!(sectionAComplete && sectionBComplete) || isSubmitting}
-          type="button"
-        >
-          {isSubmitting ? 'Starting…' : 'Begin Enrollment'} <ArrowRight size={16} />
-        </button>
+      <div className="ob-step-bottom-zone ob-step-bottom-zone-step1">
+        <EnrollmentSaveNotice />
+        {/* Desktop Footer */}
+        <div className="ob-step1-footer ob-step-footer">
+          <span className="ob-footer-note">Complete both sections above to unlock the option to begin enrollment.</span>
+          <button
+            className={`ob-btn-cta${!(sectionAComplete && sectionBComplete) ? ' ob-btn-disabled' : ''}`}
+            onClick={onBeginEnrollment}
+            disabled={!(sectionAComplete && sectionBComplete) || isSubmitting}
+            type="button"
+          >
+            <BeginEnrollmentButtonLabel isSubmitting={isSubmitting} />
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -1262,6 +1737,27 @@ const isContactSectionValid = (d: OnboardingData) =>
   && d.selectedStates.length > 0;
 
 const SCHEDULE_WEEKDAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+const ScheduledCallNotes: React.FC<{ email: string; meetingLink: string }> = ({ email, meetingLink }) => (
+  <>
+    <p className="ob-confirm-note">A calendar invite will be sent to {email}.</p>
+    {meetingLink ? (
+      <p className="ob-confirm-note">
+        <strong>Meeting link:</strong>{' '}
+        <a
+          href={meetingLink}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="ob-meeting-link"
+        >
+          Join video call
+        </a>
+      </p>
+    ) : (
+      <p className="ob-confirm-note">Your Google Meet link will be included in your calendar invite.</p>
+    )}
+  </>
+);
 
 interface ScheduleCalendarViewProps {
   availableDates: string[];
@@ -1402,6 +1898,7 @@ const StepScheduleCall: React.FC<StepScheduleCallProps> = ({
   const clearScheduleBooking = () => ({
     calendlyScheduled: false,
     step2PrepareComplete: false,
+    callMeetingLink: '',
   });
 
   useEffect(() => {
@@ -1483,6 +1980,7 @@ const StepScheduleCall: React.FC<StepScheduleCallProps> = ({
       step2FootprintContinued: false,
       callDate: '',
       callTime: '',
+      callMeetingLink: '',
       calendlyScheduled: false,
       step2ScheduleContinued: false,
       step2PrepareComplete: false,
@@ -1501,6 +1999,7 @@ const StepScheduleCall: React.FC<StepScheduleCallProps> = ({
       step2FootprintContinued: false,
       callDate: '',
       callTime: '',
+      callMeetingLink: '',
       calendlyScheduled: false,
       step2ScheduleContinued: false,
       step2PrepareComplete: false,
@@ -1517,6 +2016,7 @@ const StepScheduleCall: React.FC<StepScheduleCallProps> = ({
       step2FootprintContinued: false,
       callDate: '',
       callTime: '',
+      callMeetingLink: '',
       calendlyScheduled: false,
       step2ScheduleContinued: false,
       step2PrepareComplete: false,
@@ -1597,7 +2097,7 @@ const StepScheduleCall: React.FC<StepScheduleCallProps> = ({
     setSectionEOpen(true);
   };
 
-  const handleMarkComplete = async () => {
+  const handleMarkComplete = () => {
     if (!prepareValid) {
       toast.error('Please select your engagement timeline');
       return;
@@ -1606,35 +2106,92 @@ const StepScheduleCall: React.FC<StepScheduleCallProps> = ({
       toast.error('Please select a call date and time in Schedule Your Call');
       return;
     }
-    setBookingCall(true);
-    const result = await bookIntroductionCall({
-      name: `${formData.firstName} ${formData.lastName}`.trim(),
-      email: formData.contactEmail,
-      phone: formData.contactPhone,
-      organization: formData.organizationName,
-      date: formData.callDate,
-      time: formData.callTime,
-      engagementTimeline: formData.engagementTimeline,
-    });
-    setBookingCall(false);
-    if (!result.success) {
-      toast.error(result.message || 'Could not schedule the call on Google Calendar. Please try again.');
-      return;
-    }
-    set('calendlyScheduled', true);
-    set('callerName', `${formData.firstName} ${formData.lastName}`.trim());
-    set('callerEmail', formData.contactEmail);
-    set('callerPhone', formData.contactPhone);
     set('step2PrepareComplete', true);
     setSectionEOpen(false);
-    toast.success('Introduction call scheduled on Google Calendar!');
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (!formData.step2PrepareComplete) {
       toast.error('Please complete all sections before continuing');
       return;
     }
+    if (!scheduleValid) {
+      toast.error('Please select a call date and time in Schedule Your Call');
+      return;
+    }
+
+    if (!formData.calendlyScheduled) {
+      setBookingCall(true);
+      const result = await bookIntroductionCall({
+        name: `${formData.firstName} ${formData.lastName}`.trim(),
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.contactEmail,
+        phone: formData.contactPhone,
+        organization: formData.organizationName,
+        titleRole: formData.titleRole,
+        primarySpecialty: formData.primarySpecialty,
+        selectedStates: formData.selectedStates,
+        organizationType: formData.organizationType,
+        billableProviders: formData.billableProviders,
+        locationsFacilities: formData.locationsFacilities,
+        engagementTimeline: formData.engagementTimeline,
+        engagementTimelineLabel: ENGAGEMENT_TIMELINES.find(
+          t => t.value === formData.engagementTimeline,
+        )?.label,
+        npi: formData.npi,
+        practiceType: getPracticeTypeLabel(formData),
+        date: formData.callDate,
+        time: formData.callTime,
+      });
+      setBookingCall(false);
+      if (!result.success) {
+        toast.error(result.message || 'Could not schedule the call on Google Calendar. Please try again.');
+        return;
+      }
+      const meetingLink = result.meetingLink || '';
+      set('calendlyScheduled', true);
+      set('callMeetingLink', meetingLink);
+      set('callerName', `${formData.firstName} ${formData.lastName}`.trim());
+      set('callerEmail', formData.contactEmail);
+      set('callerPhone', formData.contactPhone);
+
+      try {
+        const emailResult = await sendOnboardingScheduleConfirmationEmail({
+          to: formData.contactEmail,
+          contactName: `${formData.firstName} ${formData.lastName}`.trim(),
+          dateDisplay: formatDateForDisplay(formData.callDate),
+          timeDisplay: formatTimeForDisplay(formData.callTime),
+          email: formData.contactEmail,
+          phone: formData.contactPhone,
+          organization: formData.organizationName,
+          titleRole: formData.titleRole,
+          primarySpecialty: formData.primarySpecialty,
+          organizationType: formData.organizationType,
+          billableProviders: formData.billableProviders,
+          locationsFacilities: formData.locationsFacilities,
+          states: formData.selectedStates,
+          engagementTimeline: ENGAGEMENT_TIMELINES.find(
+            t => t.value === formData.engagementTimeline,
+          )?.label,
+          npi: formData.npi,
+          practiceType: getPracticeTypeLabel(formData),
+          meetingLink,
+        });
+        if (!emailResult.success) {
+          console.warn('Schedule confirmation email failed:', emailResult.error);
+        }
+      } catch (emailErr) {
+        console.warn('Schedule confirmation email failed:', emailErr);
+      }
+
+      toast.success(
+        meetingLink
+          ? 'Call scheduled! Check your email for confirmation and your meeting link.'
+          : 'Call scheduled! A confirmation email has been sent to your inbox.',
+      );
+    }
+
     onNext();
   };
 
@@ -1683,7 +2240,7 @@ const StepScheduleCall: React.FC<StepScheduleCallProps> = ({
         <p className="ob-step-subtitle">Book a 30-minute introduction call</p>
       </div>
 
-      <div className="ob-step2-bar">
+      <div className="ob-step-sections-bar ob-step2-sections-bar">
         <EnrollmentSectionsBarRow
           progressPct={step2ProgressPct}
           sectionsComplete={step2DisplayComplete}
@@ -1781,7 +2338,7 @@ const StepScheduleCall: React.FC<StepScheduleCallProps> = ({
                 <div className="ob-field">
                   <label className="ob-label">
                     State(s) <span className="ob-req">*</span>
-                    <span className="ob-label-hint">Hold Ctrl or ⌘ to select multiple</span>
+                   
                   </label>
                   <div className={`ob-states-dropdown${statesOpen ? ' ob-states-open' : ''}`} ref={statesRef}>
                     <button
@@ -1827,7 +2384,7 @@ const StepScheduleCall: React.FC<StepScheduleCallProps> = ({
                   disabled={!contactValid}
                   type="button"
                 >
-                  Continue to Organization Profile <ArrowRight size={16} />
+                  <ObForwardButtonLabel label="Continue to Organization Profile" />
                 </button>
               </div>
             )}
@@ -1871,7 +2428,7 @@ const StepScheduleCall: React.FC<StepScheduleCallProps> = ({
                   disabled={!orgValid}
                   type="button"
                 >
-                  Continue to Organization Footprint <ArrowRight size={16} />
+                  <ObForwardButtonLabel label="Continue to Organization Footprint" />
                 </button>
               </div>
             )}
@@ -1925,7 +2482,7 @@ const StepScheduleCall: React.FC<StepScheduleCallProps> = ({
                   disabled={!footprintValid}
                   type="button"
                 >
-                  Continue to Schedule Your Call <ArrowRight size={16} />
+                  <ObForwardButtonLabel label="Continue to Schedule Your Call" />
                 </button>
               </div>
             )}
@@ -1945,54 +2502,57 @@ const StepScheduleCall: React.FC<StepScheduleCallProps> = ({
                 Select an available 30-minute time slot to connect with Dyad&apos;s enrollment team. All times are displayed in Pacific Time (PT).
               </p>
               <div className="ob-gcal-schedule">
-                <div className="ob-gcal-section">
-                  <h4 className="ob-gcal-heading">
-                    <Calendar size={16} />
-                    Select a Date
-                  </h4>
-                  <p className="ob-gcal-hint">
-                    Choose any available day within the next {SCHEDULE_DAYS_AHEAD} days.
-                  </p>
-                  {loadingDates ? (
-                    <p className="ob-gcal-loading">Loading available dates…</p>
-                  ) : (
-                    <ScheduleCalendarView
-                      availableDates={availableDates}
-                      selectedDate={formData.callDate}
-                      onSelectDate={handleScheduleDateSelect}
-                    />
-                  )}
-                </div>
-
-                {formData.callDate && (
-                  <div className="ob-gcal-section">
+                <div className={`ob-gcal-picker${formData.callDate ? ' ob-gcal-picker-with-times' : ''}`}>
+                  <div className="ob-gcal-picker-calendar">
                     <h4 className="ob-gcal-heading">
-                      <Clock size={16} />
-                      Select a Time
+                      <Calendar size={16} />
+                      Select a Date
                     </h4>
                     <p className="ob-gcal-hint">
-                      Available times for {formatDateForDisplay(formData.callDate)} — Pacific Time (PT)
+                      Choose any available day within the next {SCHEDULE_DAYS_AHEAD} days.
                     </p>
-                    {loadingSlots ? (
-                      <p className="ob-gcal-loading">Loading available times…</p>
-                    ) : availableSlots.length === 0 ? (
-                      <p className="ob-gcal-empty">No times available for this date. Please choose another day.</p>
-                    ) : (
-                      <div className="ob-gcal-time-grid">
-                        {availableSlots.map(slot => (
-                          <button
-                            key={slot}
-                            type="button"
-                            className={`ob-gcal-time-btn${formData.callTime === slot ? ' ob-gcal-selected' : ''}`}
-                            onClick={() => handleScheduleTimeSelect(slot)}
-                          >
-                            {formatTimeForDisplay(slot)}
-                          </button>
-                        ))}
-                      </div>
-                    )}
+                    <div className="ob-gcal-picker-row">
+                      {loadingDates ? (
+                        <p className="ob-gcal-loading">Loading available dates…</p>
+                      ) : (
+                        <ScheduleCalendarView
+                          availableDates={availableDates}
+                          selectedDate={formData.callDate}
+                          onSelectDate={handleScheduleDateSelect}
+                        />
+                      )}
+
+                      {formData.callDate && (
+                        <div className="ob-gcal-picker-times">
+                          <p className="ob-gcal-times-label">
+                            <Clock size={14} aria-hidden="true" />
+                            {formatDateForDisplay(formData.callDate)}
+                          </p>
+                          {loadingSlots ? (
+                            <p className="ob-gcal-loading">Loading times…</p>
+                          ) : availableSlots.length === 0 ? (
+                            <p className="ob-gcal-empty">No times available. Choose another day.</p>
+                          ) : (
+                            <div className="ob-gcal-time-list" role="listbox" aria-label="Available time slots">
+                              {availableSlots.map(slot => (
+                                <button
+                                  key={slot}
+                                  type="button"
+                                  role="option"
+                                  aria-selected={formData.callTime === slot}
+                                  className={`ob-gcal-time-btn${formData.callTime === slot ? ' ob-gcal-selected' : ''}`}
+                                  onClick={() => handleScheduleTimeSelect(slot)}
+                                >
+                                  {formatTimeForDisplay(slot)}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                )}
+                </div>
 
                 <p className="ob-gcal-tz">All times displayed in Pacific Time (PT)</p>
               </div>
@@ -2004,6 +2564,10 @@ const StepScheduleCall: React.FC<StepScheduleCallProps> = ({
                     <span>
                       {' '}— {formatDateForDisplay(formData.callDate)} at {formatTimeForDisplay(formData.callTime)} PT
                     </span>
+                    <ScheduledCallNotes
+                      email={formData.contactEmail}
+                      meetingLink={formData.callMeetingLink}
+                    />
                     <p className="ob-confirm-note">You can change the date or time above anytime. Re-confirm in Prepare for Your Call after making changes.</p>
                   </div>
                 </div>
@@ -2016,7 +2580,7 @@ const StepScheduleCall: React.FC<StepScheduleCallProps> = ({
                     <span>
                       {' '}— {formatDateForDisplay(formData.callDate)} at {formatTimeForDisplay(formData.callTime)} PT
                     </span>
-                    <p className="ob-confirm-note">Your selected time will be confirmed when you complete Prepare for Your Call.</p>
+                    <p className="ob-confirm-note">Your call will be scheduled on Google Calendar when you continue to Sign Confidentiality &amp; BAA.</p>
                   </div>
                 </div>
               )}
@@ -2029,7 +2593,7 @@ const StepScheduleCall: React.FC<StepScheduleCallProps> = ({
                   disabled={!scheduleValid}
                   type="button"
                 >
-                  Continue to Prepare for Your Call <ArrowRight size={16} />
+                  <ObForwardButtonLabel label="Continue to Prepare for Your Call" />
                 </button>
               </div>
             )}
@@ -2065,6 +2629,7 @@ const StepScheduleCall: React.FC<StepScheduleCallProps> = ({
                     if (formData.step2PrepareComplete) {
                       set('step2PrepareComplete', false);
                       set('calendlyScheduled', false);
+                      set('callMeetingLink', '');
                       setSectionEOpen(true);
                     }
                     set('engagementTimeline', e.target.value);
@@ -2075,6 +2640,22 @@ const StepScheduleCall: React.FC<StepScheduleCallProps> = ({
                 </select>
               </div>
             </div>
+            {formData.step2PrepareComplete && !formData.calendlyScheduled && (
+              <div className="ob-section-status-bar">
+                <div className="ob-confirm-box">
+                  <CheckCircle2 size={18} className="ob-check-green" />
+                  <div>
+                    <strong>Ready to Schedule</strong>
+                    <span>
+                      {' '}— {formatDateForDisplay(formData.callDate)} at {formatTimeForDisplay(formData.callTime)} PT
+                    </span>
+                    <p className="ob-confirm-note">
+                      Your call will be added to Google Calendar when you click Continue to Sign Confidentiality &amp; BAA below.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
             {formData.calendlyScheduled && formData.step2PrepareComplete && (
               <div className="ob-section-status-bar">
                 <div className="ob-confirm-box">
@@ -2084,7 +2665,10 @@ const StepScheduleCall: React.FC<StepScheduleCallProps> = ({
                     <span>
                       {' '}— {formatDateForDisplay(formData.callDate)} at {formatTimeForDisplay(formData.callTime)} PT
                     </span>
-                    <p className="ob-confirm-note">A calendar invite will be sent to {formData.contactEmail}.</p>
+                    <ScheduledCallNotes
+                      email={formData.contactEmail}
+                      meetingLink={formData.callMeetingLink}
+                    />
                   </div>
                 </div>
               </div>
@@ -2092,12 +2676,12 @@ const StepScheduleCall: React.FC<StepScheduleCallProps> = ({
             {sectionEOpen && !formData.step2PrepareComplete && (
               <div className="ob-section-footer ob-section-footer-fixed">
                 <button
-                  className={`ob-btn-primary${!prepareValid || bookingCall ? ' ob-btn-disabled' : ''}`}
+                  className={`ob-btn-primary${!prepareValid ? ' ob-btn-disabled' : ''}`}
                   onClick={handleMarkComplete}
-                  disabled={!prepareValid || bookingCall}
+                  disabled={!prepareValid}
                   type="button"
                 >
-                  {bookingCall ? 'Scheduling on Google Calendar…' : 'Schedule Call & Mark Complete'} <Check size={16} />
+                  <ObForwardButtonLabel label="Mark Complete" />
                 </button>
               </div>
             )}
@@ -2105,489 +2689,17 @@ const StepScheduleCall: React.FC<StepScheduleCallProps> = ({
         </div>
       </div>
 
-      <StepNavBar
-        className="ob-step2-nav-footer"
-        onBack={onBack}
-        onNext={handleNext}
-        isSubmitting={isSubmitting}
-        canProceed={formData.step2PrepareComplete && formData.calendlyScheduled}
-        nextLabel="Continue to Sign Confidentiality & BAA"
-      />
-    </div>
-  );
-};
-
-// ─── Step 3: BAA ──────────────────────────────────────────────────────────────
-
-interface StepBAAProps {
-  formData: OnboardingData;
-  set: <K extends keyof OnboardingData>(k: K, v: OnboardingData[K]) => void;
-  onNext: () => void;
-  onBack: () => void;
-  isSubmitting: boolean;
-}
-
-const StepBAA: React.FC<StepBAAProps> = ({ formData, set, onNext, onBack, isSubmitting }) => {
-  const canProceed = formData.confidentialityAgreed && formData.baaAgreed && formData.baaSignature.trim().length > 2;
-
-  const handleNext = () => {
-    if (!canProceed) { toast.error('Please agree to all terms and provide your signature'); return; }
-    onNext();
-  };
-
-  return (
-    <div className="ob-step-content">
-      <div className="ob-step-header">
-        <h2 className="ob-step-title">Sign Confidentiality & BAA</h2>
-        <p className="ob-step-subtitle">
-          Review and electronically sign the HIPAA Business Associate Agreement and
-          confidentiality terms required for enrollment.
-        </p>
-      </div>
-
-      <div className="ob-form-card">
-        {/* Confidentiality */}
-        <div className="ob-agreement-block">
-          <div className="ob-agreement-title">
-            <FileText size={16} />
-            <span>Confidentiality Agreement</span>
-          </div>
-          <div className="ob-agreement-scroll">
-            <p>By proceeding with enrollment, you agree that all information shared during the Dyad Practice Solutions enrollment process — including but not limited to practice financials, patient volume data, payer contracts, and operational workflows — shall be treated as confidential and proprietary.</p>
-            <p>You agree not to disclose, reproduce, or use such information for any purpose other than the evaluation and execution of the proposed partnership with Dyad Practice Solutions, LLC. This obligation shall survive the termination of any agreement between the parties.</p>
-            <p>Dyad Practice Solutions agrees to maintain equivalent confidentiality of all information provided by your practice during this process and will not share such information with third parties without prior written consent, except as required by law or for the purposes of executing the partnership.</p>
-          </div>
-          <label className="ob-checkbox-row">
-            <input
-              type="checkbox"
-              className="ob-checkbox"
-              checked={formData.confidentialityAgreed}
-              onChange={e => set('confidentialityAgreed', e.target.checked)}
-            />
-            <span>I have read and agree to the Confidentiality Agreement</span>
-          </label>
-        </div>
-
-        {/* BAA */}
-        <div className="ob-agreement-block">
-          <div className="ob-agreement-title">
-            <FileText size={16} />
-            <span>HIPAA Business Associate Agreement (BAA)</span>
-          </div>
-          <div className="ob-agreement-scroll">
-            <p>This Business Associate Agreement ("BAA") is entered into between your practice ("Covered Entity") and Dyad Practice Solutions, LLC ("Business Associate") in connection with services provided under the Master Services Agreement.</p>
-            <p>As a Business Associate under HIPAA, Dyad Practice Solutions agrees to: (1) not use or disclose Protected Health Information (PHI) other than as permitted or required by this BAA; (2) use appropriate safeguards to prevent unauthorized use or disclosure of PHI; (3) report to the Covered Entity any use or disclosure not provided for by this BAA; (4) ensure all subcontractors agree to the same restrictions; and (5) make PHI available in accordance with HIPAA requirements.</p>
-            <p>This Agreement shall be effective as of the date of electronic signature below and shall remain in effect for the duration of the service relationship between the parties.</p>
-          </div>
-          <label className="ob-checkbox-row">
-            <input
-              type="checkbox"
-              className="ob-checkbox"
-              checked={formData.baaAgreed}
-              onChange={e => set('baaAgreed', e.target.checked)}
-            />
-            <span>I have read and agree to the HIPAA Business Associate Agreement</span>
-          </label>
-        </div>
-
-        {/* Signature */}
-        <div className="ob-field" style={{ marginTop: 24 }}>
-          <label className="ob-label">Electronic Signature <span className="ob-req">*</span></label>
-          <p className="ob-field-hint">Type your full legal name as your electronic signature</p>
-          <input
-            type="text"
-            className={`ob-input ob-signature-input${formData.baaSignature ? ' ob-sig-filled' : ''}`}
-            placeholder="Type your full legal name"
-            value={formData.baaSignature}
-            onChange={e => set('baaSignature', e.target.value)}
-          />
-          {formData.baaSignature && (
-            <p className="ob-sig-date">Signed electronically on {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
-          )}
-        </div>
-      </div>
-
-      <StepNavBar onBack={onBack} onNext={handleNext} isSubmitting={isSubmitting} canProceed={canProceed} />
-    </div>
-  );
-};
-
-// ─── Step 4: Due Diligence ────────────────────────────────────────────────────
-
-interface StepDueDiligenceProps {
-  formData: OnboardingData;
-  set: <K extends keyof OnboardingData>(k: K, v: OnboardingData[K]) => void;
-  onNext: () => void;
-  onBack: () => void;
-  isSubmitting: boolean;
-}
-
-const StepDueDiligence: React.FC<StepDueDiligenceProps> = ({ formData, set, onNext, onBack, isSubmitting }) => {
-  const canProceed = formData.npi.length === 10 && formData.groupLegalName && formData.taxId && formData.practiceAddress && formData.city && formData.state && formData.zip;
-
-  const handleNext = () => {
-    if (!canProceed) { toast.error('Please complete all required fields'); return; }
-    if (formData.npi.length !== 10) { toast.error('NPI must be exactly 10 digits'); return; }
-    onNext();
-  };
-
-  return (
-    <div className="ob-step-content">
-      <div className="ob-step-header">
-        <h2 className="ob-step-title">Due Diligence & Discovery</h2>
-        <p className="ob-step-subtitle">
-          Provide your practice's key identifying and operational information. This enables
-          credentialing, payer enrollment, and contract preparation.
-        </p>
-      </div>
-
-      <div className="ob-form-card">
-        <div className="ob-form-section-label"><Hash size={16} /> Practice Identification</div>
-        <div className="ob-form-row">
-          <div className="ob-field">
-            <label className="ob-label">NPI Number <span className="ob-req">*</span></label>
-            <input
-              type="text"
-              className="ob-input"
-              placeholder="10-digit NPI"
-              maxLength={10}
-              value={formData.npi}
-              onChange={e => set('npi', e.target.value.replace(/\D/g, ''))}
-            />
-            {formData.npi && formData.npi.length !== 10 && (
-              <span className="ob-field-error">NPI must be 10 digits</span>
-            )}
-          </div>
-          <div className="ob-field">
-            <label className="ob-label">Tax ID (EIN) <span className="ob-req">*</span></label>
-            <input
-              type="text"
-              className="ob-input"
-              placeholder="XX-XXXXXXX"
-              value={formData.taxId}
-              onChange={e => set('taxId', e.target.value)}
-            />
-          </div>
-        </div>
-        <div className="ob-form-row">
-          <div className="ob-field">
-            <label className="ob-label">Group / Legal Entity Name <span className="ob-req">*</span></label>
-            <input
-              type="text"
-              className="ob-input"
-              placeholder="Smith Anesthesia Group, LLC"
-              value={formData.groupLegalName}
-              onChange={e => set('groupLegalName', e.target.value)}
-            />
-          </div>
-          <div className="ob-field">
-            <label className="ob-label">Number of Providers</label>
-            <input
-              type="number"
-              className="ob-input"
-              placeholder="e.g. 12"
-              min="1"
-              value={formData.providerCount}
-              onChange={e => set('providerCount', e.target.value)}
-            />
-          </div>
-        </div>
-
-        <div className="ob-form-section-label"><MapPin size={16} /> Practice Address</div>
-        <div className="ob-form-row ob-form-row-full">
-          <div className="ob-field">
-            <label className="ob-label">Street Address <span className="ob-req">*</span></label>
-            <input
-              type="text"
-              className="ob-input"
-              placeholder="123 Medical Drive, Suite 400"
-              value={formData.practiceAddress}
-              onChange={e => set('practiceAddress', e.target.value)}
-            />
-          </div>
-        </div>
-        <div className="ob-form-row ob-form-row-three">
-          <div className="ob-field">
-            <label className="ob-label">City <span className="ob-req">*</span></label>
-            <input
-              type="text"
-              className="ob-input"
-              placeholder="Atlanta"
-              value={formData.city}
-              onChange={e => set('city', e.target.value)}
-            />
-          </div>
-          <div className="ob-field">
-            <label className="ob-label">State <span className="ob-req">*</span></label>
-            <select className="ob-input ob-select" value={formData.state} onChange={e => set('state', e.target.value)}>
-              <option value="">State</option>
-              {US_STATES.map(s => <option key={s} value={s}>{s}</option>)}
-            </select>
-          </div>
-          <div className="ob-field">
-            <label className="ob-label">ZIP Code <span className="ob-req">*</span></label>
-            <input
-              type="text"
-              className="ob-input"
-              placeholder="30301"
-              maxLength={10}
-              value={formData.zip}
-              onChange={e => set('zip', e.target.value)}
-            />
-          </div>
-        </div>
-        <div className="ob-form-row ob-form-row-half">
-          <div className="ob-field">
-            <label className="ob-label">Practice Website</label>
-            <input
-              type="url"
-              className="ob-input"
-              placeholder="https://yourpractice.com"
-              value={formData.website}
-              onChange={e => set('website', e.target.value)}
-            />
-          </div>
-        </div>
-      </div>
-
-      <StepNavBar onBack={onBack} onNext={handleNext} isSubmitting={isSubmitting} canProceed={!!canProceed} />
-    </div>
-  );
-};
-
-// ─── Step 5: Commercial Alignment ─────────────────────────────────────────────
-
-interface StepCommercialProps {
-  formData: OnboardingData;
-  set: <K extends keyof OnboardingData>(k: K, v: OnboardingData[K]) => void;
-  onNext: () => void;
-  onBack: () => void;
-  isSubmitting: boolean;
-}
-
-const PAYER_MIXES = ['Mostly Medicare/Medicaid', 'Mostly Commercial', 'Balanced Mix', 'Primarily Self-Pay', 'Workers Comp / Auto'];
-
-const StepCommercial: React.FC<StepCommercialProps> = ({ formData, set, onNext, onBack, isSubmitting }) => {
-  const canProceed = formData.estimatedMonthlyClaims && formData.primaryPayerMix && formData.msaAgreed && formData.msaSignature.trim().length > 2;
-
-  const handleNext = () => {
-    if (!canProceed) { toast.error('Please complete all required fields and sign the MSA'); return; }
-    onNext();
-  };
-
-  return (
-    <div className="ob-step-content">
-      <div className="ob-step-header">
-        <h2 className="ob-step-title">Commercial Alignment & MSA</h2>
-        <p className="ob-step-subtitle">
-          Provide revenue and payer mix details, then review and execute the Master Services
-          Agreement to formalize the partnership.
-        </p>
-      </div>
-
-      <div className="ob-form-card">
-        <div className="ob-form-section-label"><DollarSign size={16} /> Revenue Profile</div>
-        <div className="ob-form-row">
-          <div className="ob-field">
-            <label className="ob-label">Estimated Monthly Claims Volume ($) <span className="ob-req">*</span></label>
-            <input
-              type="text"
-              className="ob-input"
-              placeholder="e.g. 250,000"
-              value={formData.estimatedMonthlyClaims}
-              onChange={e => set('estimatedMonthlyClaims', e.target.value)}
-            />
-          </div>
-          <div className="ob-field">
-            <label className="ob-label">Primary Payer Mix <span className="ob-req">*</span></label>
-            <select className="ob-input ob-select" value={formData.primaryPayerMix} onChange={e => set('primaryPayerMix', e.target.value)}>
-              <option value="">Select payer mix</option>
-              {PAYER_MIXES.map(p => <option key={p} value={p}>{p}</option>)}
-            </select>
-          </div>
-        </div>
-        <div className="ob-form-row ob-form-row-half">
-          <div className="ob-field">
-            <label className="ob-label">Requested Contract Start Date</label>
-            <input
-              type="date"
-              className="ob-input"
-              value={formData.contractStartDate}
-              onChange={e => set('contractStartDate', e.target.value)}
-            />
-          </div>
-        </div>
-
-        {/* MSA */}
-        <div className="ob-form-section-label" style={{ marginTop: 24 }}><FileText size={16} /> Master Services Agreement</div>
-        <div className="ob-agreement-block">
-          <div className="ob-agreement-scroll">
-            <p>This Master Services Agreement ("Agreement") is entered into between Dyad Practice Solutions, LLC ("Dyad") and the enrolling practice entity. Dyad agrees to provide revenue cycle management, credentialing support, payer contract negotiation, and operational consulting services.</p>
-            <p>Service fees are calculated as a percentage of net collections as outlined in the Schedule of Fees, which will be provided prior to execution. Initial term is 24 months with automatic renewal unless terminated with 90-day written notice.</p>
-            <p>Dyad guarantees dedicated account management, transparent reporting, and contractual performance benchmarks. Either party may terminate for cause with 30-day written notice following a 15-day cure period.</p>
-          </div>
-          <label className="ob-checkbox-row">
-            <input
-              type="checkbox"
-              className="ob-checkbox"
-              checked={formData.msaAgreed}
-              onChange={e => set('msaAgreed', e.target.checked)}
-            />
-            <span>I have read and agree to the Master Services Agreement</span>
-          </label>
-        </div>
-
-        <div className="ob-field" style={{ marginTop: 20 }}>
-          <label className="ob-label">MSA Electronic Signature <span className="ob-req">*</span></label>
-          <input
-            type="text"
-            className={`ob-input ob-signature-input${formData.msaSignature ? ' ob-sig-filled' : ''}`}
-            placeholder="Type your full legal name"
-            value={formData.msaSignature}
-            onChange={e => set('msaSignature', e.target.value)}
-          />
-          {formData.msaSignature && (
-            <p className="ob-sig-date">MSA signed electronically on {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
-          )}
-        </div>
-      </div>
-
-      <StepNavBar onBack={onBack} onNext={handleNext} isSubmitting={isSubmitting} canProceed={canProceed} nextLabel="Proceed to Bank Setup" />
-    </div>
-  );
-};
-
-// ─── Step 6: Bank & Payment Setup ─────────────────────────────────────────────
-
-interface StepBankSetupProps {
-  formData: OnboardingData;
-  set: <K extends keyof OnboardingData>(k: K, v: OnboardingData[K]) => void;
-  showAccNum: boolean;
-  setShowAccNum: (v: boolean) => void;
-  onNext: () => void;
-  onBack: () => void;
-  isSubmitting: boolean;
-}
-
-const StepBankSetup: React.FC<StepBankSetupProps> = ({
-  formData, set, showAccNum, setShowAccNum, onNext, onBack, isSubmitting
-}) => {
-  const canProceed = formData.accountHolderName && formData.bankName && formData.routingNumber.length === 9 && formData.accountNumber && formData.accountType;
-
-  const handleNext = () => {
-    if (!canProceed) { toast.error('Please complete all required banking fields'); return; }
-    if (formData.routingNumber.length !== 9) { toast.error('Routing number must be 9 digits'); return; }
-    onNext();
-  };
-
-  return (
-    <div className="ob-step-content">
-      <div className="ob-step-header">
-        <h2 className="ob-step-title">Bank & Payment Setup</h2>
-        <p className="ob-step-subtitle">
-          Provide your ACH banking details for claims remittance and revenue distribution.
-          All data is encrypted and stored securely.
-        </p>
-      </div>
-
-      <div className="ob-info-callout ob-callout-secure">
-        <Landmark size={16} className="ob-callout-icon" />
-        <span>Your banking information is encrypted using AES-256. Dyad will only use these details for ACH remittance as outlined in your MSA.</span>
-      </div>
-
-      <div className="ob-form-card">
-        <div className="ob-form-section-label"><Landmark size={16} /> Bank Account Details</div>
-        <div className="ob-form-row">
-          <div className="ob-field">
-            <label className="ob-label">Account Holder Name <span className="ob-req">*</span></label>
-            <input
-              type="text"
-              className="ob-input"
-              placeholder="Smith Anesthesia Group, LLC"
-              value={formData.accountHolderName}
-              onChange={e => set('accountHolderName', e.target.value)}
-            />
-          </div>
-          <div className="ob-field">
-            <label className="ob-label">Bank Name <span className="ob-req">*</span></label>
-            <input
-              type="text"
-              className="ob-input"
-              placeholder="e.g. Wells Fargo"
-              value={formData.bankName}
-              onChange={e => set('bankName', e.target.value)}
-            />
-          </div>
-        </div>
-        <div className="ob-form-row">
-          <div className="ob-field">
-            <label className="ob-label">Routing Number <span className="ob-req">*</span></label>
-            <input
-              type="text"
-              className="ob-input"
-              placeholder="9-digit routing number"
-              maxLength={9}
-              value={formData.routingNumber}
-              onChange={e => set('routingNumber', e.target.value.replace(/\D/g, ''))}
-            />
-            {formData.routingNumber && formData.routingNumber.length !== 9 && (
-              <span className="ob-field-error">Routing number must be 9 digits</span>
-            )}
-          </div>
-          <div className="ob-field">
-            <label className="ob-label">Account Number <span className="ob-req">*</span></label>
-            <div className="ob-input-icon-wrap">
-              <input
-                type={showAccNum ? 'text' : 'password'}
-                className="ob-input ob-input-with-icon"
-                placeholder="Account number"
-                value={formData.accountNumber}
-                onChange={e => set('accountNumber', e.target.value.replace(/\D/g, ''))}
-              />
-              <button
-                type="button"
-                className="ob-input-icon-btn"
-                onClick={() => setShowAccNum(!showAccNum)}
-                tabIndex={-1}
-              >
-                {showAccNum ? <EyeOff size={16} /> : <Eye size={16} />}
-              </button>
-            </div>
-          </div>
-        </div>
-        <div className="ob-form-row ob-form-row-half">
-          <div className="ob-field">
-            <label className="ob-label">Account Type <span className="ob-req">*</span></label>
-            <div className="ob-radio-group">
-              {['Checking', 'Savings'].map(t => (
-                <label key={t} className="ob-radio-label">
-                  <input
-                    type="radio"
-                    name="accountType"
-                    value={t}
-                    checked={formData.accountType === t}
-                    onChange={() => set('accountType', t)}
-                  />
-                  <span>{t}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="ob-step-footer ob-step-footer-final">
-        <button className="ob-btn-ghost" onClick={onBack} type="button">
-          <ArrowLeft size={16} /> Back
-        </button>
-        <button
-          className={`ob-btn-cta${!canProceed ? ' ob-btn-disabled' : ''}`}
-          onClick={handleNext}
-          disabled={!canProceed || isSubmitting}
-          type="button"
-        >
-          {isSubmitting ? 'Submitting…' : 'Complete Enrollment'} <ArrowRight size={16} />
-        </button>
+      <div className="ob-step-bottom-zone">
+        <EnrollmentSaveNotice />
+        <StepNavBar
+          className="ob-step2-nav-footer"
+          onBack={onBack}
+          onNext={handleNext}
+          isSubmitting={isSubmitting || bookingCall}
+          submittingLabel={bookingCall ? 'Scheduling on Google Calendar…' : undefined}
+          canProceed={formData.step2PrepareComplete}
+          nextLabel="Continue to Sign Confidentiality & BAA"
+        />
       </div>
     </div>
   );
@@ -2601,14 +2713,15 @@ interface StepNavBarProps {
   isSubmitting: boolean;
   canProceed: boolean;
   nextLabel?: string;
+  submittingLabel?: string;
 }
 
 const StepNavBar: React.FC<StepNavBarProps & { className?: string }> = ({
-  onBack, onNext, isSubmitting, canProceed, nextLabel = 'Save & Continue', className = '',
+  onBack, onNext, isSubmitting, canProceed, nextLabel = 'Save & Continue', submittingLabel, className = '',
 }) => (
   <div className={`ob-step-footer ob-step-nav-footer${className ? ` ${className}` : ''}`}>
     <button className="ob-btn-ghost" onClick={onBack} type="button">
-      <ArrowLeft size={16} /> Back
+      <ObBackButtonLabel label="Back" />
     </button>
     <button
       className={`ob-btn-primary${!canProceed ? ' ob-btn-disabled' : ''}`}
@@ -2616,7 +2729,11 @@ const StepNavBar: React.FC<StepNavBarProps & { className?: string }> = ({
       disabled={!canProceed || isSubmitting}
       type="button"
     >
-      {isSubmitting ? 'Saving…' : nextLabel} <ArrowRight size={16} />
+      <ObForwardButtonLabel
+        label={nextLabel}
+        loading={isSubmitting}
+        loadingLabel={submittingLabel ?? 'Saving…'}
+      />
     </button>
   </div>
 );
