@@ -33,15 +33,15 @@ export const AchDocumentBody: React.FC = () => (
     <p>Provider acknowledges and consents that Dyad has engaged Zoho Payment Services Inc. and the &ldquo;Zoho Pay&rdquo; payment platform as its contracted third-party payment service provider for the origination of all ACH debit and credit entries authorized hereunder.</p>
     <p><strong>Independence from Lockbox Infrastructure.</strong> The Live Oak Banking Company / Anatomy Financial lockbox infrastructure established under the Limited Power of Attorney (Section 1) is unrelated to and shall not be involved in the origination, processing, settlement, or any other aspect of the service fee debits authorized under this Exhibit E.</p>
     <h4>Billing &amp; Reconciliation Process</h4>
-    <p><strong>Variable Monthly Amounts</strong> – The ACH debit amount will vary based on the services provided to the Provider for the billing period, in accordance with the fee schedule outlined in Exhibit D of the MSA.</p>
-    <p><strong>Reconciliation &amp; Review</strong> – The MSO will provide a detailed reconciliation statement and invoice on the last business day of each month.</p>
-    <p><strong>Provider Review Period</strong> – The Provider will have five (5) business days to review the invoice and reconciliation statement.</p>
-    <p><strong>Automatic Approval &amp; Debit Timing</strong> – If there are no disputes submitted in writing by 12:00 PM on the 5th business day, the MSO will initiate an ACH debit for the full invoiced amount.</p>
-    <p><strong>Disputes</strong> – Provider must submit written dispute notice to support@dyadmd.com before the review deadline.</p>
+    <p><strong>Variable Monthly Amounts</strong>: The ACH debit amount will vary based on the services provided to the Provider for the billing period, in accordance with the fee schedule outlined in Exhibit D of the MSA.</p>
+    <p><strong>Reconciliation &amp; Review</strong>: The MSO will provide a detailed reconciliation statement and invoice on the last business day of each month.</p>
+    <p><strong>Provider Review Period</strong>: The Provider will have five (5) business days to review the invoice and reconciliation statement.</p>
+    <p><strong>Automatic Approval &amp; Debit Timing</strong>: If there are no disputes submitted in writing by 12:00 PM on the 5th business day, the MSO will initiate an ACH debit for the full invoiced amount.</p>
+    <p><strong>Disputes</strong>: Provider must submit written dispute notice to support@dyadmd.com before the review deadline.</p>
     <h4>General ACH Authorization Terms</h4>
-    <p><strong>Returned Payments &amp; Fees</strong> – If a payment is returned due to insufficient funds, closed accounts, or other reasons, Provider agrees to pay applicable fees, including bank-imposed return fees and a $35 administrative fee per occurrence.</p>
-    <p><strong>Changes to Banking Information</strong> – Provider must notify the MSO in writing at least ten (10) business days before the next scheduled payment if there is a change to the designated bank account.</p>
-    <p><strong>Revocation &amp; Termination</strong> – This authorization will remain in effect until the MSO receives written notice of cancellation at least fifteen (15) business days before the next scheduled debit.</p>
+    <p><strong>Returned Payments &amp; Fees</strong>: If a payment is returned due to insufficient funds, closed accounts, or other reasons, Provider agrees to pay applicable fees, including bank-imposed return fees and a $35 administrative fee per occurrence.</p>
+    <p><strong>Changes to Banking Information</strong>: Provider must notify the MSO in writing at least ten (10) business days before the next scheduled payment if there is a change to the designated bank account.</p>
+    <p><strong>Revocation &amp; Termination</strong>: This authorization will remain in effect until the MSO receives written notice of cancellation at least fifteen (15) business days before the next scheduled debit.</p>
     <h4>Compliance with Applicable Laws</h4>
     <p>This Agreement is subject to all applicable federal and state laws, including EFTA &amp; Regulation E, NACHA Operating Rules, HIPAA and HITECH Act, and state-specific Corporate Practice of Medicine and fee-splitting laws.</p>
   </div>

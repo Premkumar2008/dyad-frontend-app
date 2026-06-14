@@ -11,6 +11,8 @@ export interface BaaExhibitBProps {
   onFieldChange: (key: string, value: string) => void;
   providerDisplayName: string;
   showDyadSignature: boolean;
+  readOnly?: boolean;
+  executed?: boolean;
 }
 
 const field = (
@@ -27,11 +29,12 @@ const field = (
     placeholder={placeholder}
     className={size}
     required={required}
+    readOnly={props.readOnly}
   />
 );
 
 export const BaaExhibitB: React.FC<BaaExhibitBProps> = (props) => {
-  const sigProviderName = props.providerDisplayName || props.fields.pname || '—';
+  const sigProviderName = props.providerDisplayName || props.fields.pname || '-';
 
   return (
     <div className="ob-agreement-asc">
@@ -352,18 +355,33 @@ export const BaaExhibitB: React.FC<BaaExhibitBProps> = (props) => {
                 Covered Entity:{' '}
                 <span className="ob-agreement-sig-pname">{sigProviderName}</span>
               </div>
-              <div className="ob-agreement-sigl">
-                <span className="ob-agreement-sig-hint">
-                  Electronic acceptance captured below
-                </span>
+              <div className="ob-agreement-sigl" style={props.executed ? { borderBottomColor: '#2E7D32' } : undefined}>
+                {props.executed ? (
+                  <span className="ob-ca-sig-cursive">{props.fields.signame || ''}</span>
+                ) : (
+                  <span className="ob-agreement-sig-hint">
+                    Electronic acceptance captured below
+                  </span>
+                )}
               </div>
               <div className="ob-agreement-sigll">By: Authorized Signatory</div>
-              <div className="ob-agreement-sign">
-                Name: {field(props, 'signame', 'Full Name (required)', 'm')}
-              </div>
-              <div className="ob-agreement-sign" style={{ marginTop: 3 }}>
-                Title: {field(props, 'sigtitle', 'Title (required)', 'm')}
-              </div>
+              {props.executed ? (
+                <>
+                  <div className="ob-agreement-sign">Name: {props.fields.signame || ''}</div>
+                  <div className="ob-agreement-sign" style={{ marginTop: 3 }}>
+                    Title: {props.fields.sigtitle || ''}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="ob-agreement-sign">
+                    Name: {field(props, 'signame', 'Full Name (required)', 'm')}
+                  </div>
+                  <div className="ob-agreement-sign" style={{ marginTop: 3 }}>
+                    Title: {field(props, 'sigtitle', 'Title (required)', 'm')}
+                  </div>
+                </>
+              )}
             </td>
             <td>
               <DyadSignatureBlock

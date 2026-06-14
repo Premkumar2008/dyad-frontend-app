@@ -14,8 +14,8 @@ export const BANKING_SECTION_LABELS: Record<BankingSectionId, string> = {
 export const BANKING_SECTION_TITLES: Record<BankingSectionId, string> = {
   1: 'Limited Power of Attorney',
   2: 'Authorized Signatory & Account Opening Information',
-  3: 'Form W-9 — Request for Taxpayer Identification Number and Certification',
-  4: 'Exhibit E — ACH Authorization Agreement',
+  3: 'Form W-9 - Request for Taxpayer Identification Number and Certification',
+  4: 'Exhibit E - ACH Authorization Agreement',
   5: 'Weekly Sweep Schedule & Destination Authorization',
   6: 'Know Your Customer (KYC) Documentation',
 };
@@ -64,7 +64,7 @@ export const KYC_DOCUMENTS: { id: KycDocId; name: string; desc: string; accept: 
   {
     id: 'photoId',
     name: 'Government-Issued Photo ID (Front & Back)',
-    desc: "Driver's License, State ID, or U.S. Passport — must be current and unexpired",
+    desc: "Driver's License, State ID, or U.S. Passport - must be current and unexpired",
     accept: '.pdf,.jpg,.jpeg,.png',
   },
   {
@@ -88,7 +88,7 @@ export const KYC_DOCUMENTS: { id: KycDocId; name: string; desc: string; accept: 
   {
     id: 'beneficialOwnership',
     name: 'Beneficial Ownership Certification',
-    desc: 'FinCEN Beneficial Ownership Form — required for any individual owning 25% or more',
+    desc: 'FinCEN Beneficial Ownership Form - required for any individual owning 25% or more',
     accept: '.pdf',
   },
 ];

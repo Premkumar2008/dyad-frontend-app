@@ -178,6 +178,37 @@ This message confirms receipt of your early access request. No action is require
   }
 
   /**
+   * Try sending HTML through each configured API email provider endpoint.
+   * Uses client-built HTML exactly (e.g. onboarding schedule with Join Google Meet button).
+   */
+  async sendHtmlViaApiProviders(
+    email: string,
+    template: EmailTemplate,
+  ): Promise<{ success: boolean; error?: string }> {
+    const providers: Array<EmailConfig['service']> = ['brevo', 'sendgrid', 'mailgun', 'ses'];
+    const errors: string[] = [];
+
+    for (const provider of providers) {
+      const previous = this.config.service;
+      this.config.service = provider;
+      try {
+        const result = await this.sendCustomEmail(email, template);
+        if (result.success) {
+          return result;
+        }
+        if (result.error) errors.push(`${provider}: ${result.error}`);
+      } finally {
+        this.config.service = previous;
+      }
+    }
+
+    return {
+      success: false,
+      error: errors.join('; ') || 'No API email provider available',
+    };
+  }
+
+  /**
    * Send a pre-built email template (e.g. onboarding schedule confirmation)
    */
   async sendCustomEmail(email: string, template: EmailTemplate): Promise<{ success: boolean; error?: string }> {

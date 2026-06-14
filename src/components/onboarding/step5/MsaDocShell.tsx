@@ -15,6 +15,13 @@ table.tbl{width:100%;border-collapse:collapse;margin:14px 0;font-size:11px}
 table.tbl th,table.tbl td{border:1px solid #888;padding:6px 10px;text-align:left}
 table.tbl th{background:#EEE}
 table.tbl tr.cur td{background:#EEF6FB;font-weight:600}
+.ob-agreement-sigp,.sigp{font-weight:700;margin-bottom:8px}
+.ob-agreement-sigl,.sigl{border-bottom:1px solid #666;height:36px;margin-bottom:4px}
+.ob-agreement-sigl-dyad,.ob-agreement-sigl.ob-agreement-sigl-dyad{height:auto;min-height:52px;border-bottom:none}
+.ob-agreement-dyad-sig-img,img.ob-agreement-dyad-sig-img{width:220px;max-width:220px;height:auto;max-height:56px;object-fit:contain;display:block}
+img[src*="dyad-officer-signature"]{width:220px!important;max-width:220px!important;height:auto!important;max-height:56px!important;object-fit:contain;display:block}
+.ob-agreement-sign,.sign{font-size:12px;margin-top:3px}
+.ob-agreement-sigll,.sigll{font-size:10px;color:#666}
 `;
 
 export interface MsaDocShellProps {
@@ -30,14 +37,13 @@ export interface MsaDocShellProps {
   continueLabel: string;
   onContinue: () => void;
   continueDisabled: boolean;
-  downloadFilename: string;
   hideDraftWatermark?: boolean;
 }
 
 export const MsaDocShell: React.FC<MsaDocShellProps> = ({
   docId, title, scrollId, children, executed, attested, attestedMeta,
   onAttestChange, attestLabel, continueLabel, onContinue, continueDisabled,
-  downloadFilename, hideDraftWatermark,
+  hideDraftWatermark,
 }) => {
   const handlePrint = useCallback(() => {
     const el = document.getElementById(scrollId);
@@ -49,29 +55,13 @@ export const MsaDocShell: React.FC<MsaDocShellProps> = ({
     setTimeout(() => w.print(), 350);
   }, [scrollId, title]);
 
-  const handleDownload = useCallback(() => {
-    const el = document.getElementById(scrollId);
-    if (!el) return;
-    const header = `${'='.repeat(72)}\nDYAD PRACTICE SOLUTIONS, LLC — EXECUTED AGREEMENT COPY\n${'='.repeat(72)}\nGenerated: ${new Date().toLocaleString('en-US')}\n\n`;
-    const blob = new Blob([header + el.innerText], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = downloadFilename;
-    a.click();
-    URL.revokeObjectURL(url);
-  }, [scrollId, downloadFilename]);
-
   return (
     <div className="ob-agreement-ao" id={`${docId}-ao`}>
       <div className="ob-agreement-at2">
         <div className="ob-agreement-att">{title}</div>
         <div className="ob-agreement-ata">
           <button type="button" className="ob-agreement-tb" disabled={!attested && !executed} onClick={handlePrint}>
-            🖨️ Print{executed ? ' Executed Copy' : ''}
-          </button>
-          <button type="button" className="ob-agreement-tb" disabled={!attested && !executed} onClick={handleDownload}>
-            ⬇️ Download{executed ? ' Executed Copy' : ''}
+            🖨️ Print / Download
           </button>
         </div>
       </div>

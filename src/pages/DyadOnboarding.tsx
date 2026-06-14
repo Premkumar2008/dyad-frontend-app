@@ -1,33 +1,58 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Stethoscope, Scissors, Activity, Building2,
   ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Clock, AlertCircle,
   CheckCircle2, Calendar, FileText, CreditCard,
   ArrowLeft,
   Phone, Mail, User, MapPin, Hash, DollarSign,
-  Landmark, Check, Zap, Save, ShieldCheck, BarChart3, Briefcase
+  Landmark, Check, Zap, Save, ShieldCheck, BarChart3, Briefcase, LogOut
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import api from '../services/api';
+import {
+  getOnboardingClientSession,
+  type OnboardingClientSession,
+} from '../services/onboardingClientAuthService';
 import {
   fetchAvailableDates,
   fetchAvailableTimeSlots,
   bookIntroductionCall,
   buildScheduleCalendarMonths,
   SCHEDULE_DAYS_AHEAD,
+  getTimeZoneDisplayLabel,
+  getTimeZoneShortLabel,
+  type ScheduleBookingPayload,
+  type ScheduleTimeSlot,
 } from '../services/onboardingCalendarService';
 import {
   type NpiApiData,
   buildPrefillFromNpiData,
   clearNpiDerivedFields,
   formatNpiLookupError,
-  lookupNpiRegistry,
+  lookupOnboardingNpiRegistry,
   resetAllowedTaxonomiesCache,
 } from '../services/npiRegistryService';
 import { formatDateForDisplay, formatTimeForDisplay } from '../utils/dateTimeUtils';
+import { ScheduleTimeSlotTile } from '../components/onboarding/ScheduleTimeSlotTile';
 import { sendOnboardingScheduleConfirmationEmail } from '../services/onboardingScheduleEmailService';
+import {
+  extractOnboardingId,
+  hydrateOnboardingFromEmail,
+} from '../services/onboardingHydrationService';
+import {
+  buildStepSubmitPayload,
+  persistOnboardingFormState,
+  processOnboardingApiResponse,
+  readOnboardingStepMeta,
+  readOnboardingStorageRecord,
+  storageRecordToFormPartial,
+  writeOnboardingStorageRecord,
+} from '../services/onboardingStorageService';
 import { EnrollmentSaveNotice } from '../components/onboarding/EnrollmentSaveNotice';
+import { OnboardingIdleWarningModal } from '../components/onboarding/OnboardingIdleWarningModal';
+import { useOnboardingSessionGuard } from '../hooks/useOnboardingSessionGuard';
+import { clearAllOnboardingSessionData } from '../services/onboardingSecurityService';
 import { EnrollmentSectionsBarRow } from '../components/onboarding/EnrollmentSectionsBarRow';
 import { ObArrowRight, ObBackButtonLabel, ObForwardButtonLabel } from '../components/onboarding/ObBtnArrow';
 import { StepSignAgreements } from '../components/onboarding/step3/StepSignAgreements';
@@ -44,6 +69,7 @@ import './DyadOnboarding.css';
 
 export interface OnboardingData {
   // Step 1
+  onboardingId: string;
   npi: string;
   npiConfirmed: boolean;
   npiEnumerationType: string;
@@ -53,7 +79,7 @@ export interface OnboardingData {
   confirmedPracticeType: string;
   sectionAContinued: boolean;
   enrollmentPathwayViewed: boolean;
-  // Step 2 — Schedule Introduction Call
+  // Step 2 - Schedule Introduction Call
   firstName: string;
   lastName: string;
   titleRole: string;
@@ -69,20 +95,32 @@ export interface OnboardingData {
   step2OrgContinued: boolean;
   step2FootprintContinued: boolean;
   calendlyScheduled: boolean;
+  scheduleConfirmationEmailSent: boolean;
   step2ScheduleContinued: boolean;
   engagementTimeline: string;
   step2PrepareComplete: boolean;
   callDate: string;
   callTime: string;
+  callTimeZone: string;
   callMeetingLink: string;
+  googleMeetLink: string;
+  meetingLink: string;
+  callEventId: string;
+  callCalendarId: string;
+  callEventLink: string;
+  /** Snapshot when create-event succeeds; used to detect edits vs booked slot */
+  bookedCallDate: string;
+  bookedCallTime: string;
   callerName: string;
   callerEmail: string;
   callerPhone: string;
-  // Step 3 — Sign Agreements
+  // Step 3 - Sign Agreements
   step3EntityComplete: boolean;
   step3NdaComplete: boolean;
   step3BaaComplete: boolean;
   signerEmailVerified: boolean;
+  /** Email address that passed verification (intake or OTP); must match signerEmail to proceed */
+  verifiedSignerEmail: string;
   entityLegalName: string;
   entityType: string;
   entityFormationState: string;
@@ -103,7 +141,7 @@ export interface OnboardingData {
   confidentialityAgreed: boolean;
   baaAgreed: boolean;
   baaSignature: string;
-  // Step 4 — Due Diligence
+  // Step 4 - Due Diligence
   groupLegalName: string;
   taxId: string;
   providerCount: string;
@@ -132,12 +170,17 @@ export interface OnboardingData {
   ddPayerCash: string;
   reportAvailabilityNotes: string;
   ddDocuments: Record<string, DueDiligenceDocMeta | null>;
-  // Step 5 — Commercial Alignment & MSA
+  // Step 5 - Commercial Alignment & MSA
   proposalReviewed: boolean;
   commercialDecision: CommercialDecision;
   discussQuestions: string;
   discussContactPref: '' | 'email' | 'call';
   step5EntityComplete: boolean;
+  step5MsaComplete: boolean;
+  step5CarriedExhibitAComplete: boolean;
+  step5CarriedExhibitBComplete: boolean;
+  step5ExhibitCComplete: boolean;
+  step5FeeScheduleComplete: boolean;
   step5MsaAttested: boolean;
   step5ExhibitCAttested: boolean;
   step5FeeScheduleAttested: boolean;
@@ -158,9 +201,11 @@ export interface OnboardingData {
   primaryPayerMix: string;
   msaAgreed: boolean;
   msaSignature: string;
+  msaProviderSignatureImage: string;
   contractStartDate: string;
-  // Step 6 — Banking & Payment Setup
+  // Step 6 - Banking & Payment Setup
   step6Sec1Attested: boolean;
+  step6Sec1Complete: boolean;
   step6CipDob: string;
   step6CipSsn: string;
   step6CipCitizenship: string;
@@ -169,6 +214,7 @@ export interface OnboardingData {
   step6CipResState: string;
   step6CipResZip: string;
   step6Sec2Attested: boolean;
+  step6Sec2Complete: boolean;
   w9Line1: string;
   w9Line2: string;
   w9TaxClass: string;
@@ -192,14 +238,17 @@ export interface OnboardingData {
   achMandateId: string;
   achMandateActivatedAt: string;
   step6Sec4Attested: boolean;
+  step6Sec4Complete: boolean;
   sweepUseSection4: boolean;
   sweepOtherBankName: string;
   sweepOtherAcctType: string;
   sweepOtherRouting: string;
   sweepOtherAccount: string;
   step6Sec5Attested: boolean;
+  step6Sec5Complete: boolean;
   kycDocuments: Record<string, KycDocMeta | null>;
   step6Sec6Attested: boolean;
+  step6Sec6Complete: boolean;
   step6EnrollmentComplete: boolean;
   step6ConfirmationId: string;
   accountHolderName: string;
@@ -210,6 +259,7 @@ export interface OnboardingData {
 }
 
 const INITIAL_DATA: OnboardingData = {
+  onboardingId: '',
   npi: '',
   npiConfirmed: false,
   npiEnumerationType: '',
@@ -234,12 +284,21 @@ const INITIAL_DATA: OnboardingData = {
   step2OrgContinued: false,
   step2FootprintContinued: false,
   calendlyScheduled: false,
+  scheduleConfirmationEmailSent: false,
   step2ScheduleContinued: false,
   engagementTimeline: '',
   step2PrepareComplete: false,
   callDate: '',
   callTime: '',
+  callTimeZone: '',
   callMeetingLink: '',
+  googleMeetLink: '',
+  meetingLink: '',
+  callEventId: '',
+  callCalendarId: '',
+  callEventLink: '',
+  bookedCallDate: '',
+  bookedCallTime: '',
   callerName: '',
   callerEmail: '',
   callerPhone: '',
@@ -247,6 +306,7 @@ const INITIAL_DATA: OnboardingData = {
   step3NdaComplete: false,
   step3BaaComplete: false,
   signerEmailVerified: false,
+  verifiedSignerEmail: '',
   entityLegalName: '',
   entityType: '',
   entityFormationState: '',
@@ -300,6 +360,11 @@ const INITIAL_DATA: OnboardingData = {
   discussQuestions: '',
   discussContactPref: '',
   step5EntityComplete: false,
+  step5MsaComplete: false,
+  step5CarriedExhibitAComplete: false,
+  step5CarriedExhibitBComplete: false,
+  step5ExhibitCComplete: false,
+  step5FeeScheduleComplete: false,
   step5MsaAttested: false,
   step5ExhibitCAttested: false,
   step5FeeScheduleAttested: false,
@@ -320,8 +385,10 @@ const INITIAL_DATA: OnboardingData = {
   primaryPayerMix: '',
   msaAgreed: false,
   msaSignature: '',
+  msaProviderSignatureImage: '',
   contractStartDate: '',
   step6Sec1Attested: false,
+  step6Sec1Complete: false,
   step6CipDob: '',
   step6CipSsn: '',
   step6CipCitizenship: '',
@@ -330,6 +397,7 @@ const INITIAL_DATA: OnboardingData = {
   step6CipResState: '',
   step6CipResZip: '',
   step6Sec2Attested: false,
+  step6Sec2Complete: false,
   w9Line1: '',
   w9Line2: '',
   w9TaxClass: '',
@@ -353,14 +421,17 @@ const INITIAL_DATA: OnboardingData = {
   achMandateId: '',
   achMandateActivatedAt: '',
   step6Sec4Attested: false,
+  step6Sec4Complete: false,
   sweepUseSection4: true,
   sweepOtherBankName: '',
   sweepOtherAcctType: '',
   sweepOtherRouting: '',
   sweepOtherAccount: '',
   step6Sec5Attested: false,
+  step6Sec5Complete: false,
   kycDocuments: emptyKycDocuments(),
   step6Sec6Attested: false,
+  step6Sec6Complete: false,
   step6EnrollmentComplete: false,
   step6ConfirmationId: '',
   accountHolderName: '',
@@ -370,9 +441,169 @@ const INITIAL_DATA: OnboardingData = {
   accountType: '',
 };
 
-const STORAGE_KEY = 'dyad_onboarding_v1';
-const STEP_KEY = 'dyad_onboarding_step_v1';
-const HIGHEST_STEP_KEY = 'dyad_onboarding_highest_step_v1';
+const ONBOARDING_BOOL_FIELDS: (keyof OnboardingData)[] = [
+  'npiConfirmed', 'sectionAContinued', 'enrollmentPathwayViewed',
+  'step2ContactContinued', 'step2OrgContinued', 'step2FootprintContinued',
+  'calendlyScheduled', 'scheduleConfirmationEmailSent', 'step2ScheduleContinued', 'step2PrepareComplete',
+  'step3EntityComplete', 'step3NdaComplete', 'step3BaaComplete', 'signerEmailVerified',
+  'confidentialityAgreed', 'baaAgreed',
+  'step4ProviderConfirmed', 'step4FinancialConfirmed', 'step4DocsConfirmed',
+  'proposalReviewed', 'step5EntityComplete', 'step5MsaComplete', 'step5CarriedExhibitAComplete',
+  'step5CarriedExhibitBComplete', 'step5ExhibitCComplete', 'step5FeeScheduleComplete',
+  'step5MsaAttested', 'step5ExhibitCAttested',
+  'step5FeeScheduleAttested', 'msaPackageAgreed', 'msaPackageExecuted', 'msaAgreed',
+  'step6Sec1Attested', 'step6Sec1Complete', 'step6Sec2Attested', 'step6Sec2Complete',
+  'w9EsignConsent', 'w9IrsCert', 'w9AuthDist',
+  'w9Signed', 'w9Item2Flagged', 'achMandateActive', 'step6Sec4Attested', 'step6Sec4Complete',
+  'sweepUseSection4', 'step6Sec5Attested', 'step6Sec5Complete', 'step6Sec6Attested', 'step6Sec6Complete',
+  'step6EnrollmentComplete',
+];
+
+const coerceOnboardingBoolean = (value: unknown): boolean => {
+  if (typeof value === 'boolean') return value;
+  if (typeof value === 'number') return value !== 0;
+  if (typeof value === 'string') {
+    const normalized = value.trim().toLowerCase();
+    if (normalized === 'true' || normalized === '1' || normalized === 'yes') return true;
+    if (normalized === 'false' || normalized === '0' || normalized === 'no' || normalized === '') return false;
+  }
+  return Boolean(value);
+};
+
+const isEmptyOnboardingValue = (value: unknown): boolean => {
+  if (value === null || value === undefined) return true;
+  if (typeof value === 'string') return value.trim().length === 0;
+  if (Array.isArray(value)) return value.length === 0;
+  return false;
+};
+
+const PRACTICE_TYPE_ID_LIST = ['anesthesiology', 'surgical', 'pain', 'asc'] as const;
+const PRACTICE_TYPE_ID_SET = new Set<string>(PRACTICE_TYPE_ID_LIST);
+
+const PRACTICE_TYPE_TITLE_BY_ID: Record<(typeof PRACTICE_TYPE_ID_LIST)[number], string> = {
+  anesthesiology: 'Anesthesiology',
+  surgical: 'Surgical Specialty',
+  pain: 'Pain Medicine',
+  asc: 'ASC Facility',
+};
+
+const sortPracticeTypeIdsFromList = (ids: string[]) =>
+  PRACTICE_TYPE_ID_LIST.filter(id => ids.includes(id));
+
+const resolvePracticeTypeId = (raw: string): string => {
+  const trimmed = raw.trim();
+  if (!trimmed) return '';
+  if (PRACTICE_TYPE_ID_SET.has(trimmed)) return trimmed;
+  const lower = trimmed.toLowerCase();
+  if (PRACTICE_TYPE_ID_SET.has(lower)) return lower;
+
+  const byTitle = PRACTICE_TYPE_ID_LIST.find(
+    id => PRACTICE_TYPE_TITLE_BY_ID[id].toLowerCase() === lower,
+  );
+  if (byTitle) return byTitle;
+
+  if (/anesthes|crna/i.test(lower)) return 'anesthesiology';
+  if (/\bpain\b|pain medicine|interventional pain/i.test(lower)) return 'pain';
+  if (/asc|ambulatory surg|surgery center/i.test(lower)) return 'asc';
+  if (/surg|orthop|ophthalmol|ent|urolog|gastro/i.test(lower)) return 'surgical';
+
+  return '';
+};
+
+const hasValidPracticeTypeSelection = (ids: string[]) =>
+  ids.some(id => PRACTICE_TYPE_ID_SET.has(id));
+
+const normalizePracticeTypeSelection = (data: OnboardingData): OnboardingData => {
+  const next = { ...data };
+
+  let selected = (next.selectedPracticeTypes ?? [])
+    .map(resolvePracticeTypeId)
+    .filter((id): id is string => PRACTICE_TYPE_ID_SET.has(id));
+  selected = sortPracticeTypeIdsFromList([...new Set(selected)]);
+
+  const practiceId = resolvePracticeTypeId(next.practiceType || '');
+  if (!hasValidPracticeTypeSelection(selected) && practiceId) {
+    selected = [practiceId];
+  }
+
+  if (!hasValidPracticeTypeSelection(selected) && next.npiApiData && next.npiConfirmed) {
+    const fromNpi = buildPrefillFromNpiData(next.npiApiData).selectedPracticeTypes
+      .map(resolvePracticeTypeId)
+      .filter((id): id is string => PRACTICE_TYPE_ID_SET.has(id));
+    selected = sortPracticeTypeIdsFromList(fromNpi);
+  }
+
+  if (hasValidPracticeTypeSelection(selected)) {
+    next.selectedPracticeTypes = selected;
+    if (!PRACTICE_TYPE_ID_SET.has(next.practiceType)) {
+      next.practiceType = selected[0];
+    }
+    if (next.sectionAContinued && !PRACTICE_TYPE_ID_SET.has(next.confirmedPracticeType)) {
+      next.confirmedPracticeType = selected[0];
+    }
+    if (next.npiApiData && next.npiConfirmed && !next.npiApiData.suggestedPracticeTypes?.length) {
+      next.npiApiData = {
+        ...next.npiApiData,
+        suggestedPracticeTypes: selected as NpiApiData['suggestedPracticeTypes'],
+        suggestedPracticeType: (selected[0] || next.npiApiData.suggestedPracticeType || '') as NpiApiData['suggestedPracticeType'],
+      };
+    }
+  }
+
+  return next;
+};
+
+const applyNpiDerivedPrefill = (data: OnboardingData): OnboardingData => {
+  if (!data.npiApiData || !data.npiConfirmed) return data;
+  const prefill = buildPrefillFromNpiData(data.npiApiData);
+  const next = { ...data };
+  (Object.keys(prefill) as (keyof typeof prefill)[]).forEach((key) => {
+    const incoming = prefill[key];
+    if (isEmptyOnboardingValue(incoming)) return;
+    const current = next[key as keyof OnboardingData];
+    const isPracticeField = key === 'selectedPracticeTypes' || key === 'practiceType';
+    if (isPracticeField && hasValidPracticeTypeSelection(
+      Array.isArray(current) ? current as string[] : [],
+    )) {
+      return;
+    }
+    if (isEmptyOnboardingValue(current) || isPracticeField) {
+      (next as Record<string, unknown>)[key] = incoming;
+    }
+  });
+  return next;
+};
+
+const sanitizeLoadedOnboardingData = (parsed: Partial<OnboardingData>): OnboardingData => {
+  const merged = { ...INITIAL_DATA, ...parsed };
+  ONBOARDING_BOOL_FIELDS.forEach((field) => {
+    (merged as Record<string, unknown>)[field] = coerceOnboardingBoolean(merged[field]);
+  });
+  if (!merged.sectionAContinued) {
+    merged.enrollmentPathwayViewed = false;
+  }
+  if (!Array.isArray(merged.selectedStates)) {
+    merged.selectedStates = [];
+  }
+  if (!merged.npiApiData) {
+    merged.npiApiData = null;
+  }
+  if (!Array.isArray(merged.selectedPracticeTypes)) {
+    merged.selectedPracticeTypes = merged.practiceType ? [merged.practiceType] : [];
+  }
+  if (merged.sectionAContinued && merged.practiceType && !merged.confirmedPracticeType) {
+    merged.confirmedPracticeType = merged.practiceType;
+  }
+  merged.ddDocuments = { ...emptyDueDiligenceDocuments(), ...(merged.ddDocuments || {}) };
+  merged.kycDocuments = { ...emptyKycDocuments(), ...(merged.kycDocuments || {}) };
+  merged.callEventId = merged.callEventId ?? '';
+  merged.callCalendarId = merged.callCalendarId ?? '';
+  merged.callEventLink = merged.callEventLink ?? '';
+  merged.bookedCallDate = merged.bookedCallDate ?? '';
+  merged.bookedCallTime = merged.bookedCallTime ?? '';
+  merged.onboardingId = merged.onboardingId ?? '';
+  return normalizePracticeTypeSelection(applyNpiDerivedPrefill(merged));
+};
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -450,12 +681,12 @@ const isEnrollmentStepComplete = (
       || data.commercialDecision === 'discuss'
       || data.commercialDecision === 'decline';
     case 6: return data.step6EnrollmentComplete || (
-      data.step6Sec1Attested
-      && data.step6Sec2Attested
+      data.step6Sec1Complete
+      && data.step6Sec2Complete
       && data.w9Signed
-      && data.step6Sec4Attested
-      && data.step6Sec5Attested
-      && data.step6Sec6Attested
+      && data.step6Sec4Complete
+      && data.step6Sec5Complete
+      && data.step6Sec6Complete
     );
     default: return false;
   }
@@ -556,23 +787,23 @@ const PRIMARY_SPECIALTIES = [
 ];
 
 const PROVIDER_COUNT_OPTIONS = [
-  { value: '1', label: '1 provider — Solo provider' },
-  { value: '2-10', label: '2–10 providers — Small group' },
-  { value: '11-49', label: '11–49 providers — Mid-sized group' },
-  { value: '50-99', label: '50–99 providers — Large group or regional platform' },
-  { value: '100-499', label: '100–499 providers — Enterprise group or specialty platform' },
-  { value: '500+', label: '500+ providers — National platform or integrated enterprise' },
-  { value: 'unsure', label: 'Not sure — Dyad can help determine this during intake' },
+  { value: '1', label: '1 provider - Solo provider' },
+  { value: '2-10', label: '2–10 providers - Small group' },
+  { value: '11-49', label: '11–49 providers - Mid-sized group' },
+  { value: '50-99', label: '50–99 providers - Large group or regional platform' },
+  { value: '100-499', label: '100–499 providers - Enterprise group or specialty platform' },
+  { value: '500+', label: '500+ providers - National platform or integrated enterprise' },
+  { value: 'unsure', label: 'Not sure - Dyad can help determine this during intake' },
 ];
 
 const LOCATION_COUNT_OPTIONS = [
-  { value: '1', label: '1 location or facility — Single-site practice' },
-  { value: '2-5', label: '2–5 locations — Small multi-site group' },
-  { value: '6-10', label: '6–10 locations — Regional footprint' },
-  { value: '11-25', label: '11–25 locations — Large regional group or platform' },
-  { value: '26-50', label: '26–50 locations — Multi-market platform or portfolio' },
-  { value: '51+', label: '51+ locations — National platform or enterprise' },
-  { value: 'unsure', label: 'Not sure — Dyad can help determine this during intake' },
+  { value: '1', label: '1 location or facility - Single-site practice' },
+  { value: '2-5', label: '2–5 locations - Small multi-site group' },
+  { value: '6-10', label: '6–10 locations - Regional footprint' },
+  { value: '11-25', label: '11–25 locations - Large regional group or platform' },
+  { value: '26-50', label: '26–50 locations - Multi-market platform or portfolio' },
+  { value: '51+', label: '51+ locations - National platform or enterprise' },
+  { value: 'unsure', label: 'Not sure - Dyad can help determine this during intake' },
 ];
 
 const ENGAGEMENT_TIMELINES = [
@@ -594,7 +825,7 @@ const ORG_PROFILE_TYPES = [
 ];
 
 const STEP2_PREP_ITEMS = [
-  'A general overview of your practice — number of providers, primary specialty, and patient volume',
+  'A general overview of your practice - number of providers, primary specialty, and patient volume',
   'Key challenges or goals you\'d like Dyad to address (collections, denials, credentialing, compliance, etc.)',
   'Names of any practice management or EHR systems currently in use',
   'Any relevant contracts or agreements that may be in transition (billing vendors, payer contracts, etc.)',
@@ -734,52 +965,35 @@ const EnrollmentProgressCard: React.FC<EnrollmentProgressCardProps> = ({
 };
 
 const BeginEnrollmentButtonLabel: React.FC<{ isSubmitting: boolean }> = ({ isSubmitting }) => (
-  <ObForwardButtonLabel label="Begin Enrollment" loading={isSubmitting} loadingLabel="Starting…" />
+  <ObForwardButtonLabel label="Begin Enrollment" loading={isSubmitting} keepLabelOnLoading />
 );
 
 // ─── Main Component ──────────────────────────────────────────────────────────
 
 const DyadOnboarding: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const isClientOnboardingRoute = location.pathname === '/client-onboarding-process';
+  const [clientSession, setClientSession] = useState<OnboardingClientSession | null>(() =>
+    isClientOnboardingRoute ? getOnboardingClientSession() : null,
+  );
 
-  const [currentStep, setCurrentStep] = useState<number>(() => {
-    try { return parseInt(localStorage.getItem(STEP_KEY) || '1', 10) || 1; } catch { return 1; }
-  });
+  useEffect(() => {
+    if (isClientOnboardingRoute) {
+      setClientSession(getOnboardingClientSession());
+    }
+  }, [isClientOnboardingRoute]);
 
-  const [highestStepReached, setHighestStepReached] = useState<number>(() => {
-    try {
-      const cur = parseInt(localStorage.getItem(STEP_KEY) || '1', 10) || 1;
-      const stored = parseInt(localStorage.getItem(HIGHEST_STEP_KEY) || String(cur), 10) || cur;
-      return Math.max(stored, cur);
-    } catch { return 1; }
-  });
+  const [currentStep, setCurrentStep] = useState<number>(() => readOnboardingStepMeta().currentStep);
+
+  const [highestStepReached, setHighestStepReached] = useState<number>(
+    () => readOnboardingStepMeta().highestStepReached,
+  );
 
   const [formData, setFormData] = useState<OnboardingData>(() => {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return INITIAL_DATA;
-      const parsed = { ...INITIAL_DATA, ...JSON.parse(raw) };
-      if (!parsed.sectionAContinued) {
-        parsed.enrollmentPathwayViewed = false;
-      }
-      if (!Array.isArray(parsed.selectedStates)) {
-        parsed.selectedStates = [];
-      }
-      if (typeof parsed.npiConfirmed !== 'boolean') {
-        parsed.npiConfirmed = false;
-      }
-      if (!parsed.npiApiData) {
-        parsed.npiApiData = null;
-      }
-      if (!Array.isArray(parsed.selectedPracticeTypes)) {
-        parsed.selectedPracticeTypes = parsed.practiceType ? [parsed.practiceType] : [];
-      }
-      if (parsed.sectionAContinued && parsed.practiceType && !parsed.confirmedPracticeType) {
-        parsed.confirmedPracticeType = parsed.practiceType;
-      }
-      parsed.ddDocuments = { ...emptyDueDiligenceDocuments(), ...(parsed.ddDocuments || {}) };
-      parsed.kycDocuments = { ...emptyKycDocuments(), ...(parsed.kycDocuments || {}) };
-      return parsed;
+      const record = readOnboardingStorageRecord();
+      return sanitizeLoadedOnboardingData(storageRecordToFormPartial(record));
     } catch { return INITIAL_DATA; }
   });
 
@@ -789,8 +1003,71 @@ const DyadOnboarding: React.FC = () => {
   );
   const [savedBadge, setSavedBadge] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formDataEpoch, setFormDataEpoch] = useState(0);
+  const [isHydratingOnboarding, setIsHydratingOnboarding] = useState(isClientOnboardingRoute);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isInitialSave = useRef(true);
+  const hasPendingSaveRef = useRef(false);
+  const onboardingHydratedRef = useRef(false);
+  const onboardingHydratingRef = useRef(isClientOnboardingRoute);
+
+  const applyStorageRecordToForm = useCallback((
+    record: ReturnType<typeof readOnboardingStorageRecord>,
+    email?: string,
+  ) => {
+    const next = sanitizeLoadedOnboardingData({
+      ...storageRecordToFormPartial(record),
+      contactEmail: record.contactEmail || email || '',
+    });
+    setFormData(next);
+    setFormDataEpoch(epoch => epoch + 1);
+
+    if (next.sectionAContinued) {
+      setSectionAOpen(false);
+      setSectionBOpen(!next.enrollmentPathwayViewed);
+    }
+
+    const step = Math.min(Math.max(record.currentStep || 1, 1), SIDEBAR_STEPS.length);
+    const highest = Math.min(
+      Math.max(record.highestStepReached || step, step),
+      SIDEBAR_STEPS.length,
+    );
+    setCurrentStep(step);
+    setHighestStepReached(highest);
+    return next;
+  }, []);
+
+  useEffect(() => {
+    if (!isClientOnboardingRoute || !clientSession?.email || onboardingHydratedRef.current) {
+      onboardingHydratingRef.current = false;
+      setIsHydratingOnboarding(false);
+      return;
+    }
+    onboardingHydratedRef.current = true;
+
+    const email = clientSession.email;
+
+    void (async () => {
+      try {
+        const result = await hydrateOnboardingFromEmail(email);
+        if (result) {
+          applyStorageRecordToForm(result.storageRecord, email);
+        } else {
+          const stepMeta = readOnboardingStepMeta();
+          const next = sanitizeLoadedOnboardingData({
+            ...storageRecordToFormPartial(readOnboardingStorageRecord()),
+            contactEmail: email,
+          });
+          persistOnboardingFormState(next, stepMeta);
+          setFormData(next);
+          setFormDataEpoch(epoch => epoch + 1);
+        }
+      } finally {
+        onboardingHydratingRef.current = false;
+        setIsHydratingOnboarding(false);
+      }
+    })();
+  }, [isClientOnboardingRoute, clientSession?.email, applyStorageRecordToForm]);
 
   const sectionAUnlocked = formData.npiConfirmed && formData.selectedPracticeTypes.length > 0;
   const sectionAComplete = formData.sectionAContinued;
@@ -801,6 +1078,69 @@ const DyadOnboarding: React.FC = () => {
   const effectiveHighestStep = deriveHighestStepReached(
     highestStepReached, currentStep, formData, sectionAComplete, sectionBComplete,
   );
+
+  const flushSave = useCallback(() => {
+    if (saveTimer.current) {
+      clearTimeout(saveTimer.current);
+      saveTimer.current = null;
+    }
+    if (onboardingHydratingRef.current) return;
+    try {
+      persistOnboardingFormState(formData, {
+        currentStep,
+        highestStepReached: effectiveHighestStep,
+      });
+      hasPendingSaveRef.current = false;
+    } catch { /* ignore */ }
+  }, [formData, currentStep, effectiveHighestStep]);
+
+  const hasFormProgress = useCallback(() => Boolean(
+    formData.npi?.trim()
+    || formData.onboardingId
+    || formData.sectionAContinued
+    || formData.firstName?.trim()
+    || currentStep > 1,
+  ), [formData, currentStep]);
+
+  const handleIdleSecurityLogout = useCallback(async () => {
+    flushSave();
+    try {
+      if (formData.onboardingId && currentStep >= 1) {
+        const body = buildStepSubmitPayload(currentStep, formData, {
+          currentStep,
+          highestStepReached: effectiveHighestStep,
+          onboardingId: formData.onboardingId,
+        });
+        await api.post(`/onboarding/step/${currentStep}`, body);
+      }
+    } catch { /* best-effort server sync before secure logout */ }
+
+    clearAllOnboardingSessionData();
+    setClientSession(null);
+    navigate('/login', { replace: true, state: { loginMode: 'code', reason: 'idle_timeout' } });
+  }, [flushSave, formData, currentStep, effectiveHighestStep, navigate]);
+
+  const {
+    showIdleWarning,
+    idleSecondsLeft,
+    extendSession,
+    markIntentionalLeave,
+  } = useOnboardingSessionGuard({
+    enabled: isClientOnboardingRoute && !!clientSession && !isHydratingOnboarding,
+    hasUnsavedChanges: () => hasPendingSaveRef.current,
+    hasFormProgress,
+    flushSave,
+    onIdleSecurityLogout: handleIdleSecurityLogout,
+  });
+
+  const handleClientLogout = () => {
+    markIntentionalLeave();
+    flushSave();
+    clearAllOnboardingSessionData();
+    setClientSession(null);
+    toast.success('Signed out');
+    navigate('/login', { replace: true, state: { loginMode: 'code' } });
+  };
 
   useEffect(() => {
     if (effectiveHighestStep > highestStepReached) {
@@ -817,12 +1157,17 @@ const DyadOnboarding: React.FC = () => {
 
   // Auto-save: debounced write to localStorage
   useEffect(() => {
+    if (onboardingHydratingRef.current) return;
+    hasPendingSaveRef.current = true;
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(() => {
+      if (onboardingHydratingRef.current) return;
       try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(formData));
-        localStorage.setItem(STEP_KEY, String(currentStep));
-        localStorage.setItem(HIGHEST_STEP_KEY, String(effectiveHighestStep));
+        persistOnboardingFormState(formData, {
+          currentStep,
+          highestStepReached: effectiveHighestStep,
+        });
+        hasPendingSaveRef.current = false;
         if (isInitialSave.current) {
           isInitialSave.current = false;
           return;
@@ -855,11 +1200,39 @@ const DyadOnboarding: React.FC = () => {
     }
   };
 
-  const submitStep = async (step: number, payload: Record<string, unknown>) => {
+  const submitStep = async (
+    step: number,
+    meta: { currentStep: number; highestStepReached: number },
+    dataSnapshot?: OnboardingData,
+  ): Promise<string | null> => {
+    const data = dataSnapshot ?? formData;
+    const body = buildStepSubmitPayload(step, data, {
+      ...meta,
+      onboardingId: data.onboardingId || undefined,
+    });
     try {
-      await api.post(`/onboarding/step/${step}`, payload);
+      const res = await api.post(`/onboarding/step/${step}`, body);
+      const responseId = extractOnboardingId(res.data);
+
+      if (res.data) {
+        const mergedRecord = processOnboardingApiResponse(res.data, {
+          email: formData.contactEmail || clientSession?.email,
+          mergeWithLocal: true,
+          persist: true,
+          localRecord: readOnboardingStorageRecord(),
+        });
+        mergedRecord.currentStep = meta.currentStep;
+        mergedRecord.highestStepReached = meta.highestStepReached;
+        if (responseId) mergedRecord.onboardingId = responseId;
+        writeOnboardingStorageRecord(mergedRecord);
+        applyStorageRecordToForm(mergedRecord, formData.contactEmail || clientSession?.email);
+      }
+
+      if (step === 1) return responseId ?? extractOnboardingId(res.data);
+      return responseId ?? data.onboardingId ?? null;
     } catch {
       // Proceed even if API unavailable; data is saved locally
+      return formData.onboardingId || null;
     }
   };
 
@@ -869,142 +1242,83 @@ const DyadOnboarding: React.FC = () => {
       return;
     }
     setIsSubmitting(true);
-    await submitStep(1, {
-      practiceType: getPracticeTypeLabel(formData),
-      npi: formData.npi,
-      npiApiData: formData.npiApiData,
+    const newOnboardingId = await submitStep(1, {
+      currentStep: 2,
+      highestStepReached: Math.max(effectiveHighestStep, 2),
     });
+    if (newOnboardingId) set('onboardingId', newOnboardingId);
     setIsSubmitting(false);
     bumpHighestStep(2);
     goToStep(2);
   };
 
-  const handleNextFromStep = async () => {
+  const handleNextFromStep = async (overrides?: Partial<OnboardingData>) => {
     setIsSubmitting(true);
-    const payloads: Record<number, Record<string, unknown>> = {
-      2: {
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        titleRole: formData.titleRole,
-        organizationName: formData.organizationName,
-        contactEmail: formData.contactEmail,
-        contactPhone: formData.contactPhone,
-        primarySpecialty: formData.primarySpecialty,
-        selectedStates: formData.selectedStates,
-        organizationType: formData.organizationType,
-        billableProviders: formData.billableProviders,
-        locationsFacilities: formData.locationsFacilities,
-        calendlyScheduled: formData.calendlyScheduled,
-        callDate: formData.callDate,
-        callTime: formData.callTime,
-        callMeetingLink: formData.callMeetingLink,
-        engagementTimeline: formData.engagementTimeline,
-        callerName: `${formData.firstName} ${formData.lastName}`.trim(),
-        callerEmail: formData.contactEmail,
-        callerPhone: formData.contactPhone,
-      },
-      3: {
-        step3EntityComplete: formData.step3EntityComplete,
-        step3NdaComplete: formData.step3NdaComplete,
-        step3BaaComplete: formData.step3BaaComplete,
-        entityLegalName: formData.entityLegalName,
-        entityType: formData.entityType,
-        confidentialityAgreed: formData.confidentialityAgreed,
-        baaAgreed: formData.baaAgreed,
-        baaSignature: formData.baaSignature,
-        ndaFields: formData.ndaFields,
-        baaFields: formData.baaFields,
-        ndaAcceptedRecordId: formData.ndaAcceptedRecordId,
-        baaAcceptedRecordId: formData.baaAcceptedRecordId,
-      },
-      4: {
-        taxId: formData.taxId,
-        website: formData.website,
-        step4ProviderConfirmed: formData.step4ProviderConfirmed,
-        step4FinancialConfirmed: formData.step4FinancialConfirmed,
-        step4DocsConfirmed: formData.step4DocsConfirmed,
-        annualCaseVolume: formData.annualCaseVolume,
-        annualGrossCollections: formData.annualGrossCollections,
-        inNetworkPayerContracts: formData.inNetworkPayerContracts,
-        ddPayerCommercial: formData.ddPayerCommercial,
-        ddPayerMedicare: formData.ddPayerMedicare,
-        ddPayerPI: formData.ddPayerPI,
-        ddPayerCash: formData.ddPayerCash,
-        reportAvailabilityNotes: formData.reportAvailabilityNotes,
-        ddDocuments: formData.ddDocuments,
-      },
-      5: {
-        proposalReviewed: formData.proposalReviewed,
-        commercialDecision: formData.commercialDecision,
-        discussQuestions: formData.discussQuestions,
-        discussContactPref: formData.discussContactPref,
-        step5EntityComplete: formData.step5EntityComplete,
-        step5MsaAttested: formData.step5MsaAttested,
-        step5ExhibitCAttested: formData.step5ExhibitCAttested,
-        step5FeeScheduleAttested: formData.step5FeeScheduleAttested,
-        msaFields: formData.msaFields,
-        exhibitCFields: formData.exhibitCFields,
-        feeScheduleFields: formData.feeScheduleFields,
-        msaPackageExecuted: formData.msaPackageExecuted,
-        msaPackageRecordId: formData.msaPackageRecordId,
-        msaAgreed: formData.msaAgreed,
-        msaSignature: formData.msaSignature,
-      },
-      6: {
-        step6Sec1Attested: formData.step6Sec1Attested,
-        step6Sec2Attested: formData.step6Sec2Attested,
-        w9Signed: formData.w9Signed,
-        step6Sec4Attested: formData.step6Sec4Attested,
-        step6Sec5Attested: formData.step6Sec5Attested,
-        step6Sec6Attested: formData.step6Sec6Attested,
-        step6EnrollmentComplete: formData.step6EnrollmentComplete,
-        step6ConfirmationId: formData.step6ConfirmationId,
-        accountHolderName: formData.accountHolderName,
-        bankName: formData.bankName,
-        routingNumber: formData.routingNumber,
-        accountNumber: formData.accountNumber,
-        accountType: formData.accountType,
-        achMandateActive: formData.achMandateActive,
-        kycDocuments: formData.kycDocuments,
-      },
-    };
-    await submitStep(currentStep, payloads[currentStep] || {});
+    const merged = overrides ? { ...formData, ...overrides } : formData;
+    if (overrides) setFormData(prev => ({ ...prev, ...overrides }));
+    const nextStep = Math.min(currentStep + 1, SIDEBAR_STEPS.length);
+    await submitStep(currentStep, {
+      currentStep: currentStep < SIDEBAR_STEPS.length ? nextStep : currentStep,
+      highestStepReached: Math.max(effectiveHighestStep, nextStep),
+    }, merged);
     setIsSubmitting(false);
     if (currentStep < SIDEBAR_STEPS.length) {
       bumpHighestStep(currentStep + 1);
       goToStep(currentStep + 1);
     } else {
+      markIntentionalLeave();
       toast.success('Enrollment complete! Welcome to Dyad Practice Solutions.');
-      localStorage.removeItem(STORAGE_KEY);
-      localStorage.removeItem(STEP_KEY);
-      localStorage.removeItem(HIGHEST_STEP_KEY);
+      clearAllOnboardingSessionData();
       navigate('/');
     }
   };
 
   const stepLabel = SIDEBAR_STEPS.find(s => s.id === currentStep)?.label.toUpperCase() ?? 'OVERVIEW';
-  const mobileStepDisplay = currentStep - 1;
+
+  const handleMobileBack = () => {
+    if (currentStep > 1) {
+      goToStep(currentStep - 1);
+    } else {
+      navigate('/');
+    }
+  };
 
   return (
     <div className="ob-wrapper">
-      {/* ── Mobile Header ── */}
+      {showIdleWarning && (
+        <OnboardingIdleWarningModal
+          secondsLeft={idleSecondsLeft}
+          onStaySignedIn={extendSession}
+          onLogoutNow={handleClientLogout}
+        />
+      )}
       <header className="ob-mobile-header">
         <button
           className="ob-mobile-back"
-          onClick={() => navigate(-1)}
+          onClick={handleMobileBack}
           type="button"
-          aria-label="Go back"
+          aria-label={currentStep > 1 ? 'Previous step' : 'Go back'}
         >
           <ArrowLeft size={20} />
         </button>
-        <div className="ob-mobile-brand">
-          <span className="ob-brand-dyad">DYAD</span>
-          <span className="ob-brand-sub">PRACTICE SOLUTIONS</span>
-        </div>
+        <button className="ob-mobile-brand" onClick={() => navigate('/')} type="button">
+          <img
+            alt="Dyad Practice Solutions"
+            className="ob-mobile-brand-logo"
+            src="/assets/images/logo_main.png"
+          />
+        </button>
       </header>
       <div className="ob-mobile-subheader">
         <span>ENROLLMENT</span>
-        <span className="ob-mobile-step-label">{stepLabel} · STEP {mobileStepDisplay} OF {SIDEBAR_STEPS.length}</span>
+        <span className="ob-mobile-step-label">
+          {stepLabel} · STEP {currentStep} OF {SIDEBAR_STEPS.length}
+        </span>
+        {isClientOnboardingRoute && clientSession && (
+          <button type="button" className="ob-mobile-logout-btn" onClick={handleClientLogout}>
+            Logout
+          </button>
+        )}
       </div>
 
       {/* ── Sidebar ── */}
@@ -1057,6 +1371,20 @@ const DyadOnboarding: React.FC = () => {
         </div>
 
         <div className="ob-sidebar-footer">
+          {isClientOnboardingRoute && clientSession && (
+            <div className="ob-client-user-bar">
+              <div className="ob-client-user-info">
+                <User size={14} aria-hidden="true" />
+                <span className="ob-client-user-name" title={clientSession.email}>
+                  {clientSession.displayName}
+                </span>
+              </div>
+              <button type="button" className="ob-client-logout-btn" onClick={handleClientLogout}>
+                <LogOut size={14} aria-hidden="true" />
+                Logout
+              </button>
+            </div>
+          )}
           <div className={`ob-saved-badge${savedBadge ? ' ob-saved-badge-visible' : ''}`} aria-live="polite">
             <Save size={12} />
             <span>Saved</span>
@@ -1077,8 +1405,14 @@ const DyadOnboarding: React.FC = () => {
 
         {/* Step Content */}
         <div className="ob-content">
-          {currentStep === 1 && (
+          {isHydratingOnboarding ? (
+            <div className="ob-hydration-loading" role="status" aria-live="polite">
+              <div className="ob-hydration-spinner" aria-hidden="true" />
+              <p>Loading your saved enrollment progress…</p>
+            </div>
+          ) : currentStep === 1 && (
             <StepOverview
+              key={`step-1-${formDataEpoch}`}
               formData={formData}
               set={set}
               setFormData={setFormData}
@@ -1094,8 +1428,9 @@ const DyadOnboarding: React.FC = () => {
               overviewSectionsComplete={overviewSectionsComplete}
             />
           )}
-          {currentStep === 2 && (
+          {!isHydratingOnboarding && currentStep === 2 && (
             <StepScheduleCall
+              key={`step-2-${formDataEpoch}`}
               formData={formData}
               set={set}
               setFormData={setFormData}
@@ -1104,8 +1439,9 @@ const DyadOnboarding: React.FC = () => {
               isSubmitting={isSubmitting}
             />
           )}
-          {currentStep === 3 && (
+          {!isHydratingOnboarding && currentStep === 3 && (
             <StepSignAgreements
+              key={`step-3-${formDataEpoch}`}
               formData={formData}
               set={set}
               setFormData={setFormData}
@@ -1127,8 +1463,9 @@ const DyadOnboarding: React.FC = () => {
               )}
             />
           )}
-          {currentStep === 4 && (
+          {!isHydratingOnboarding && currentStep === 4 && (
             <StepDueDiligence
+              key={`step-4-${formDataEpoch}`}
               formData={formData}
               set={set}
               onNext={handleNextFromStep}
@@ -1146,8 +1483,9 @@ const DyadOnboarding: React.FC = () => {
               }}
             />
           )}
-          {currentStep === 5 && (
+          {!isHydratingOnboarding && currentStep === 5 && (
             <StepCommercialAlignment
+              key={`step-5-${formDataEpoch}`}
               formData={formData}
               set={set}
               onNext={handleNextFromStep}
@@ -1167,8 +1505,9 @@ const DyadOnboarding: React.FC = () => {
               })()}
             />
           )}
-          {currentStep === 6 && (
+          {!isHydratingOnboarding && currentStep === 6 && (
             <StepBankingPaymentSetup
+              key={`step-6-${formDataEpoch}`}
               formData={formData}
               set={set}
               onNext={handleNextFromStep}
@@ -1279,7 +1618,7 @@ const StepOverview: React.FC<StepOverviewProps> = ({
     setShowNpiPanel(false);
     setPreviewNpiData(null);
     try {
-      const result = await lookupNpiRegistry(formData.npi);
+      const result = await lookupOnboardingNpiRegistry(formData.npi);
       setPreviewNpiData(result);
       setShowNpiPanel(true);
     } catch (err: unknown) {
@@ -1424,7 +1763,7 @@ const StepOverview: React.FC<StepOverviewProps> = ({
                 Practice or Provider NPI <span className="ob-req">*</span>
               </label>
               <p className="ob-field-hint">
-                10-digit National Provider Identifier — Type 1 (individual) or Type 2 (organization). Verified live against the CMS NPPES registry.
+                10-digit National Provider Identifier - Type 1 (individual) or Type 2 (organization). Verified live against the CMS NPPES registry.
               </p>
               <div className="ob-npi-row">
                 <input
@@ -1493,11 +1832,11 @@ const StepOverview: React.FC<StepOverviewProps> = ({
                     <div className="ob-npi-detail-grid">
                       <div className="ob-npi-detail-cell">
                         <div className="ob-npi-detail-label">PRIMARY TAXONOMY</div>
-                        <div className="ob-npi-detail-value">{npiPanelData.taxonomyDesc || '—'}</div>
+                        <div className="ob-npi-detail-value">{npiPanelData.taxonomyDesc || '-'}</div>
                       </div>
                       <div className="ob-npi-detail-cell">
                         <div className="ob-npi-detail-label">ENUMERATION DATE</div>
-                        <div className="ob-npi-detail-value ob-npi-detail-value--bold">{npiPanelData.enumerationDate || '—'}</div>
+                        <div className="ob-npi-detail-value ob-npi-detail-value--bold">{npiPanelData.enumerationDate || '-'}</div>
                       </div>
                       {npiPanelData.addr && (
                         <div className="ob-npi-detail-cell ob-npi-detail-cell--full">
@@ -1524,7 +1863,7 @@ const StepOverview: React.FC<StepOverviewProps> = ({
 
                     <div className="ob-npi-panel-actions">
                       <button type="button" className="ob-npi-confirm-btn" onClick={handleNpiConfirm}>
-                        Confirm — this is my practice <ObArrowRight />
+                        Confirm - this is my practice <ObArrowRight />
                       </button>
                       <button
                         type="button"
@@ -1549,7 +1888,7 @@ const StepOverview: React.FC<StepOverviewProps> = ({
             <p className="ob-practice-auto-label">
               {formData.npiConfirmed && formData.selectedPracticeTypes.length > 0
                 ? isMultiPracticeTypeEditable
-                  ? 'Your practice types (assigned from NPI — uncheck any that do not apply)'
+                  ? 'Your practice types (assigned from NPI - uncheck any that do not apply)'
                   : 'Your practice type (assigned from NPI)'
                 : 'Practice type (assigned automatically after NPI verification)'}
             </p>
@@ -1599,7 +1938,7 @@ const StepOverview: React.FC<StepOverviewProps> = ({
                 <span className="ob-footer-hint">Verify and confirm your NPI to continue</span>
               )}
               {formData.npiConfirmed && formData.selectedPracticeTypes.length === 0 && (
-                <span className="ob-footer-hint">Practice type could not be determined — try a different NPI</span>
+                <span className="ob-footer-hint">Practice type could not be determined - try a different NPI</span>
               )}
               <button
                 className={`ob-btn-primary${!sectionAUnlocked ? ' ob-btn-disabled' : ''}`}
@@ -1673,7 +2012,7 @@ const StepOverview: React.FC<StepOverviewProps> = ({
 
         <SectionCollapse open={showSectionBReview}>
           <div className="ob-section-footer ob-section-footer-fixed ob-pathway-footer">
-            <span className="ob-pathway-footer-hint">You may proceed once you have reviewed the steps above</span>
+            <span className="ob-pathway-footer-hint"></span>
             <button
               className="ob-btn-primary ob-pathway-review-btn"
               onClick={handlePathwayReviewed}
@@ -1700,7 +2039,7 @@ const StepOverview: React.FC<StepOverviewProps> = ({
         <EnrollmentSaveNotice />
         {/* Desktop Footer */}
         <div className="ob-step1-footer ob-step-footer">
-          <span className="ob-footer-note">Complete both sections above to unlock the option to begin enrollment.</span>
+          <span className="ob-footer-note"></span>
           <button
             className={`ob-btn-cta${!(sectionAComplete && sectionBComplete) ? ' ob-btn-disabled' : ''}`}
             onClick={onBeginEnrollment}
@@ -1721,10 +2060,18 @@ interface StepScheduleCallProps {
   formData: OnboardingData;
   set: <K extends keyof OnboardingData>(k: K, v: OnboardingData[K]) => void;
   setFormData: React.Dispatch<React.SetStateAction<OnboardingData>>;
-  onNext: () => void;
+  onNext: (overrides?: Partial<OnboardingData>) => Promise<void>;
   onBack: () => void;
   isSubmitting: boolean;
 }
+
+const normalizeContactEmail = (email: string): string => email.trim().toLowerCase();
+
+const isContactEmailVerified = (d: OnboardingData) => {
+  const current = normalizeContactEmail(d.contactEmail);
+  const verified = normalizeContactEmail(d.verifiedSignerEmail);
+  return current.length > 0 && verified.length > 0 && current === verified;
+};
 
 const isContactSectionValid = (d: OnboardingData) =>
   d.firstName.trim().length > 0
@@ -1734,27 +2081,29 @@ const isContactSectionValid = (d: OnboardingData) =>
   && isValidEmail(d.contactEmail)
   && isValidPhone(d.contactPhone)
   && !!d.primarySpecialty
-  && d.selectedStates.length > 0;
+  && d.selectedStates.length > 0
+  && isContactEmailVerified(d);
 
 const SCHEDULE_WEEKDAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 const ScheduledCallNotes: React.FC<{ email: string; meetingLink: string }> = ({ email, meetingLink }) => (
   <>
-    <p className="ob-confirm-note">A calendar invite will be sent to {email}.</p>
+    <p className="ob-confirm-note">A calendar invite has been sent to {email}.</p>
     {meetingLink ? (
-      <p className="ob-confirm-note">
-        <strong>Meeting link:</strong>{' '}
+      <p className="ob-confirm-note ob-confirm-meet-row">
         <a
           href={meetingLink}
           target="_blank"
           rel="noopener noreferrer"
-          className="ob-meeting-link"
+          className="ob-btn-primary ob-confirm-meet-btn"
         >
-          Join video call
+          Join Google Meet
         </a>
       </p>
     ) : (
-      <p className="ob-confirm-note">Your Google Meet link will be included in your calendar invite.</p>
+      <p className="ob-confirm-note">
+        Your Google Meet link is in the calendar invite from dyadcontactrequest@gmail.com.
+      </p>
     )}
   </>
 );
@@ -1877,13 +2226,32 @@ const StepScheduleCall: React.FC<StepScheduleCallProps> = ({
   const [statesOpen, setStatesOpen] = useState(false);
   const statesRef = useRef<HTMLDivElement>(null);
   const [availableDates, setAvailableDates] = useState<string[]>([]);
-  const [availableSlots, setAvailableSlots] = useState<string[]>([]);
+  const [availableSlots, setAvailableSlots] = useState<ScheduleTimeSlot[]>([]);
+  const [slotsTimeZone, setSlotsTimeZone] = useState('America/Los_Angeles');
   const [loadingDates, setLoadingDates] = useState(false);
   const [loadingSlots, setLoadingSlots] = useState(false);
+  const [slotsError, setSlotsError] = useState('');
+  const [slotsFetchedDate, setSlotsFetchedDate] = useState('');
+  const slotsRequestRef = useRef(0);
   const [bookingCall, setBookingCall] = useState(false);
+  const [sendingScheduleEmail, setSendingScheduleEmail] = useState(false);
+  const [scheduleRescheduleMode, setScheduleRescheduleMode] = useState(false);
+
+  const contactEmailVerified = isContactEmailVerified(formData);
 
   const step2SectionsComplete = getStep2SectionsComplete(formData);
   const scheduleSelectionComplete = !!(formData.callDate && formData.callTime);
+  const scheduleMatchesBooking =
+    !!formData.calendlyScheduled
+    && !!formData.bookedCallDate
+    && !!formData.bookedCallTime
+    && formData.callDate === formData.bookedCallDate
+    && formData.callTime === formData.bookedCallTime;
+  const showBookedCallSummary = scheduleMatchesBooking && scheduleSelectionComplete;
+  const hasConfirmedSchedule =
+    showBookedCallSummary
+    || (scheduleSelectionComplete && formData.step2ScheduleContinued);
+  const showScheduleSummaryOnly = hasConfirmedSchedule && !scheduleRescheduleMode;
   const step2DisplayComplete =
     step2SectionsComplete
     + (formData.step2FootprintContinued && !formData.step2ScheduleContinued && scheduleSelectionComplete ? 1 : 0);
@@ -1894,12 +2262,93 @@ const StepScheduleCall: React.FC<StepScheduleCallProps> = ({
   const footprintValid = !!formData.billableProviders && !!formData.locationsFacilities;
   const scheduleValid = scheduleSelectionComplete;
   const prepareValid = !!formData.engagementTimeline;
+  const activeTimeZone = formData.callTimeZone || slotsTimeZone;
+  const scheduleTzLabel = getTimeZoneDisplayLabel(activeTimeZone);
+  const scheduleTzShort = getTimeZoneShortLabel(activeTimeZone);
+  const formatScheduleTime = (time: string) =>
+    formatTimeForDisplay(time, activeTimeZone || undefined);
 
   const clearScheduleBooking = () => ({
     calendlyScheduled: false,
-    step2PrepareComplete: false,
+    scheduleConfirmationEmailSent: false,
     callMeetingLink: '',
+    googleMeetLink: '',
+    meetingLink: '',
+    callEventId: '',
+    callCalendarId: '',
+    callEventLink: '',
+    bookedCallDate: '',
+    bookedCallTime: '',
   });
+
+  const buildScheduleBookingOverrides = (
+    prev: OnboardingData,
+    meetingLink: string,
+    result: {
+      eventId?: string;
+      calendarId?: string;
+      eventLink?: string;
+    },
+    wasUpdated: boolean,
+  ): Partial<OnboardingData> => ({
+    calendlyScheduled: true,
+    callMeetingLink: meetingLink,
+    googleMeetLink: meetingLink,
+    meetingLink,
+    callEventId: result.eventId?.trim() || prev.callEventId || '',
+    callCalendarId: result.calendarId?.trim() || prev.callCalendarId || '',
+    callEventLink: result.eventLink?.trim() || prev.callEventLink || '',
+    bookedCallDate: prev.callDate,
+    bookedCallTime: prev.callTime,
+    callerName: `${prev.firstName} ${prev.lastName}`.trim(),
+    callerEmail: prev.contactEmail,
+    callerPhone: prev.contactPhone,
+    scheduleConfirmationEmailSent: wasUpdated ? false : prev.scheduleConfirmationEmailSent,
+  });
+
+  const invalidateFromContact = () => {
+    setFormData(prev => ({
+      ...prev,
+      step2ContactContinued: false,
+      ...clearScheduleBooking(),
+    }));
+    setSectionAOpen(true);
+    setSectionBOpen(false);
+    setSectionCOpen(false);
+    setSectionDOpen(false);
+    setSectionEOpen(false);
+    setScheduleRescheduleMode(false);
+  };
+
+  const invalidateFromOrg = () => {
+    setFormData(prev => ({
+      ...prev,
+      step2OrgContinued: false,
+      ...clearScheduleBooking(),
+    }));
+    setSectionBOpen(true);
+    setSectionCOpen(false);
+    setSectionDOpen(false);
+    setSectionEOpen(false);
+    setScheduleRescheduleMode(false);
+  };
+
+  const invalidateFromFootprint = () => {
+    setFormData(prev => ({
+      ...prev,
+      step2FootprintContinued: false,
+      ...clearScheduleBooking(),
+    }));
+    setSectionCOpen(true);
+    setSectionDOpen(false);
+    setSectionEOpen(false);
+    setScheduleRescheduleMode(false);
+  };
+
+  const sectionBUnlocked = formData.step2ContactContinued;
+  const sectionCUnlocked = formData.step2OrgContinued;
+  const sectionDUnlocked = formData.step2FootprintContinued;
+  const sectionEUnlocked = formData.step2ScheduleContinued;
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -1912,7 +2361,35 @@ const StepScheduleCall: React.FC<StepScheduleCallProps> = ({
   }, []);
 
   useEffect(() => {
+    if (
+      !sectionDOpen
+      || scheduleRescheduleMode
+      || !formData.calendlyScheduled
+      || !formData.callDate
+      || !formData.bookedCallDate
+    ) return;
+    setFormData(prev => ({
+      ...prev,
+      bookedCallDate: prev.callDate,
+      bookedCallTime: prev.callTime,
+    }));
+  }, [
+    sectionDOpen,
+    scheduleRescheduleMode,
+    formData.calendlyScheduled,
+    formData.callDate,
+    formData.callTime,
+    formData.bookedCallDate,
+    setFormData,
+  ]);
+
+  useEffect(() => {
     if (!sectionDOpen) return;
+    setSlotsFetchedDate('');
+    setSlotsError('');
+    setAvailableSlots([]);
+    setLoadingSlots(false);
+    slotsRequestRef.current += 1;
     let cancelled = false;
     setLoadingDates(true);
     fetchAvailableDates()
@@ -1921,128 +2398,105 @@ const StepScheduleCall: React.FC<StepScheduleCallProps> = ({
     return () => { cancelled = true; };
   }, [sectionDOpen]);
 
-  useEffect(() => {
-    if (!formData.callDate || !sectionDOpen) {
-      setAvailableSlots([]);
-      return;
-    }
-    let cancelled = false;
+  const loadSlotsForDate = async (date: string) => {
+    const requestId = ++slotsRequestRef.current;
     setLoadingSlots(true);
-    fetchAvailableTimeSlots(formData.callDate)
-      .then(slots => { if (!cancelled) setAvailableSlots(slots); })
-      .finally(() => { if (!cancelled) setLoadingSlots(false); });
-    return () => { cancelled = true; };
-  }, [formData.callDate, sectionDOpen]);
+    setSlotsError('');
+    setAvailableSlots([]);
+    setSlotsFetchedDate(date);
+    try {
+      const { slots, timeZone } = await fetchAvailableTimeSlots(date);
+      if (requestId !== slotsRequestRef.current) return;
+      setAvailableSlots(slots);
+      setSlotsTimeZone(timeZone);
+      set('callTimeZone', timeZone);
+    } catch (err: unknown) {
+      if (requestId !== slotsRequestRef.current) return;
+      setAvailableSlots([]);
+      setSlotsError(
+        err instanceof Error ? err.message : 'Could not load available times. Please try again.',
+      );
+    } finally {
+      if (requestId === slotsRequestRef.current) setLoadingSlots(false);
+    }
+  };
 
   const handleScheduleDateSelect = (date: string) => {
-    if (formData.step2ScheduleContinued) {
-      setFormData(prev => ({
-        ...prev,
-        callDate: date,
-        callTime: '',
+    const dateChanged = date !== formData.callDate;
+    const breaksBooking = formData.calendlyScheduled && dateChanged;
+    const needsReconfirm = formData.step2ScheduleContinued || breaksBooking;
+
+    setFormData(prev => ({
+      ...prev,
+      callDate: date,
+      callTime: dateChanged ? '' : prev.callTime,
+      callTimeZone: dateChanged ? '' : prev.callTimeZone,
+      ...(needsReconfirm ? {
         step2ScheduleContinued: false,
-        ...clearScheduleBooking(),
-      }));
-      setSectionEOpen(false);
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        callDate: date,
-        callTime: '',
-        ...clearScheduleBooking(),
-      }));
-    }
+        step2PrepareComplete: false,
+      } : {}),
+      ...(breaksBooking ? clearScheduleBooking() : {}),
+    }));
+    if (needsReconfirm) setSectionEOpen(false);
+    void loadSlotsForDate(date);
   };
 
-  const handleScheduleTimeSelect = (time: string) => {
-    if (formData.step2ScheduleContinued) {
-      setFormData(prev => ({
-        ...prev,
-        callTime: time,
+  const handleScheduleTimeSelect = (slot: ScheduleTimeSlot) => {
+    const time = slot.id;
+    const timeChanged = time !== formData.callTime;
+    const breaksBooking = formData.calendlyScheduled && timeChanged;
+    const needsReconfirm = formData.step2ScheduleContinued || breaksBooking;
+
+    setFormData(prev => ({
+      ...prev,
+      callTime: time,
+      callTimeZone: slotsTimeZone,
+      ...(needsReconfirm ? {
         step2ScheduleContinued: false,
-        ...clearScheduleBooking(),
-      }));
-      setSectionEOpen(false);
-    } else {
-      setFormData(prev => ({
-        ...prev,
-        callTime: time,
-        ...clearScheduleBooking(),
-      }));
-    }
-  };
-
-  const resetFromContact = () => {
-    setFormData(prev => ({
-      ...prev,
-      step2ContactContinued: false,
-      step2OrgContinued: false,
-      step2FootprintContinued: false,
-      callDate: '',
-      callTime: '',
-      callMeetingLink: '',
-      calendlyScheduled: false,
-      step2ScheduleContinued: false,
-      step2PrepareComplete: false,
+        step2PrepareComplete: false,
+      } : {}),
+      ...(breaksBooking ? clearScheduleBooking() : {}),
     }));
-    setSectionAOpen(true);
-    setSectionBOpen(false);
-    setSectionCOpen(false);
-    setSectionDOpen(false);
-    setSectionEOpen(false);
-  };
-
-  const resetFromOrg = () => {
-    setFormData(prev => ({
-      ...prev,
-      step2OrgContinued: false,
-      step2FootprintContinued: false,
-      callDate: '',
-      callTime: '',
-      callMeetingLink: '',
-      calendlyScheduled: false,
-      step2ScheduleContinued: false,
-      step2PrepareComplete: false,
-    }));
-    setSectionBOpen(true);
-    setSectionCOpen(false);
-    setSectionDOpen(false);
-    setSectionEOpen(false);
-  };
-
-  const resetFromFootprint = () => {
-    setFormData(prev => ({
-      ...prev,
-      step2FootprintContinued: false,
-      callDate: '',
-      callTime: '',
-      callMeetingLink: '',
-      calendlyScheduled: false,
-      step2ScheduleContinued: false,
-      step2PrepareComplete: false,
-    }));
-    setSectionCOpen(true);
-    setSectionDOpen(false);
-    setSectionEOpen(false);
+    if (needsReconfirm) setSectionEOpen(false);
   };
 
   const handleContactField = <K extends keyof OnboardingData>(k: K, v: OnboardingData[K]) => {
-    if (formData.step2ContactContinued) resetFromContact();
+    if (formData.step2ContactContinued) invalidateFromContact();
     set(k, v);
   };
 
+  const handleContactEmailChange = (value: string) => {
+    if (formData.step2ContactContinued) invalidateFromContact();
+    if (normalizeContactEmail(value) !== normalizeContactEmail(formData.verifiedSignerEmail)) {
+      set('verifiedSignerEmail', '');
+      set('signerEmailVerified', false);
+    }
+    set('contactEmail', value);
+  };
+
+  const handleConfirmContactEmail = () => {
+    const email = formData.contactEmail.trim();
+    if (!isValidEmail(email)) {
+      toast.error('Please enter a valid email address');
+      return;
+    }
+    set('verifiedSignerEmail', email);
+    set('signerEmailVerified', true);
+    toast.success('Email confirmed');
+  };
+
   const handleOrgSelect = (id: string) => {
-    if (formData.step2OrgContinued && id !== formData.organizationType) resetFromOrg();
+    if (formData.step2OrgContinued && id !== formData.organizationType) invalidateFromOrg();
     set('organizationType', id);
   };
 
   const handleFootprintField = (k: 'billableProviders' | 'locationsFacilities', v: string) => {
-    if (formData.step2FootprintContinued) resetFromFootprint();
+    if (formData.step2FootprintContinued) invalidateFromFootprint();
     set(k, v);
   };
 
   const toggleState = (state: string) => {
-    if (formData.step2ContactContinued) resetFromContact();
+    if (formData.step2ContactContinued) invalidateFromContact();
     setFormData(prev => {
       const has = prev.selectedStates.includes(state);
       return {
@@ -2056,7 +2510,11 @@ const StepScheduleCall: React.FC<StepScheduleCallProps> = ({
 
   const handleContinueContact = () => {
     if (!contactValid) {
-      toast.error('Please complete all required contact fields');
+      if (!contactEmailVerified) {
+        toast.error('Please confirm your email address before continuing');
+      } else {
+        toast.error('Please complete all required contact fields');
+      }
       return;
     }
     set('callerName', `${formData.firstName} ${formData.lastName}`.trim());
@@ -2087,14 +2545,158 @@ const StepScheduleCall: React.FC<StepScheduleCallProps> = ({
     setSectionDOpen(true);
   };
 
+  const handleStartScheduleChange = () => {
+    setScheduleRescheduleMode(true);
+    setSectionDOpen(true);
+    setSectionEOpen(false);
+    setFormData(prev => ({
+      ...prev,
+      step2ScheduleContinued: false,
+      step2PrepareComplete: false,
+    }));
+    if (formData.callDate) {
+      void loadSlotsForDate(formData.callDate);
+    }
+  };
+
   const handleContinueSchedule = () => {
     if (!scheduleValid) {
       toast.error('Please select a date and time for your call');
       return;
     }
+    setScheduleRescheduleMode(false);
     set('step2ScheduleContinued', true);
     setSectionDOpen(false);
     setSectionEOpen(true);
+  };
+
+  const buildScheduleBookingPayload = (): ScheduleBookingPayload => ({
+    name: `${formData.firstName} ${formData.lastName}`.trim(),
+    firstName: formData.firstName,
+    lastName: formData.lastName,
+    email: formData.contactEmail,
+    phone: formData.contactPhone,
+    organization: formData.organizationName,
+    titleRole: formData.titleRole,
+    primarySpecialty: formData.primarySpecialty,
+    selectedStates: formData.selectedStates,
+    organizationType: formData.organizationType,
+    billableProviders: formData.billableProviders,
+    locationsFacilities: formData.locationsFacilities,
+    engagementTimeline: formData.engagementTimeline,
+    engagementTimelineLabel: ENGAGEMENT_TIMELINES.find(
+      t => t.value === formData.engagementTimeline,
+    )?.label,
+    npi: formData.npi,
+    practiceType: getPracticeTypeLabel(formData),
+    date: formData.callDate,
+    time: formData.callTime.includes('T')
+      ? formatScheduleTime(formData.callTime)
+      : formData.callTime,
+    slotStart: formData.callTime.includes('T') ? formData.callTime : undefined,
+    timeZone: activeTimeZone,
+  });
+
+  const bookScheduleOnCalendar = async (): Promise<{
+    ok: boolean;
+    meetingLink: string;
+    updated: boolean;
+    eventId?: string;
+    calendarId?: string;
+    eventLink?: string;
+  }> => {
+    if (scheduleMatchesBooking) {
+      const meetingLink = formData.callMeetingLink?.trim() || formData.googleMeetLink?.trim() || '';
+      return {
+        ok: true,
+        meetingLink,
+        updated: false,
+        eventId: formData.callEventId,
+        calendarId: formData.callCalendarId,
+        eventLink: formData.callEventLink,
+      };
+    }
+
+    const hadExistingEvent = !!formData.callEventId?.trim();
+    setBookingCall(true);
+    const result = await bookIntroductionCall(
+      buildScheduleBookingPayload(),
+      hadExistingEvent
+        ? {
+            existingEvent: {
+              eventId: formData.callEventId ?? '',
+              calendarId: formData.callCalendarId ?? '',
+              eventLink: formData.callEventLink ?? '',
+              meetingLink: formData.callMeetingLink ?? formData.googleMeetLink ?? '',
+            },
+          }
+        : undefined,
+    );
+    setBookingCall(false);
+
+    if (!result.success) {
+      toast.error(result.message || 'Could not schedule the call on Google Calendar. Please try again.');
+      return { ok: false, meetingLink: '', updated: false };
+    }
+
+    const meetingLink = result.meetingLink?.trim() || formData.callMeetingLink?.trim() || '';
+    if (!meetingLink) {
+      console.warn('Call booked but no meetingLink returned from calendar API', result);
+    }
+    if (!result.eventId?.trim() && !hadExistingEvent) {
+      console.warn('Call booked but no eventId returned from /create-event', result);
+    }
+
+    const wasUpdated = !!(result.updated || hadExistingEvent);
+    const bookingOverrides = buildScheduleBookingOverrides(
+      formData,
+      meetingLink,
+      result,
+      wasUpdated,
+    );
+
+    setFormData(prev => ({ ...prev, ...bookingOverrides }));
+
+    toast.success(
+      wasUpdated
+        ? 'Call updated on Google Calendar.'
+        : 'Call scheduled on Google Calendar.',
+    );
+    return {
+      ok: true,
+      meetingLink,
+      updated: wasUpdated,
+      eventId: bookingOverrides.callEventId,
+      calendarId: bookingOverrides.callCalendarId,
+      eventLink: bookingOverrides.callEventLink,
+    };
+  };
+
+  const sendScheduleConfirmationEmail = async (meetingLink: string): Promise<boolean> => {
+    try {
+      const emailResult = await sendOnboardingScheduleConfirmationEmail({
+        to: formData.contactEmail,
+        contactName: `${formData.firstName} ${formData.lastName}`.trim(),
+        dateDisplay: formatDateForDisplay(formData.callDate),
+        timeDisplay: formatScheduleTime(formData.callTime),
+        timezone: scheduleTzLabel,
+        email: formData.contactEmail,
+        phone: formData.contactPhone,
+        titleRole: formData.titleRole,
+        meetingLink,
+      });
+      if (!emailResult.success) {
+        console.warn('Schedule confirmation email failed:', emailResult.error);
+        toast.error(emailResult.error || 'Could not send confirmation email. Please try again.');
+        return false;
+      }
+      set('scheduleConfirmationEmailSent', true);
+      return true;
+    } catch (emailErr) {
+      console.warn('Schedule confirmation email failed:', emailErr);
+      toast.error('Could not send confirmation email. Please try again.');
+      return false;
+    }
   };
 
   const handleMarkComplete = () => {
@@ -2111,8 +2713,24 @@ const StepScheduleCall: React.FC<StepScheduleCallProps> = ({
   };
 
   const handleNext = async () => {
+    if (!formData.step2ContactContinued) {
+      toast.error('Please complete Contact Information');
+      return;
+    }
+    if (!formData.step2OrgContinued) {
+      toast.error('Please complete Organization Profile');
+      return;
+    }
+    if (!formData.step2FootprintContinued) {
+      toast.error('Please complete Organization Footprint');
+      return;
+    }
+    if (!formData.step2ScheduleContinued) {
+      toast.error('Please complete Schedule Your Call');
+      return;
+    }
     if (!formData.step2PrepareComplete) {
-      toast.error('Please complete all sections before continuing');
+      toast.error('Please complete Prepare for Your Call');
       return;
     }
     if (!scheduleValid) {
@@ -2120,79 +2738,50 @@ const StepScheduleCall: React.FC<StepScheduleCallProps> = ({
       return;
     }
 
-    if (!formData.calendlyScheduled) {
-      setBookingCall(true);
-      const result = await bookIntroductionCall({
-        name: `${formData.firstName} ${formData.lastName}`.trim(),
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        email: formData.contactEmail,
-        phone: formData.contactPhone,
-        organization: formData.organizationName,
-        titleRole: formData.titleRole,
-        primarySpecialty: formData.primarySpecialty,
-        selectedStates: formData.selectedStates,
-        organizationType: formData.organizationType,
-        billableProviders: formData.billableProviders,
-        locationsFacilities: formData.locationsFacilities,
-        engagementTimeline: formData.engagementTimeline,
-        engagementTimelineLabel: ENGAGEMENT_TIMELINES.find(
-          t => t.value === formData.engagementTimeline,
-        )?.label,
-        npi: formData.npi,
-        practiceType: getPracticeTypeLabel(formData),
-        date: formData.callDate,
-        time: formData.callTime,
-      });
-      setBookingCall(false);
-      if (!result.success) {
-        toast.error(result.message || 'Could not schedule the call on Google Calendar. Please try again.');
-        return;
-      }
-      const meetingLink = result.meetingLink || '';
-      set('calendlyScheduled', true);
-      set('callMeetingLink', meetingLink);
-      set('callerName', `${formData.firstName} ${formData.lastName}`.trim());
-      set('callerEmail', formData.contactEmail);
-      set('callerPhone', formData.contactPhone);
+    let meetingLink = formData.callMeetingLink?.trim() || formData.googleMeetLink?.trim() || '';
+    const scheduleSlotChanged =
+      !formData.calendlyScheduled
+      || formData.callDate !== formData.bookedCallDate
+      || formData.callTime !== formData.bookedCallTime;
+    let scheduleWasUpdated = false;
+    let stepSubmitOverrides: Partial<OnboardingData> | undefined;
 
-      try {
-        const emailResult = await sendOnboardingScheduleConfirmationEmail({
-          to: formData.contactEmail,
-          contactName: `${formData.firstName} ${formData.lastName}`.trim(),
-          dateDisplay: formatDateForDisplay(formData.callDate),
-          timeDisplay: formatTimeForDisplay(formData.callTime),
-          email: formData.contactEmail,
-          phone: formData.contactPhone,
-          organization: formData.organizationName,
-          titleRole: formData.titleRole,
-          primarySpecialty: formData.primarySpecialty,
-          organizationType: formData.organizationType,
-          billableProviders: formData.billableProviders,
-          locationsFacilities: formData.locationsFacilities,
-          states: formData.selectedStates,
-          engagementTimeline: ENGAGEMENT_TIMELINES.find(
-            t => t.value === formData.engagementTimeline,
-          )?.label,
-          npi: formData.npi,
-          practiceType: getPracticeTypeLabel(formData),
-          meetingLink,
-        });
-        if (!emailResult.success) {
-          console.warn('Schedule confirmation email failed:', emailResult.error);
-        }
-      } catch (emailErr) {
-        console.warn('Schedule confirmation email failed:', emailErr);
-      }
-
-      toast.success(
-        meetingLink
-          ? 'Call scheduled! Check your email for confirmation and your meeting link.'
-          : 'Call scheduled! A confirmation email has been sent to your inbox.',
+    if (scheduleSlotChanged) {
+      const booked = await bookScheduleOnCalendar();
+      if (!booked.ok) return;
+      meetingLink = booked.meetingLink;
+      scheduleWasUpdated = booked.updated;
+      stepSubmitOverrides = buildScheduleBookingOverrides(
+        formData,
+        meetingLink,
+        booked,
+        scheduleWasUpdated,
       );
+    } else if (meetingLink) {
+      stepSubmitOverrides = {
+        callMeetingLink: meetingLink,
+        googleMeetLink: meetingLink,
+        meetingLink,
+      };
     }
 
-    onNext();
+    const needsConfirmationEmail =
+      scheduleSlotChanged
+      || scheduleWasUpdated
+      || !formData.scheduleConfirmationEmailSent;
+
+    if (needsConfirmationEmail) {
+      setSendingScheduleEmail(true);
+      const emailed = await sendScheduleConfirmationEmail(meetingLink);
+      setSendingScheduleEmail(false);
+      if (!emailed) return;
+      stepSubmitOverrides = {
+        ...stepSubmitOverrides,
+        scheduleConfirmationEmailSent: true,
+      };
+    }
+
+    await onNext(stepSubmitOverrides);
   };
 
   const renderSectionHeader = (
@@ -2219,7 +2808,7 @@ const StepScheduleCall: React.FC<StepScheduleCallProps> = ({
           {complete
             ? 'Complete'
             : unlocked
-            ? 'In progress — complete to continue'
+            ? 'In progress - complete to continue'
             : lockedMsg}
         </span>
       </div>
@@ -2249,11 +2838,11 @@ const StepScheduleCall: React.FC<StepScheduleCallProps> = ({
       </div>
 
       <div className="ob-step2-sections">
-        {/* Section 1 — Contact Information */}
+        {/* Section 1 - Contact Information */}
         <div className={`ob-section-card${sectionAOpen ? ' ob-section-expanded' : ''}${statesOpen ? ' ob-states-panel-open' : ''}${formData.step2ContactContinued ? ' ob-section-complete' : ''}`}>
           {renderSectionHeader(
             '1', 'Contact Information', true, formData.step2ContactContinued, sectionAOpen,
-            '', () => formData.step2ContactContinued && setSectionAOpen(!sectionAOpen),
+            '', () => setSectionAOpen(!sectionAOpen),
           )}
           <SectionCollapse open={sectionAOpen}>
             <div className="ob-section-body">
@@ -2294,23 +2883,48 @@ const StepScheduleCall: React.FC<StepScheduleCallProps> = ({
                   <label className="ob-label">Practice or Organization Name <span className="ob-req">*</span></label>
                   <input
                     type="text"
-                    className="ob-input"
+                    className="ob-input ob-input-readonly"
                     placeholder="Legal or d/b/a name"
                     value={formData.organizationName}
-                    onChange={e => handleContactField('organizationName', e.target.value)}
+                    readOnly
+                    aria-readonly="true"
                   />
                 </div>
               </div>
               <div className="ob-form-row">
                 <div className="ob-field">
                   <label className="ob-label">Email Address <span className="ob-req">*</span></label>
-                  <input
-                    type="email"
-                    className="ob-input"
-                    placeholder="you@practice.com"
-                    value={formData.contactEmail}
-                    onChange={e => handleContactField('contactEmail', e.target.value)}
-                  />
+                  <div className="ob-otp-email-row">
+                    <input
+                      type="email"
+                      className="ob-input"
+                      placeholder="you@practice.com"
+                      value={formData.contactEmail}
+                      onChange={e => handleContactEmailChange(e.target.value)}
+                      disabled={contactEmailVerified}
+                    />
+                    {!contactEmailVerified && (
+                      <button
+                        type="button"
+                        className="ob-btn-primary ob-otp-send-btn"
+                        onClick={handleConfirmContactEmail}
+                        disabled={!isValidEmail(formData.contactEmail)}
+                      >
+                        <ObForwardButtonLabel
+                          label="Confirm Email"
+                          showArrow={false}
+                        />
+                      </button>
+                    )}
+                  </div>
+                  {contactEmailVerified && (
+                    <p className="ob-otp-verified">Email confirmed</p>
+                  )}
+                  {!contactEmailVerified && formData.contactEmail.trim() && (
+                    <p className="ob-field-hint">
+                      Confirm your email address before continuing to the next section.
+                    </p>
+                  )}
                 </div>
                 <div className="ob-field">
                   <label className="ob-label">Phone Number <span className="ob-req">*</span></label>
@@ -2391,10 +3005,10 @@ const StepScheduleCall: React.FC<StepScheduleCallProps> = ({
           </SectionCollapse>
         </div>
 
-        {/* Section 2 — Organization Profile */}
-        <div className={`ob-section-card${sectionBOpen ? ' ob-section-expanded' : ''}${!formData.step2ContactContinued ? ' ob-section-locked' : ''}${formData.step2OrgContinued ? ' ob-section-complete' : ''}`}>
+        {/* Section 2 - Organization Profile */}
+        <div className={`ob-section-card${sectionBOpen ? ' ob-section-expanded' : ''}${!sectionBUnlocked ? ' ob-section-locked' : ''}${formData.step2OrgContinued ? ' ob-section-complete' : ''}`}>
           {renderSectionHeader(
-            '2', 'Organization Profile', formData.step2ContactContinued, formData.step2OrgContinued, sectionBOpen,
+            '2', 'Organization Profile', sectionBUnlocked, formData.step2OrgContinued, sectionBOpen,
             'Complete Section 1 to unlock',
             () => formData.step2OrgContinued && setSectionBOpen(!sectionBOpen),
           )}
@@ -2435,10 +3049,10 @@ const StepScheduleCall: React.FC<StepScheduleCallProps> = ({
           </SectionCollapse>
         </div>
 
-        {/* Section 3 — Organization Footprint */}
-        <div className={`ob-section-card${sectionCOpen ? ' ob-section-expanded' : ''}${!formData.step2OrgContinued ? ' ob-section-locked' : ''}${formData.step2FootprintContinued ? ' ob-section-complete' : ''}`}>
+        {/* Section 3 - Organization Footprint */}
+        <div className={`ob-section-card${sectionCOpen ? ' ob-section-expanded' : ''}${!sectionCUnlocked ? ' ob-section-locked' : ''}${formData.step2FootprintContinued ? ' ob-section-complete' : ''}`}>
           {renderSectionHeader(
-            '3', 'Organization Footprint', formData.step2OrgContinued, formData.step2FootprintContinued, sectionCOpen,
+            '3', 'Organization Footprint', sectionCUnlocked, formData.step2FootprintContinued, sectionCOpen,
             'Complete Section 2 to unlock',
             () => formData.step2FootprintContinued && setSectionCOpen(!sectionCOpen),
           )}
@@ -2489,20 +3103,77 @@ const StepScheduleCall: React.FC<StepScheduleCallProps> = ({
           </SectionCollapse>
         </div>
 
-        {/* Section 4 — Schedule Your Call */}
-        <div className={`ob-section-card${sectionDOpen ? ' ob-section-expanded' : ''}${!formData.step2FootprintContinued ? ' ob-section-locked' : ''}${formData.step2ScheduleContinued ? ' ob-section-complete' : ''}`}>
+        {/* Section 4 - Schedule Your Call */}
+        <div className={`ob-section-card${sectionDOpen ? ' ob-section-expanded' : ''}${!sectionDUnlocked ? ' ob-section-locked' : ''}${formData.step2ScheduleContinued ? ' ob-section-complete' : ''}`}>
           {renderSectionHeader(
-            '4', 'Schedule Your Call', formData.step2FootprintContinued, formData.step2ScheduleContinued, sectionDOpen,
+            '4', 'Schedule Your Call', sectionDUnlocked, formData.step2ScheduleContinued, sectionDOpen,
             'Complete Section 3 to unlock',
-            () => formData.step2ScheduleContinued && setSectionDOpen(!sectionDOpen),
+            () => (formData.step2ScheduleContinued || showBookedCallSummary) && setSectionDOpen(!sectionDOpen),
+          )}
+          {showBookedCallSummary && !scheduleRescheduleMode && (
+            <div className="ob-section-status-bar">
+              <div className="ob-confirm-box ob-confirm-box-with-action">
+                <CheckCircle2 size={18} className="ob-check-green" />
+                <div className="ob-confirm-box-content">
+                  <strong>Call Scheduled</strong>
+                  <span>
+                    {' '}{formatDateForDisplay(formData.callDate)} at {formatScheduleTime(formData.callTime)} {scheduleTzShort}
+                  </span>
+                  <ScheduledCallNotes
+                    email={formData.contactEmail}
+                    meetingLink={formData.callMeetingLink}
+                  />
+                </div>
+                <button
+                  type="button"
+                  className="ob-schedule-change-btn"
+                  onClick={handleStartScheduleChange}
+                >
+                  Change date and time
+                </button>
+              </div>
+            </div>
           )}
           <SectionCollapse open={sectionDOpen}>
             <div className="ob-section-body">
+              {showScheduleSummaryOnly ? (
+                <>
+                  <p className="ob-section-desc">
+                    Your introduction call is set for the time below. You can change it anytime before continuing to the next step.
+                  </p>
+                  <div className="ob-confirm-box ob-confirm-box-inline ob-confirm-box-with-action">
+                    <CheckCircle2 size={18} className="ob-check-green" />
+                    <div className="ob-confirm-box-content">
+                      <strong>{showBookedCallSummary ? 'Call Scheduled' : 'Time Selected'}</strong>
+                      <span>
+                        {' '}{formatDateForDisplay(formData.callDate)} at {formatScheduleTime(formData.callTime)} {scheduleTzShort}
+                      </span>
+                      {showBookedCallSummary && (
+                        <ScheduledCallNotes
+                          email={formData.contactEmail}
+                          meetingLink={formData.callMeetingLink}
+                        />
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      className="ob-schedule-change-btn"
+                      onClick={handleStartScheduleChange}
+                    >
+                      Change date and time
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
               <p className="ob-section-desc">
-                Select an available 30-minute time slot to connect with Dyad&apos;s enrollment team. All times are displayed in Pacific Time (PT).
+                {scheduleRescheduleMode
+                  ? 'Pick a new date and time to update your scheduled call. All times are displayed in '
+                  : 'Select an available 30-minute time slot to connect with Dyad&apos;s enrollment team. All times are displayed in '}
+                {scheduleTzLabel}.
               </p>
               <div className="ob-gcal-schedule">
-                <div className={`ob-gcal-picker${formData.callDate ? ' ob-gcal-picker-with-times' : ''}`}>
+                <div className={`ob-gcal-picker ob-gcal-picker--step2${formData.callDate ? ' ob-gcal-picker-with-times' : ''}`}>
                   <div className="ob-gcal-picker-calendar">
                     <h4 className="ob-gcal-heading">
                       <Calendar size={16} />
@@ -2512,77 +3183,62 @@ const StepScheduleCall: React.FC<StepScheduleCallProps> = ({
                       Choose any available day within the next {SCHEDULE_DAYS_AHEAD} days.
                     </p>
                     <div className="ob-gcal-picker-row">
-                      {loadingDates ? (
-                        <p className="ob-gcal-loading">Loading available dates…</p>
-                      ) : (
-                        <ScheduleCalendarView
-                          availableDates={availableDates}
-                          selectedDate={formData.callDate}
-                          onSelectDate={handleScheduleDateSelect}
-                        />
-                      )}
+                      <div className="ob-gcal-picker-calendar-col">
+                        {loadingDates ? (
+                          <p className="ob-gcal-loading">Loading available dates…</p>
+                        ) : (
+                          <ScheduleCalendarView
+                            availableDates={availableDates}
+                            selectedDate={formData.callDate}
+                            onSelectDate={handleScheduleDateSelect}
+                          />
+                        )}
+                      </div>
 
                       {formData.callDate && (
                         <div className="ob-gcal-picker-times">
                           <p className="ob-gcal-times-label">
                             <Clock size={14} aria-hidden="true" />
-                            {formatDateForDisplay(formData.callDate)}
+                            Available times · {formatDateForDisplay(formData.callDate)}
                           </p>
-                          {loadingSlots ? (
+                          {slotsFetchedDate === formData.callDate && loadingSlots ? (
                             <p className="ob-gcal-loading">Loading times…</p>
-                          ) : availableSlots.length === 0 ? (
+                          ) : slotsFetchedDate === formData.callDate && slotsError ? (
+                            <p className="ob-gcal-error">{slotsError}</p>
+                          ) : slotsFetchedDate === formData.callDate && availableSlots.length === 0 ? (
                             <p className="ob-gcal-empty">No times available. Choose another day.</p>
-                          ) : (
+                          ) : slotsFetchedDate === formData.callDate ? (
                             <div className="ob-gcal-time-list" role="listbox" aria-label="Available time slots">
                               {availableSlots.map(slot => (
-                                <button
-                                  key={slot}
-                                  type="button"
-                                  role="option"
-                                  aria-selected={formData.callTime === slot}
-                                  className={`ob-gcal-time-btn${formData.callTime === slot ? ' ob-gcal-selected' : ''}`}
+                                <ScheduleTimeSlotTile
+                                  key={slot.id}
+                                  dateKey={formData.callDate}
+                                  timeLabel={slot.label}
+                                  selected={formData.callTime === slot.id}
                                   onClick={() => handleScheduleTimeSelect(slot)}
-                                >
-                                  {formatTimeForDisplay(slot)}
-                                </button>
+                                />
                               ))}
                             </div>
-                          )}
+                          ) : null}
                         </div>
                       )}
                     </div>
                   </div>
                 </div>
 
-                <p className="ob-gcal-tz">All times displayed in Pacific Time (PT)</p>
               </div>
-              {formData.calendlyScheduled && formData.step2PrepareComplete && (
-                <div className="ob-confirm-box ob-confirm-box-inline">
-                  <CheckCircle2 size={18} className="ob-check-green" />
-                  <div>
-                    <strong>Call Scheduled on Google Calendar</strong>
-                    <span>
-                      {' '}— {formatDateForDisplay(formData.callDate)} at {formatTimeForDisplay(formData.callTime)} PT
-                    </span>
-                    <ScheduledCallNotes
-                      email={formData.contactEmail}
-                      meetingLink={formData.callMeetingLink}
-                    />
-                    <p className="ob-confirm-note">You can change the date or time above anytime. Re-confirm in Prepare for Your Call after making changes.</p>
-                  </div>
-                </div>
-              )}
-              {scheduleSelectionComplete && !formData.calendlyScheduled && (
+              {scheduleSelectionComplete && !showBookedCallSummary && (
                 <div className="ob-confirm-box ob-confirm-box-inline">
                   <CheckCircle2 size={18} className="ob-check-green" />
                   <div>
                     <strong>Time Selected</strong>
                     <span>
-                      {' '}— {formatDateForDisplay(formData.callDate)} at {formatTimeForDisplay(formData.callTime)} PT
+                      {' '} {formatDateForDisplay(formData.callDate)} at {formatScheduleTime(formData.callTime)} {scheduleTzShort}
                     </span>
-                    <p className="ob-confirm-note">Your call will be scheduled on Google Calendar when you continue to Sign Confidentiality &amp; BAA.</p>
                   </div>
                 </div>
+              )}
+                </>
               )}
             </div>
             {sectionDOpen && !formData.step2ScheduleContinued && (
@@ -2600,10 +3256,10 @@ const StepScheduleCall: React.FC<StepScheduleCallProps> = ({
           </SectionCollapse>
         </div>
 
-        {/* Section 5 — Prepare for Your Call */}
-        <div className={`ob-section-card${sectionEOpen ? ' ob-section-expanded' : ''}${!formData.step2ScheduleContinued ? ' ob-section-locked' : ''}${formData.step2PrepareComplete ? ' ob-section-complete' : ''}`}>
+        {/* Section 5 - Prepare for Your Call */}
+        <div className={`ob-section-card${sectionEOpen ? ' ob-section-expanded' : ''}${!sectionEUnlocked ? ' ob-section-locked' : ''}${formData.step2PrepareComplete ? ' ob-section-complete' : ''}`}>
           {renderSectionHeader(
-            '5', 'Prepare for Your Call', formData.step2ScheduleContinued, formData.step2PrepareComplete, sectionEOpen,
+            '5', 'Prepare for Your Call', sectionEUnlocked, formData.step2PrepareComplete, sectionEOpen,
             'Complete Section 4 to unlock',
             () => formData.step2PrepareComplete && setSectionEOpen(!sectionEOpen),
           )}
@@ -2628,8 +3284,6 @@ const StepScheduleCall: React.FC<StepScheduleCallProps> = ({
                   onChange={e => {
                     if (formData.step2PrepareComplete) {
                       set('step2PrepareComplete', false);
-                      set('calendlyScheduled', false);
-                      set('callMeetingLink', '');
                       setSectionEOpen(true);
                     }
                     set('engagementTimeline', e.target.value);
@@ -2640,39 +3294,6 @@ const StepScheduleCall: React.FC<StepScheduleCallProps> = ({
                 </select>
               </div>
             </div>
-            {formData.step2PrepareComplete && !formData.calendlyScheduled && (
-              <div className="ob-section-status-bar">
-                <div className="ob-confirm-box">
-                  <CheckCircle2 size={18} className="ob-check-green" />
-                  <div>
-                    <strong>Ready to Schedule</strong>
-                    <span>
-                      {' '}— {formatDateForDisplay(formData.callDate)} at {formatTimeForDisplay(formData.callTime)} PT
-                    </span>
-                    <p className="ob-confirm-note">
-                      Your call will be added to Google Calendar when you click Continue to Sign Confidentiality &amp; BAA below.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-            {formData.calendlyScheduled && formData.step2PrepareComplete && (
-              <div className="ob-section-status-bar">
-                <div className="ob-confirm-box">
-                  <CheckCircle2 size={18} className="ob-check-green" />
-                  <div>
-                    <strong>Call Scheduled on Google Calendar</strong>
-                    <span>
-                      {' '}— {formatDateForDisplay(formData.callDate)} at {formatTimeForDisplay(formData.callTime)} PT
-                    </span>
-                    <ScheduledCallNotes
-                      email={formData.contactEmail}
-                      meetingLink={formData.callMeetingLink}
-                    />
-                  </div>
-                </div>
-              </div>
-            )}
             {sectionEOpen && !formData.step2PrepareComplete && (
               <div className="ob-section-footer ob-section-footer-fixed">
                 <button
@@ -2695,9 +3316,21 @@ const StepScheduleCall: React.FC<StepScheduleCallProps> = ({
           className="ob-step2-nav-footer"
           onBack={onBack}
           onNext={handleNext}
-          isSubmitting={isSubmitting || bookingCall}
-          submittingLabel={bookingCall ? 'Scheduling on Google Calendar…' : undefined}
-          canProceed={formData.step2PrepareComplete}
+          isSubmitting={isSubmitting || bookingCall || sendingScheduleEmail}
+          submittingLabel={
+            sendingScheduleEmail
+              ? 'Sending confirmation email…'
+              : bookingCall
+                ? 'Scheduling your call…'
+                : undefined
+          }
+          canProceed={
+            formData.step2ContactContinued
+            && formData.step2OrgContinued
+            && formData.step2FootprintContinued
+            && formData.step2ScheduleContinued
+            && formData.step2PrepareComplete
+          }
           nextLabel="Continue to Sign Confidentiality & BAA"
         />
       </div>

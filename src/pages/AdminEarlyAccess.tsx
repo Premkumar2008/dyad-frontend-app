@@ -2,6 +2,20 @@ import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import toast from 'react-hot-toast';
+import { ActiveClientsPanel } from '../components/admin/ActiveClientsPanel';
+import {
+  ADMIN_BREADCRUMBS,
+  ADMIN_PAGE_META,
+  isAdminViewEnabled,
+  type AdminViewId,
+} from '../components/admin/adminNav';
+import { ADMIN_NAV_ITEMS, AdminNavIcons } from '../components/admin/adminNavIcons';
+import { EmailTemplatesPanel } from '../components/admin/EmailTemplatesPanel';
+import { OnboardingPipelinePanel } from '../components/admin/OnboardingPipelinePanel';
+import { OutreachSchedulePanel } from '../components/admin/OutreachSchedulePanel';
+import { ReportsPanel } from '../components/admin/ReportsPanel';
+import { SettingsPanel } from '../components/admin/SettingsPanel';
+import { EarlyAccessSubmissionDetailModal } from '../components/admin/EarlyAccessSubmissionDetailModal';
 import './AdminEarlyAccess.css';
 
 // ── Types ────────────────────────────────────────────────
@@ -28,6 +42,24 @@ const formatDate = (iso: string) => {
   try {
     return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   } catch { return iso; }
+};
+
+const formatSubmittedAt = (iso: string) => {
+  try {
+    const date = new Date(iso);
+    if (Number.isNaN(date.getTime())) return iso;
+    return date.toLocaleString('en-US', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      timeZoneName: 'short',
+    });
+  } catch {
+    return iso;
+  }
 };
 
 const practiceTypeBadge = (type: string): { bg: string; color: string } => {
@@ -172,11 +204,14 @@ const AdminEarlyAccess: React.FC = () => {
   const [manualInviteEmail, setManualInviteEmail] = useState('');
   const [manualInviteLoading, setManualInviteLoading] = useState(false);
   const [manualInviteError, setManualInviteError] = useState('');
+  const [detailSubmission, setDetailSubmission] = useState<Submission | null>(null);
   const [search, setSearch] = useState('');
   const [filterType, setFilterType] = useState('All types');
   const [filterStatus, setFilterStatus] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [activeView, setActiveView] = useState<AdminViewId>('early-access');
   const PAGE_SIZE = 8;
+  const breadcrumb = ADMIN_BREADCRUMBS[activeView];
 
   // ── Auth guard ──────────────────────────────────────────
   useEffect(() => {
@@ -224,7 +259,7 @@ const AdminEarlyAccess: React.FC = () => {
       setSubmissions(raw.map(normalise));
     } catch (err: any) {
       if (err.response?.status === 401) {
-        // Token expired — send back to login
+        // Token expired - send back to login
         localStorage.removeItem('adminAccessToken');
         localStorage.removeItem('adminRefreshToken');
         localStorage.removeItem('adminInfo');
@@ -350,7 +385,7 @@ const AdminEarlyAccess: React.FC = () => {
           );
           sentIds.push(sub._id);
         } catch {
-          // individual failure — tracked via sentIds length
+          // individual failure - tracked via sentIds length
         }
       })
     );
@@ -399,7 +434,7 @@ const AdminEarlyAccess: React.FC = () => {
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>You're Invited — Dyad Early Access</title>
+  <title>You're Invited - Dyad Early Access</title>
   <style>
     body { font-family: Arial, sans-serif; line-height: 1.7; color: #333; margin: 0; padding: 0; background: #f4f4f4; }
     .wrapper { background: #f4f4f4; padding: 30px 0; }
@@ -469,7 +504,7 @@ const AdminEarlyAccess: React.FC = () => {
       // Step 2: send the invite email
       await axios.post(
         `${apiUrl}/api-early-access/send-invite-email`,
-        { email, subject: "You're Invited — Dyad Early Access Program", html, text },
+        { email, subject: "You're Invited - Dyad Early Access Program", html, text },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       toast.success(`Invitation sent to ${email}`);
@@ -499,15 +534,43 @@ const AdminEarlyAccess: React.FC = () => {
          
         </div>
 
+        <div className="adm2-sidebar-breadcrumb">
+          <span>Admin</span>
+          <span className="adm2-sidebar-breadcrumb-sep">›</span>
+          <span>{breadcrumb.section}</span>
+          <span className="adm2-sidebar-breadcrumb-sep">›</span>
+          <span className="adm2-sidebar-breadcrumb-current">{breadcrumb.page}</span>
+        </div>
+
         <nav className="adm2-nav">
-          <span className="adm2-nav-group-label">PRE-LAUNCH</span>
-          <button className="adm2-nav-item adm2-nav-item--active">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-              <rect x="1" y="2" width="14" height="12" rx="2" stroke="currentColor" strokeWidth="1.5" fill="none"/>
-              <path d="M4 6h8M4 9h5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-            </svg>
-            Early Access Submissions
-          </button>
+          {(['pre-launch', 'operations', 'system'] as const).map(group => (
+            <React.Fragment key={group}>
+              <span className="adm2-nav-group-label">
+                {group === 'pre-launch' ? 'PRE-LAUNCH' : group === 'operations' ? 'OPERATIONS' : 'SYSTEM'}
+              </span>
+              {ADMIN_NAV_ITEMS.filter(item => item.section === group).map(item => {
+                const enabled = isAdminViewEnabled(item.id);
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    disabled={!enabled}
+                    className={[
+                      'adm2-nav-item',
+                      activeView === item.id ? 'adm2-nav-item--active' : '',
+                      !enabled ? 'adm2-nav-item--disabled' : '',
+                    ].filter(Boolean).join(' ')}
+                    onClick={() => { if (enabled) setActiveView(item.id); }}
+                    aria-disabled={!enabled}
+                    title={enabled ? undefined : 'Coming soon'}
+                  >
+                    {AdminNavIcons[item.id]}
+                    {item.label}
+                  </button>
+                );
+              })}
+            </React.Fragment>
+          ))}
         </nav>
 
         <div className="adm2-sidebar-bottom">
@@ -522,6 +585,23 @@ const AdminEarlyAccess: React.FC = () => {
 
       {/* ══ Main content ═════════════════════════════════ */}
       <div className="adm2-main">
+
+        {activeView !== 'early-access' && (
+          <div className="adm2-page-head">
+            <p className="adm2-breadcrumb">{ADMIN_PAGE_META[activeView].eyebrow}</p>
+            <h1 className="adm2-title">{ADMIN_PAGE_META[activeView].title}</h1>
+            <p className="adm2-subtitle">{ADMIN_PAGE_META[activeView].subtitle}</p>
+          </div>
+        )}
+
+        {activeView === 'outreach-schedule' && <OutreachSchedulePanel />}
+        {activeView === 'email-templates' && <EmailTemplatesPanel />}
+        {activeView === 'active-clients' && <ActiveClientsPanel />}
+        {activeView === 'onboarding-pipeline' && <OnboardingPipelinePanel />}
+        {activeView === 'reports' && <ReportsPanel />}
+        {activeView === 'settings' && <SettingsPanel />}
+
+        {activeView === 'early-access' && (<>
 
         {/* Page header */}
         <div className="adm2-page-head">
@@ -659,8 +739,24 @@ const AdminEarlyAccess: React.FC = () => {
                         <input type="checkbox" className="adm2-checkbox" checked={isSelected} onChange={() => toggleRow(sub._id, sub.status, sub.invitationSent)} disabled={sub.status !== 'beta-cohort' || isInvited} />
                       </td>
                       <td className="adm2-td">
-                        <span className="adm2-practice-name">{sub.practiceName}</span>
-                        <span className="adm2-practice-sub">{sub.contactName} · {sub.email}</span>
+                        <button
+                          type="button"
+                          className="adm2-name-link adm2-name-link--primary"
+                          onClick={() => setDetailSubmission(sub)}
+                        >
+                          {sub.practiceName}
+                        </button>
+                        <span className="adm2-practice-sub">
+                          <button
+                            type="button"
+                            className="adm2-name-link adm2-name-link--sub"
+                            onClick={() => setDetailSubmission(sub)}
+                          >
+                            {sub.contactName}
+                          </button>
+                          {' · '}
+                          {sub.email}
+                        </span>
                       </td>
                       <td className="adm2-td">
                         <span className="adm2-type-badge" style={{ background: badge.bg, color: badge.color }}>
@@ -702,7 +798,7 @@ const AdminEarlyAccess: React.FC = () => {
                             Sent
                           </span>
                         ) : (
-                          <span className="adm2-invite-pending">—</span>
+                          <span className="adm2-invite-pending">-</span>
                         )}
                       </td>
                     </tr>
@@ -755,12 +851,22 @@ const AdminEarlyAccess: React.FC = () => {
           <code className="adm2-code">beta_invite = true</code>, and{' '}
           <code className="adm2-code">invite_sent_at IS NULL</code>. When all three are met, Email 2 (Beta Invitation) is dispatched with the embedded Calendly link, and{' '}
           <code className="adm2-code">invite_sent_at</code> is stamped to prevent re-send. Bulk actions on this page modify the{' '}
-          <code className="adm2-code">beta_invite</code> flag in the database — they do not send emails directly.
+          <code className="adm2-code">beta_invite</code> flag in the database - they do not send emails directly.
         </div>
+
+        </>)}
 
       </div>
 
       {/* ══ Manual Invite Modal ══════════════════════════ */}
+      <EarlyAccessSubmissionDetailModal
+        submission={detailSubmission}
+        onClose={() => setDetailSubmission(null)}
+        formatSubmittedAt={formatSubmittedAt}
+        statusLabel={(status) => statusConfig[status]?.label ?? status}
+        practiceTypeBadge={practiceTypeBadge}
+      />
+
       {manualInviteOpen && (
         <div className="adm2-modal-backdrop" onClick={() => setManualInviteOpen(false)}>
           <div className="adm2-modal" onClick={e => e.stopPropagation()}>

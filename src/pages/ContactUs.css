@@ -1485,7 +1485,7 @@ input[type="datetime-local"] {
   font-weight: 600;
 }
 
-/* Booked / busy — with strikethrough */
+/* Booked / busy - with strikethrough */
 .dtp-slot--busy {
   background: #fff5f5;
   border-color: #fecaca;

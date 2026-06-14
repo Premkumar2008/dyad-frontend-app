@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import OnboardingProtectedRoute from './components/OnboardingProtectedRoute';
 import DyadLanding from './components/DyadLanding';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -56,7 +57,14 @@ function App() {
             <Route path="/admin-early-access" element={<AdminEarlyAccess />} />
             <Route path="/schedule-call" element={<ScheduleCall />} />
             <Route path="/dyad-onboarding-access" element={<DyadOnboarding />} />
-            <Route path="/client-onboarding-process" element={<DyadOnboarding />} />
+            <Route
+              path="/client-onboarding-process"
+              element={
+                <OnboardingProtectedRoute>
+                  <DyadOnboarding />
+                </OnboardingProtectedRoute>
+              }
+            />
             <Route
               path="/admin" 
               element={

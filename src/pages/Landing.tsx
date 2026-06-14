@@ -707,7 +707,7 @@ const Landing: React.FC = () => {
                       onClick={() => setSelectedCard({
                         title: 'Our Story & Inspiration',
                         subtitle: 'The origins and purpose',
-                        description: 'In 1908, William J. Mayo hired Harry Harwick to manage the business and operations of the Mayo Clinic, pioneering a new leadership model in healthcare: the Dyad. At its core, a Dyad is a partnership — a seamless collaboration between a clinical leader and a business operations expert to elevate care delivery and practice performance. Inspired by this model, Dyad Practice Solutions was founded to bring the same partnership-driven approach to modern healthcare operations, combining institutional-grade technology, deep domain'
+                        description: 'In 1908, William J. Mayo hired Harry Harwick to manage the business and operations of the Mayo Clinic, pioneering a new leadership model in healthcare: the Dyad. At its core, a Dyad is a partnership - a seamless collaboration between a clinical leader and a business operations expert to elevate care delivery and practice performance. Inspired by this model, Dyad Practice Solutions was founded to bring the same partnership-driven approach to modern healthcare operations, combining institutional-grade technology, deep domain'
                       })}
                       className='text-blue-500 hover:text-blue-400 font-medium transition-colors duration-300 text-xs sm:text-base sm:hidden block mt-2 mb-3 flex items-center justify-center'
                     >
@@ -724,7 +724,7 @@ const Landing: React.FC = () => {
                     </a>
                     <div className='max-h-0 opacity-0 overflow-hidden transition-all duration-700 ease-in-out group-hover:max-h-24 sm:group-hover:max-h-48 group-hover:opacity-100 hidden sm:block'>
                       <div className='text-gray-200 text-xs sm:text-sm leading-relaxed overflow-y-auto max-h-24 sm:max-h-48 scrollbar scrollbar-track-gray-800 scrollbar-thumb-gray-400 hover:scrollbar-thumb-gray-300 scrollbar-thumb-rounded-full scrollbar-w-1 sm:scrollbar-w-2'>
-                        In 1908, William J. Mayo hired Harry Harwick to manage the business and operations of the Mayo Clinic, pioneering a new leadership model in healthcare: the Dyad. At its core, a Dyad is a partnership — a seamless collaboration between a clinical leader and a business operations expert to elevate care delivery and practice performance. Inspired by this model, Dyad Practice Solutions was founded to bring the same partnership-driven approach to modern healthcare operations, combining institutional-grade technology, deep domain
+                        In 1908, William J. Mayo hired Harry Harwick to manage the business and operations of the Mayo Clinic, pioneering a new leadership model in healthcare: the Dyad. At its core, a Dyad is a partnership - a seamless collaboration between a clinical leader and a business operations expert to elevate care delivery and practice performance. Inspired by this model, Dyad Practice Solutions was founded to bring the same partnership-driven approach to modern healthcare operations, combining institutional-grade technology, deep domain
                        </div>
                     </div>
                   </div>
@@ -789,7 +789,7 @@ const Landing: React.FC = () => {
                       onClick={() => setSelectedCard({
                         title: 'Technology Guided by Expertise',
                         subtitle: 'Integrated risk controls & optimized workflows',
-                        description: 'Technology alone isn\'t enough — it\'s how it\'s applied that makes the difference. Dyad integrates AI, automation, and data-driven insights with industry expertise to improve workflows, reduce costs, and strengthen practice operations — all with expert oversight to ensure accuracy and reliability.'
+                        description: 'Technology alone isn\'t enough - it\'s how it\'s applied that makes the difference. Dyad integrates AI, automation, and data-driven insights with industry expertise to improve workflows, reduce costs, and strengthen practice operations - all with expert oversight to ensure accuracy and reliability.'
                       })}
                       className='text-blue-500 hover:text-blue-400 font-medium transition-colors duration-300 text-xs sm:text-base sm:hidden block mt-2 mb-3 flex items-center justify-center'
                     >
@@ -806,7 +806,7 @@ const Landing: React.FC = () => {
                     </a>
                     <div className='max-h-0 opacity-0 overflow-hidden transition-all duration-700 ease-in-out group-hover:max-h-24 sm:group-hover:max-h-48 group-hover:opacity-100 hidden sm:block'>
                       <div className='text-gray-200 text-xs sm:text-sm leading-relaxed overflow-y-auto max-h-24 sm:max-h-48 scrollbar scrollbar-track-gray-800 scrollbar-thumb-gray-400 hover:scrollbar-thumb-gray-300 scrollbar-thumb-rounded-full scrollbar-w-1 sm:scrollbar-w-2'>
-                     Technology alone isn't enough — it's how it's applied that makes the difference. Dyad integrates AI, automation, and data-driven insights with industry expertise to improve workflows, reduce costs, and strengthen practice operations — all with expert oversight to ensure accuracy and reliability.  </div>
+                     Technology alone isn't enough - it's how it's applied that makes the difference. Dyad integrates AI, automation, and data-driven insights with industry expertise to improve workflows, reduce costs, and strengthen practice operations - all with expert oversight to ensure accuracy and reliability.  </div>
                     </div>
                   </div>
                 </div>
@@ -872,7 +872,7 @@ const Landing: React.FC = () => {
                       onClick={() => setSelectedCard({
                         title: 'Why DYAD?',
                         subtitle: 'Expertise, execution and strategic support',
-                        description: 'DYAD integrates industry expertise, technology, and structured risk controls to create stability, efficiency, and accountability in practice operations. Rather than offering fragmented, à la carte services, we take an integrated approach — delivering a seamless, structured framework that enhances efficiency, ensures consistency, and drives measurable outcomes. Our approach ensures every solution aligns with the best interests of the organization.'
+                        description: 'DYAD integrates industry expertise, technology, and structured risk controls to create stability, efficiency, and accountability in practice operations. Rather than offering fragmented, à la carte services, we take an integrated approach - delivering a seamless, structured framework that enhances efficiency, ensures consistency, and drives measurable outcomes. Our approach ensures every solution aligns with the best interests of the organization.'
                       })}
                       className='text-blue-500 hover:text-blue-400 font-medium transition-colors duration-300 text-xs sm:text-base sm:hidden block mt-2 mb-3 flex items-center justify-center'
                     >
@@ -889,7 +889,7 @@ const Landing: React.FC = () => {
                     </a>
                     <div className='max-h-0 opacity-0 overflow-hidden transition-all duration-700 ease-in-out group-hover:max-h-24 sm:group-hover:max-h-48 group-hover:opacity-100 hidden sm:block'>
                       <div className='text-gray-200 text-xs sm:text-sm leading-relaxed overflow-y-auto max-h-24 sm:max-h-48 scrollbar scrollbar-track-gray-800 scrollbar-thumb-gray-400 hover:scrollbar-thumb-gray-300 scrollbar-thumb-rounded-full scrollbar-w-1 sm:scrollbar-w-2'>
-                    DYAD integrates industry expertise, technology, and structured risk controls to create stability, efficiency, and accountability in practice operations. Rather than offering fragmented, à la carte services, we take an integrated approach — delivering a seamless, structured framework that enhances efficiency, ensures consistency, and drives measurable outcomes. Our approach ensures every solution aligns with the best interests of the organization.   </div>
+                    DYAD integrates industry expertise, technology, and structured risk controls to create stability, efficiency, and accountability in practice operations. Rather than offering fragmented, à la carte services, we take an integrated approach - delivering a seamless, structured framework that enhances efficiency, ensures consistency, and drives measurable outcomes. Our approach ensures every solution aligns with the best interests of the organization.   </div>
                     </div>
                   </div>
                 </div>
@@ -995,7 +995,7 @@ const Landing: React.FC = () => {
                   <p className="text-gray-700 font-medium mb-4" style={{ fontSize: '16px' }}>Founder</p>
                   <p className="text-gray-700 mb-2" style={{ fontSize: '14px' }}>MBA, MS FAIM</p>
                   <p className="text-gray-700 leading-relaxed text-sm sm:text-base">
-                    27+ years building institutional-grade financial, payments, and risk infrastructure. A Treasurer at global enterprises with deep expertise in collections optimization, cash acceleration, and controls for over 2.5 trillion in assets under management. Designed real-time receivables, merchant processing, and fraud mitigation platforms — applied directly to healthcare revenue cycle. Brings fiduciary discipline and payer-level rigor to physician reimbursement.
+                    27+ years building institutional-grade financial, payments, and risk infrastructure. A Treasurer at global enterprises with deep expertise in collections optimization, cash acceleration, and controls for over 2.5 trillion in assets under management. Designed real-time receivables, merchant processing, and fraud mitigation platforms - applied directly to healthcare revenue cycle. Brings fiduciary discipline and payer-level rigor to physician reimbursement.
                   </p>
                 </div>
               </div>

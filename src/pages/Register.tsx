@@ -144,7 +144,7 @@ const Register: React.FC = () => {
     }
   }, [location.state, setValue]);
 
-  // NPI validation — calls /api/npi/registry once when 10 digits are entered
+  // NPI validation - calls /api/npi/registry once when 10 digits are entered
   const validateNPI = async (npi: string) => {
     if (npi.length !== 10) return;
 

@@ -5,6 +5,7 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import { ChevronLeft, ChevronRight, Mail, ArrowLeft, Loader2, Lock, Eye, EyeOff, RefreshCw } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { LoginWithCodeForm } from '../components/auth/LoginWithCodeForm';
 import toast from 'react-hot-toast';
 import axios from 'axios';
 import "../pages/login-new.css";
@@ -321,6 +322,7 @@ const Login: React.FC = () => {
   const [npiEnumerationType, setNpiEnumerationType] = useState<string>('');
   const [phoneValue, setPhoneValue] = useState('');
   const [showOTPVerification, setShowOTPVerification] = useState(false);
+  const [showLoginWithCode, setShowLoginWithCode] = useState(false);
   const [otpEmail, setOtpEmail] = useState<string>('');
   const { login, isLoading, user, sendPasswordResetOTP, resetPasswordWithOTP, register: registerUser } = useAuth();
 
@@ -341,6 +343,23 @@ const Login: React.FC = () => {
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
+
+  // Open code login when redirected from protected onboarding route
+  useEffect(() => {
+    if (location.state?.loginMode === 'code') {
+      setShowLoginWithCode(true);
+      setShowRegister(false);
+      setShowForgotPassword(false);
+      setShowResetPassword(false);
+      setShowOTPVerification(false);
+    }
+    if (location.state?.reason === 'idle_timeout') {
+      toast.error(
+        'You were signed out after 10 minutes of inactivity. Sign in again to continue enrollment.',
+        { id: 'idle-timeout-logout' },
+      );
+    }
+  }, [location.state]);
 
   // Handle redirection when user state changes
   useEffect(() => {
@@ -706,11 +725,26 @@ const Login: React.FC = () => {
         
 
           <h3 className="text-xl font-medium text-gray-900">
-            {showOTPVerification ? '' : showRegister ? 'Register' : showResetPassword ? 'Reset Your Password' : showForgotPassword ? 'Forgot Your Password?' : 'Login'}
+            {showLoginWithCode
+              ? 'Login Using Code'
+              : showOTPVerification
+                ? ''
+                : showRegister
+                  ? 'Register'
+                  : showResetPassword
+                    ? 'Reset Your Password'
+                    : showForgotPassword
+                      ? 'Forgot Your Password?'
+                      : 'Login'}
           </h3>
          
            <div className={`form-container-login ${showRegister ? "register-form" : ""}`}>
-          {!showOTPVerification && !showForgotPassword && !showResetPassword && !showRegister ? (
+          {showLoginWithCode ? (
+            <LoginWithCodeForm
+              onBack={() => setShowLoginWithCode(false)}
+              onSuccess={() => navigate('/client-onboarding-process', { replace: true })}
+            />
+          ) : !showOTPVerification && !showForgotPassword && !showResetPassword && !showRegister ? (
             /* Login Form */
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
               {/* Email Field */}
@@ -811,6 +845,17 @@ const Login: React.FC = () => {
                   'Log In'
                 )}
               </button>
+
+              {/* Login using code */}
+              <div className="text-center">
+                <button
+                  type="button"
+                  onClick={() => setShowLoginWithCode(true)}
+                  className="text-md text-primary-600 hover:text-primary-500 font-medium"
+                >
+                  Login using code
+                </button>
+              </div>
 
               {/* Register Link */}
               <div className="text-center">

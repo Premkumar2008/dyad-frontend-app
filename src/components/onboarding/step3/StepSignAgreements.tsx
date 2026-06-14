@@ -8,44 +8,13 @@ import { BaaExhibitB } from './BaaExhibitB';
 import { formatAgreementAcceptance } from './agreementHelpers';
 import type { OnboardingData } from '../../../pages/DyadOnboarding';
 import { EnrollmentSectionsBarRow } from '../EnrollmentSectionsBarRow';
+import { ENTITY_TYPES, US_STATES_ABBR, US_STATES_FULL } from '../entityFormConstants';
 import { ObArrowRight, ObForwardButtonLabel, trimBtnArrow } from '../ObBtnArrow';
 
 type Step3SectionId = 'A' | 'B' | 'C';
 type SectionStatus = 'active' | 'completed' | 'locked';
 
 const STEP3_SECTIONS: Step3SectionId[] = ['A', 'B', 'C'];
-
-const ENTITY_TYPES = [
-  'Professional Medical Corporation',
-  'Professional Limited Liability Company (PLLC)',
-  'Limited Liability Company (LLC)',
-  'Limited Partnership (LP)',
-  'General Partnership',
-  'S Corporation',
-  'C Corporation',
-  'Sole Proprietorship / Solo Practice',
-  'Ambulatory Surgery Center (ASC)',
-  'Non-Profit Organization',
-  'Government Entity',
-  'Other',
-];
-
-const US_STATES_FULL = [
-  'Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California', 'Colorado', 'Connecticut', 'Delaware',
-  'Florida', 'Georgia', 'Hawaii', 'Idaho', 'Illinois', 'Indiana', 'Iowa', 'Kansas', 'Kentucky',
-  'Louisiana', 'Maine', 'Maryland', 'Massachusetts', 'Michigan', 'Minnesota', 'Mississippi',
-  'Missouri', 'Montana', 'Nebraska', 'Nevada', 'New Hampshire', 'New Jersey', 'New Mexico',
-  'New York', 'North Carolina', 'North Dakota', 'Ohio', 'Oklahoma', 'Oregon', 'Pennsylvania',
-  'Rhode Island', 'South Carolina', 'South Dakota', 'Tennessee', 'Texas', 'Utah', 'Vermont',
-  'Virginia', 'Washington', 'West Virginia', 'Wisconsin', 'Wyoming', 'District of Columbia',
-];
-
-const US_STATES_ABBR = [
-  'AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'DC', 'FL', 'GA', 'HI', 'ID', 'IL', 'IN', 'IA',
-  'KS', 'KY', 'LA', 'ME', 'MD', 'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ', 'NM',
-  'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC', 'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA',
-  'WV', 'WI', 'WY',
-];
 
 const emptyNdaFields = (): Record<string, string> => ({
   pname: '', edate: '', pentity: '', ptype: '', pstate: '', paddr: '', signame: '', sigtitle: '',
@@ -54,6 +23,8 @@ const emptyNdaFields = (): Record<string, string> => ({
 const emptyBaaFields = (): Record<string, string> => ({
   pname: '', centity: '', edate: '', signame: '', sigtitle: '',
 });
+
+const normalizeSignerEmail = (email: string): string => email.trim().toLowerCase();
 
 export interface StepSignAgreementsProps {
   formData: OnboardingData;
@@ -106,20 +77,28 @@ export const StepSignAgreements: React.FC<StepSignAgreementsProps> = ({
   const [otpCode, setOtpCode] = useState('');
   const [otpSending, setOtpSending] = useState(false);
   const [otpVerifying, setOtpVerifying] = useState(false);
-
   const [ndaAcceptedAt, setNdaAcceptedAt] = useState<string | null>(formData.ndaAcceptedAt || null);
   const [baaAcceptedAt, setBaaAcceptedAt] = useState<string | null>(formData.baaAcceptedAt || null);
 
-  const preverifiedEmail = useMemo(
-    () => !!(formData.contactEmail && formData.step2ContactContinued),
-    [formData.contactEmail, formData.step2ContactContinued],
+  const isSignerEmailVerified = useMemo(() => {
+    const current = normalizeSignerEmail(formData.signerEmail);
+    const verified = normalizeSignerEmail(formData.verifiedSignerEmail);
+    return current.length > 0 && verified.length > 0 && current === verified;
+  }, [formData.signerEmail, formData.verifiedSignerEmail]);
+
+  const intakeEmailVerified = useMemo(
+    () => !!(
+      formData.step2ContactContinued
+      && formData.contactEmail.trim()
+      && normalizeSignerEmail(formData.signerEmail) === normalizeSignerEmail(formData.contactEmail)
+      && normalizeSignerEmail(formData.verifiedSignerEmail) === normalizeSignerEmail(formData.contactEmail)
+    ),
+    [formData.step2ContactContinued, formData.contactEmail, formData.signerEmail, formData.verifiedSignerEmail],
   );
 
   useEffect(() => {
-    if (preverifiedEmail && !formData.signerEmailVerified) {
-      set('signerEmailVerified', true);
-    }
-  }, [preverifiedEmail, formData.signerEmailVerified, set]);
+    set('signerEmailVerified', isSignerEmailVerified);
+  }, [isSignerEmailVerified, set]);
 
   useEffect(() => {
     set('ndaFields', ndaFields);
@@ -150,20 +129,56 @@ export const StepSignAgreements: React.FC<StepSignAgreementsProps> = ({
     if (!formData.entityCity && city) set('entityCity', city);
     if (!formData.entityAddrState && addrState) set('entityAddrState', addrState);
     if (!formData.entityZip && zip) set('entityZip', zip);
-    if (!formData.signerEmail && formData.contactEmail) {
-      setFormData(prev => ({
-        ...prev,
-        signerEmail: prev.contactEmail,
-        signerFirstName: prev.firstName,
-        signerLastName: prev.lastName,
-        signerTitle: prev.titleRole,
-      }));
-    }
-  }, [formData, set, setFormData]);
+  }, [formData, set]);
+
+  useEffect(() => {
+    setFormData(prev => {
+      const updates: Partial<OnboardingData> = {};
+      if (!prev.signerEmail.trim() && prev.contactEmail.trim()) {
+        updates.signerEmail = prev.contactEmail;
+      }
+      if (!prev.signerFirstName.trim() && prev.firstName.trim()) {
+        updates.signerFirstName = prev.firstName;
+      }
+      if (!prev.signerLastName.trim() && prev.lastName.trim()) {
+        updates.signerLastName = prev.lastName;
+      }
+      if (!prev.signerTitle.trim() && prev.titleRole.trim()) {
+        updates.signerTitle = prev.titleRole;
+      }
+      if (Object.keys(updates).length === 0) return prev;
+      return { ...prev, ...updates };
+    });
+  }, [
+    formData.contactEmail,
+    formData.firstName,
+    formData.lastName,
+    formData.titleRole,
+    setFormData,
+  ]);
 
   useEffect(() => {
     syncEntityFromPriorSteps();
   }, [syncEntityFromPriorSteps]);
+
+  useEffect(() => {
+    setSectionStatus(getInitialSectionStatus(formData));
+    setOpenSections({
+      A: !formData.step3EntityComplete,
+      B: formData.step3EntityComplete && !formData.step3NdaComplete,
+      C: formData.step3NdaComplete && !formData.step3BaaComplete,
+    });
+  }, [formData.step3EntityComplete, formData.step3NdaComplete, formData.step3BaaComplete]);
+
+  useEffect(() => {
+    if (!formData.ndaFields || !Object.values(formData.ndaFields).some(Boolean)) return;
+    setNdaFields(prev => ({ ...emptyNdaFields(), ...prev, ...formData.ndaFields }));
+  }, [formData.ndaFields]);
+
+  useEffect(() => {
+    if (!formData.baaFields || !Object.values(formData.baaFields).some(Boolean)) return;
+    setBaaFields(prev => ({ ...emptyBaaFields(), ...prev, ...formData.baaFields }));
+  }, [formData.baaFields]);
 
   const toggleSection = (id: Step3SectionId) => {
     if (sectionStatus[id] === 'locked') return;
@@ -230,8 +245,11 @@ export const StepSignAgreements: React.FC<StepSignAgreementsProps> = ({
     try {
       const res = await verifyOTP({ email: formData.signerEmail.trim(), otp: otpCode.trim() });
       if (res.data?.success) {
+        const verified = formData.signerEmail.trim();
+        set('verifiedSignerEmail', verified);
         set('signerEmailVerified', true);
         setOtpSent(false);
+        setOtpCode('');
         toast.success('Email verified');
       } else {
         toast.error(res.data?.message || 'Invalid verification code');
@@ -400,7 +418,7 @@ export const StepSignAgreements: React.FC<StepSignAgreementsProps> = ({
 
   const sectionLabel = (id: Step3SectionId) => {
     if (sectionStatus[id] === 'completed') return 'Complete';
-    if (sectionStatus[id] === 'active') return 'In progress — complete to continue';
+    if (sectionStatus[id] === 'active') return 'In progress - complete to continue';
     const prev = STEP3_SECTIONS[STEP3_SECTIONS.indexOf(id) - 1];
     return prev ? `Complete Section ${prev} to unlock` : 'Locked';
   };
@@ -423,7 +441,7 @@ export const StepSignAgreements: React.FC<StepSignAgreementsProps> = ({
         />
       </div>
 
-      {/* Section A — Entity */}
+      {/* Section A - Entity */}
       <div
         id="ob-step3-section-A"
         className={`ob-section-card${openSections.A ? ' ob-section-expanded' : ''}${sectionStatus.A === 'completed' ? ' ob-section-complete' : ''}${sectionStatus.A === 'locked' ? ' ob-section-locked' : ''}${sectionStatus.A === 'active' ? ' ob-section-active-ring' : ''}`}
@@ -568,24 +586,33 @@ export const StepSignAgreements: React.FC<StepSignAgreementsProps> = ({
                       className="ob-input"
                       value={formData.signerEmail}
                       onChange={e => {
-                        set('signerEmail', e.target.value);
-                        if (formData.signerEmailVerified) set('signerEmailVerified', false);
+                        const next = e.target.value;
+                        set('signerEmail', next);
+                        if (normalizeSignerEmail(next) !== normalizeSignerEmail(formData.verifiedSignerEmail)) {
+                          set('signerEmailVerified', false);
+                          setOtpSent(false);
+                          setOtpCode('');
+                        }
                       }}
-                      readOnly={formData.signerEmailVerified}
                       placeholder="signer@practice.com"
                     />
-                    {!formData.signerEmailVerified && !preverifiedEmail && (
+                    {!isSignerEmailVerified && (
                       <button
                         type="button"
                         className="ob-btn-primary ob-otp-send-btn"
                         onClick={handleSendOtp}
                         disabled={otpSending}
                       >
-                        <ObForwardButtonLabel label={otpSent ? 'Resend Code' : 'Send Code'} />
+                        <ObForwardButtonLabel
+                          label={otpSent ? 'Resend Code' : 'Send Code'}
+                          loading={otpSending}
+                          loadingLabel="Sending…"
+                          showArrow={false}
+                        />
                       </button>
                     )}
                   </div>
-                  {otpSent && !formData.signerEmailVerified && !preverifiedEmail && (
+                  {otpSent && !isSignerEmailVerified && (
                     <div className="ob-otp-flow">
                       <div className="ob-otp-verify-row">
                         <input
@@ -608,12 +635,17 @@ export const StepSignAgreements: React.FC<StepSignAgreementsProps> = ({
                       <p className="ob-field-hint">A one-time verification code has been sent. It expires in 10 minutes.</p>
                     </div>
                   )}
-                  {formData.signerEmailVerified && !preverifiedEmail && (
-                    <p className="ob-otp-verified">✅ Email verified</p>
-                  )}
-                  {preverifiedEmail && formData.signerEmailVerified && (
+                  {isSignerEmailVerified && intakeEmailVerified && (
                     <p className="ob-otp-verified">
-                      ✅ Email verified during call scheduling — no additional verification required
+                      Email verified during intake no additional verification required.
+                    </p>
+                  )}
+                  {isSignerEmailVerified && !intakeEmailVerified && (
+                    <p className="ob-otp-verified">Email verified</p>
+                  )}
+                  {!isSignerEmailVerified && formData.signerEmail.trim() && (
+                    <p className="ob-field-hint">
+                      Changing the email requires a one-time verification code before you can continue.
                     </p>
                   )}
                 </div>
@@ -640,23 +672,23 @@ export const StepSignAgreements: React.FC<StepSignAgreementsProps> = ({
         </div>
       </div>
 
-      {/* Section B — NDA */}
+      {/* Section B - NDA */}
       <div
         id="ob-step3-section-B"
         className={`ob-section-card${openSections.B ? ' ob-section-expanded' : ''}${sectionStatus.B === 'completed' ? ' ob-section-complete' : ''}${sectionStatus.B === 'locked' ? ' ob-section-locked' : ''}${sectionStatus.B === 'active' ? ' ob-section-active-ring' : ''}`}
       >
-        {renderSectionHeader('B', 'Exhibit A — Confidentiality Agreement', sectionStatus.B, openSections.B, sectionLabel('B'))}
+        {renderSectionHeader('B', 'Exhibit A - Confidentiality Agreement', sectionStatus.B, openSections.B, sectionLabel('B'))}
         <div className={`ob-section-collapse${openSections.B ? ' ob-section-collapse-open' : ''}`}>
           <div className="ob-section-collapse-inner">
             <div className="ob-section-body ob-step3-agreement-body">
               <p className="ob-section-desc">
                 Protects practice-level financial data, operational metrics, and proprietary information
-                shared during due diligence and ongoing engagement. This is a mutual agreement — Dyad&apos;s
+                shared during due diligence and ongoing engagement. This is a mutual agreement - Dyad&apos;s
                 confidential information is equally protected.
               </p>
               <AgreementExhibit
                 exhibitId="nda"
-                title="Exhibit A — Confidentiality Agreement"
+                title="Exhibit A - Confidentiality Agreement"
                 scrollId="nda-scroll"
                 accepted={formData.confidentialityAgreed}
                 acceptedAt={ndaAcceptedAt}
@@ -680,12 +712,12 @@ export const StepSignAgreements: React.FC<StepSignAgreementsProps> = ({
         </div>
       </div>
 
-      {/* Section C — BAA */}
+      {/* Section C - BAA */}
       <div
         id="ob-step3-section-C"
         className={`ob-section-card${openSections.C ? ' ob-section-expanded' : ''}${sectionStatus.C === 'completed' ? ' ob-section-complete' : ''}${sectionStatus.C === 'locked' ? ' ob-section-locked' : ''}${sectionStatus.C === 'active' ? ' ob-section-active-ring' : ''}`}
       >
-        {renderSectionHeader('C', 'Exhibit B — Business Associate Agreement (BAA)', sectionStatus.C, openSections.C, sectionLabel('C'))}
+        {renderSectionHeader('C', 'Exhibit B - Business Associate Agreement (BAA)', sectionStatus.C, openSections.C, sectionLabel('C'))}
         <div className={`ob-section-collapse${openSections.C ? ' ob-section-collapse-open' : ''}`}>
           <div className="ob-section-collapse-inner">
             <div className="ob-section-body ob-step3-agreement-body">
@@ -695,7 +727,7 @@ export const StepSignAgreements: React.FC<StepSignAgreementsProps> = ({
               </p>
               <AgreementExhibit
                 exhibitId="baa"
-                title="Exhibit B — Business Associate Agreement"
+                title="Exhibit B - Business Associate Agreement"
                 scrollId="baa-scroll"
                 accepted={formData.baaAgreed}
                 acceptedAt={baaAcceptedAt}

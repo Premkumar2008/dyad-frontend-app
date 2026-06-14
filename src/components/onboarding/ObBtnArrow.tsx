@@ -3,7 +3,7 @@ import React from 'react';
 export const trimBtnArrow = (text: string) =>
   text.replace(/\s*[→←✓]\s*$/, '').trim();
 
-/** Thin line arrow — matches Begin Enrollment reference */
+/** Thin line arrow - matches Begin Enrollment reference */
 export const ObArrowRight: React.FC = () => (
   <svg
     className="ob-btn-arrow ob-btn-arrow-right"
@@ -47,20 +47,29 @@ export const ObForwardButtonLabel: React.FC<{
   loading?: boolean;
   loadingLabel?: string;
   showArrow?: boolean;
-}> = ({ label, loading, loadingLabel = 'Saving…', showArrow = true }) => {
+  /** When true, keeps label text and prepends spinner instead of swapping to loadingLabel */
+  keepLabelOnLoading?: boolean;
+}> = ({
+  label,
+  loading,
+  loadingLabel = 'Saving…',
+  showArrow = true,
+  keepLabelOnLoading = false,
+}) => {
   if (loading) {
     return (
-      <>
+      <span className="ob-btn-inline">
         <span className="ob-btn-spinner" aria-hidden />
-        {loadingLabel}
-      </>
+        <span>{keepLabelOnLoading ? trimBtnArrow(label) : loadingLabel}</span>
+        {keepLabelOnLoading && showArrow && <ObArrowRight />}
+      </span>
     );
   }
   return (
-    <>
-      {trimBtnArrow(label)}
+    <span className="ob-btn-inline">
+      <span>{trimBtnArrow(label)}</span>
       {showArrow && <ObArrowRight />}
-    </>
+    </span>
   );
 };
 

@@ -17,6 +17,9 @@ p{margin-bottom:12px;text-align:justify}
 .ob-agreement-sigll,.sigll{font-size:10px;color:#666}
 .ob-agreement-sign,.sign{font-size:12px;margin-top:3px}
 .ob-agreement-ff,.ff{border:none;border-bottom:1px solid #333;font-family:Georgia,serif;font-size:13px;color:#000;padding:2px 4px}
+.ob-agreement-sigl-dyad,.ob-agreement-sigl.ob-agreement-sigl-dyad{height:auto;min-height:52px;border-bottom:none}
+.ob-agreement-dyad-sig-img,img.ob-agreement-dyad-sig-img{width:220px;max-width:220px;height:auto;max-height:56px;object-fit:contain;display:block}
+img[src*="dyad-officer-signature"]{width:220px!important;max-width:220px!important;height:auto!important;max-height:56px!important;object-fit:contain;display:block}
 `;
 
 const DRAFT_BANNER = (
@@ -60,11 +63,6 @@ export interface AgreementExhibitProps {
   providerName: string;
 }
 
-const downloadFilename: Record<'nda' | 'baa', string> = {
-  nda: 'Exhibit_A_Confidentiality_Agreement.txt',
-  baa: 'Exhibit_B_Business_Associate_Agreement.txt',
-};
-
 export const AgreementExhibit: React.FC<AgreementExhibitProps> = ({
   exhibitId,
   title,
@@ -86,29 +84,16 @@ export const AgreementExhibit: React.FC<AgreementExhibitProps> = ({
     const w = window.open('', '_blank');
     if (!w) return;
     w.document.write(
-      `<html><head><title>Dyad Practice Solutions — Agreement</title>` +
+      `<html><head><title>Dyad Practice Solutions - Agreement</title>` +
         `<style>${PRINT_STYLES}</style></head><body>${el.innerHTML}</body></html>`,
     );
     w.document.close();
     w.print();
   }, [scrollId]);
 
-  const handleDownload = useCallback(() => {
-    const el = document.getElementById(scrollId);
-    if (!el) return;
-    const text = el.innerText;
-    const blob = new Blob([text], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = downloadFilename[exhibitId];
-    a.click();
-    URL.revokeObjectURL(url);
-  }, [exhibitId, scrollId]);
-
   const timestampText =
-    accepted && acceptedAt && recordId
-      ? `Accepted ${acceptedAt} — Record ID: ${recordId}`
+    accepted && acceptedAt
+      ? `Accepted ${acceptedAt}`
       : null;
 
   return (
@@ -127,16 +112,7 @@ export const AgreementExhibit: React.FC<AgreementExhibitProps> = ({
             disabled={!accepted}
             onClick={handlePrint}
           >
-            🖨️ Print
-          </button>
-          <button
-            type="button"
-            className="ob-agreement-tb"
-            id={`${exhibitId}-dl`}
-            disabled={!accepted}
-            onClick={handleDownload}
-          >
-            ⬇️ Download
+            🖨️ Print / Download
           </button>
         </div>
       </div>
@@ -159,7 +135,7 @@ export const AgreementExhibit: React.FC<AgreementExhibitProps> = ({
 
       <div className="ob-agreement-cws">
         <div className="ob-agreement-cwl">
-          <strong>Electronic Signature Disclosure</strong> — By checking the box below, you consent to
+          <strong>Electronic Signature Disclosure</strong> - By checking the box below, you consent to
           use electronic signatures pursuant to the ESIGN Act (15 U.S.C. § 7001 et seq.) and UETA. You
           acknowledge that: (1) you have reviewed the full text of {exhibitId === 'nda' ? 'Exhibit A' : 'Exhibit B'}{' '}
           displayed above; (2) you agree to be legally bound by its terms

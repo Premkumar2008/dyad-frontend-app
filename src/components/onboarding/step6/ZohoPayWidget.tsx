@@ -69,7 +69,7 @@ export const ZohoPayWidget: React.FC<ZohoPayWidgetProps> = ({
             <div className="ob-bank-zp-gi"><div className="ob-bank-zp-gl">Debit Trigger</div><div className="ob-bank-zp-gv">5th business day post-invoice</div></div>
             <div className="ob-bank-zp-gi"><div className="ob-bank-zp-gl">Amount Basis</div><div className="ob-bank-zp-gv">Per Exhibit D fee schedule</div></div>
             <div className="ob-bank-zp-gi"><div className="ob-bank-zp-gl">SEC Code</div><div className="ob-bank-zp-gv">CCD (Corporate)</div></div>
-            <div className="ob-bank-zp-gi"><div className="ob-bank-zp-gl">Settlement</div><div className="ob-bank-zp-gv">Standard ACH (1–2 BD)</div></div>
+            <div className="ob-bank-zp-gi"><div className="ob-bank-zp-gl">Settlement</div><div className="ob-bank-zp-gv">Standard ACH (1-2 BD)</div></div>
           </div>
         </div>
         {!mandateActive ? (

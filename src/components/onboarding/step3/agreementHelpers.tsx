@@ -24,6 +24,9 @@ export const DyadSignatureBlock: React.FC<DyadSignatureBlockProps> = ({
           src={DYAD_SIGNATURE_SRC}
           alt={`Signature of ${DYAD_OFFICER.name}`}
           className="ob-agreement-dyad-sig-img"
+          width={220}
+          height={56}
+          style={{ width: 220, maxWidth: '100%', height: 'auto', maxHeight: 56, objectFit: 'contain' }}
         />
       ) : (
         <span className="ob-agreement-dpend">Pending countersignature upon your acceptance</span>
@@ -51,7 +54,7 @@ export function formatAgreementAcceptance(now: Date = new Date()): AgreementAcce
   const recordId = Math.random().toString(36).slice(2, 11).toUpperCase();
   const text =
     `Accepted ${now.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}` +
-    ` at ${now.toLocaleTimeString('en-US')} — Record ID: ${recordId}`;
+    ` at ${now.toLocaleTimeString('en-US')}`;
   return { text, recordId, acceptedAt: now };
 }
 
@@ -62,6 +65,7 @@ export interface AgreementFieldProps {
   placeholder: string;
   className?: 's' | 'm' | 'l';
   required?: boolean;
+  readOnly?: boolean;
 }
 
 export const AgreementField: React.FC<AgreementFieldProps> = ({
@@ -71,15 +75,17 @@ export const AgreementField: React.FC<AgreementFieldProps> = ({
   placeholder,
   className = 'm',
   required,
+  readOnly,
 }) => (
   <input
     type="text"
     id={id}
-    className={`ob-agreement-ff ob-agreement-ff-${className}`}
+    className={`ob-agreement-ff ob-agreement-ff-${className}${readOnly ? ' ob-agreement-ff-readonly' : ''}`}
     value={value}
     onChange={(e) => onChange(e.target.value)}
     placeholder={placeholder}
     required={required}
+    readOnly={readOnly}
   />
 );
 

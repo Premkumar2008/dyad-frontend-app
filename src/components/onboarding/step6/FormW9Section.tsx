@@ -59,7 +59,7 @@ export const FormW9Section: React.FC<FormW9SectionProps> = ({ formData, set, sig
   if (formData.w9Item2Flagged) {
     return (
       <div className="ob-bank-w9-admin-alert">
-        <div className="ob-bank-w9-admin-head">ALERT TRIGGERED — Routed to Dyad Compliance Dashboard</div>
+        <div className="ob-bank-w9-admin-head">ALERT TRIGGERED - Routed to Dyad Compliance Dashboard</div>
         <div className="ob-bank-w9-admin-body">
           <p><strong>Item 2 cross-out flag raised.</strong> This W-9 cannot be signed via the enrollment portal until Dyad&rsquo;s compliance team has reviewed the matter.</p>
           <p className="ob-bank-w9-admin-foot">Contact <strong>compliance@dyadmd.com</strong> for urgent matters.</p>
@@ -87,7 +87,7 @@ export const FormW9Section: React.FC<FormW9SectionProps> = ({ formData, set, sig
           <span className="ob-bank-w9-num">2</span>
           <span>Business name / disregarded entity name</span>
         </div>
-        <input className="ob-input" value={formData.w9Line2} onChange={e => set('w9Line2', e.target.value)} placeholder="Optional — DBA or disregarded entity name" />
+        <input className="ob-input" value={formData.w9Line2} onChange={e => set('w9Line2', e.target.value)} placeholder="Optional - DBA or disregarded entity name" />
       </div>
 
       <div className="ob-bank-w9-line">
@@ -108,9 +108,9 @@ export const FormW9Section: React.FC<FormW9SectionProps> = ({ formData, set, sig
             <label className="ob-label">LLC tax classification <span className="ob-req">*</span></label>
             <select className="ob-input ob-select" value={formData.w9LlcClass} onChange={e => set('w9LlcClass', e.target.value)}>
               <option value="">Select tax classification</option>
-              <option value="C">C — C corporation</option>
-              <option value="S">S — S corporation</option>
-              <option value="P">P — Partnership</option>
+              <option value="C">C - C corporation</option>
+              <option value="S">S - S corporation</option>
+              <option value="P">P - Partnership</option>
             </select>
           </div>
         )}
@@ -153,7 +153,7 @@ export const FormW9Section: React.FC<FormW9SectionProps> = ({ formData, set, sig
       </div>
 
       <div className="ob-bank-w9-line">
-        <div className="ob-bank-w9-line-head"><span className="ob-bank-w9-num part">Part II</span><span>Certification — Preprinted Text from IRS Form W-9</span></div>
+        <div className="ob-bank-w9-line-head"><span className="ob-bank-w9-num part">Part II</span><span>Certification - Preprinted Text from IRS Form W-9</span></div>
         <div className="ob-bank-w9-cert-box">
           <h5>Under penalties of perjury, I certify that:</h5>
           <ol>

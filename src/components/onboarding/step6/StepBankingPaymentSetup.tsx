@@ -3,7 +3,7 @@ import { ChevronDown, ChevronUp, Eye, EyeOff, Landmark, ShieldCheck } from 'luci
 import toast from 'react-hot-toast';
 import type { OnboardingData } from '../../../pages/DyadOnboarding';
 import { EnrollmentSaveNotice } from '../EnrollmentSaveNotice';
-import { ObBackButtonLabel, ObForwardButtonLabel } from '../ObBtnArrow';
+import { ObArrowRight, ObBackButtonLabel, ObForwardButtonLabel, trimBtnArrow } from '../ObBtnArrow';
 import { formatAgreementAcceptance } from '../step3/agreementHelpers';
 import { FormW9Section } from './FormW9Section';
 import { KycUploadBar } from './KycUploadBar';
@@ -44,14 +44,38 @@ const SWEEP_ATTEST = 'I have reviewed the Designated Operating Account informati
 
 const KYC_ATTEST = 'I certify that all documents provided above are authentic, current, and accurately represent the legal status and ownership structure of the practice. I understand that these documents are required by federal banking regulations and will be transmitted securely to Live Oak Bank, N.A. for the purpose of account verification and compliance with the Bank Secrecy Act and USA PATRIOT Act.';
 
+const BANKING_SECTION_COMPLETE_FIELD: Partial<Record<BankingSectionId, keyof OnboardingData>> = {
+  1: 'step6Sec1Complete',
+  2: 'step6Sec2Complete',
+  4: 'step6Sec4Complete',
+  5: 'step6Sec5Complete',
+  6: 'step6Sec6Complete',
+};
+
+const BANKING_SECTION_ATTEST_FIELD: Partial<Record<BankingSectionId, keyof OnboardingData>> = {
+  1: 'step6Sec1Attested',
+  2: 'step6Sec2Attested',
+  4: 'step6Sec4Attested',
+  5: 'step6Sec5Attested',
+  6: 'step6Sec6Attested',
+};
+
+const BANKING_SECTION_CONTINUE_LABEL: Partial<Record<BankingSectionId, string>> = {
+  1: 'Continue to Authorized Signatory & CIP',
+  2: 'Continue to Form W-9',
+  4: 'Continue to Sweep Schedule',
+  5: 'Continue to KYC Documents',
+  6: 'Complete KYC Section',
+};
+
+const isBankingSectionComplete = (formData: OnboardingData, id: BankingSectionId): boolean => {
+  if (id === 3) return formData.w9Signed;
+  const field = BANKING_SECTION_COMPLETE_FIELD[id];
+  return field ? Boolean(formData[field]) : false;
+};
+
 const initSectionStatus = (formData: OnboardingData): Record<BankingSectionId, SectionStatus> => {
-  const done: BankingSectionId[] = [];
-  if (formData.step6Sec1Attested) done.push(1);
-  if (formData.step6Sec2Attested) done.push(2);
-  if (formData.w9Signed) done.push(3);
-  if (formData.step6Sec4Attested) done.push(4);
-  if (formData.step6Sec5Attested) done.push(5);
-  if (formData.step6Sec6Attested) done.push(6);
+  const done = BANKING_SECTION_ORDER.filter(id => isBankingSectionComplete(formData, id));
   const status: Record<BankingSectionId, SectionStatus> = { 1: 'locked', 2: 'locked', 3: 'locked', 4: 'locked', 5: 'locked', 6: 'locked' };
   BANKING_SECTION_ORDER.forEach((id, i) => {
     if (done.includes(id)) status[id] = 'completed';
@@ -60,6 +84,15 @@ const initSectionStatus = (formData: OnboardingData): Record<BankingSectionId, S
   if (!done.length) status[1] = 'active';
   return status;
 };
+
+const getInitialOpenSections = (formData: OnboardingData): Record<BankingSectionId, boolean> => ({
+  1: !formData.step6Sec1Complete,
+  2: formData.step6Sec1Complete && !formData.step6Sec2Complete,
+  3: formData.step6Sec2Complete && !formData.w9Signed,
+  4: formData.w9Signed && !formData.step6Sec4Complete,
+  5: formData.step6Sec4Complete && !formData.step6Sec5Complete,
+  6: formData.step6Sec5Complete && !formData.step6Sec6Complete,
+});
 
 const AttestBox: React.FC<{
   checked: boolean;
@@ -80,10 +113,9 @@ export const StepBankingPaymentSetup: React.FC<StepBankingPaymentSetupProps> = (
   formData, set, onNext, onBack, isSubmitting,
 }) => {
   const [sectionStatus, setSectionStatus] = useState(() => initSectionStatus(formData));
-  const [openSections, setOpenSections] = useState<Record<BankingSectionId, boolean>>({
-    1: !formData.step6Sec1Attested,
-    2: false, 3: false, 4: false, 5: false, 6: false,
-  });
+  const [openSections, setOpenSections] = useState<Record<BankingSectionId, boolean>>(
+    () => getInitialOpenSections(formData),
+  );
   const [attestErrors, setAttestErrors] = useState<Partial<Record<BankingSectionId, string>>>({});
   const [showAccNum, setShowAccNum] = useState(false);
   const [showComplete, setShowComplete] = useState(false);
@@ -96,25 +128,40 @@ export const StepBankingPaymentSetup: React.FC<StepBankingPaymentSetupProps> = (
   const signerPhone = formData.contactPhone;
 
   const prefillW9 = useCallback(() => {
-    if (!formData.w9Line1) {
-      const addr = formData.entityStreet
-        ? `${formData.entityStreet}, ${formData.entityCity}, ${formData.entityAddrState || formData.state} ${formData.entityZip || formData.zip}`
-        : `${formData.practiceAddress}, ${formData.city}, ${formData.state} ${formData.zip}`;
-      set('w9Line1', formData.entityLegalName || formData.groupLegalName || formData.organizationName);
-      set('w9Line5', formData.entityStreet || formData.practiceAddress);
-      set('w9Line6', addr);
-      if (formData.taxId) set('w9Tin', formData.taxId);
-      if (!formData.w9TinType) set('w9TinType', 'EIN');
-    }
+    const legalName = formData.entityLegalName || formData.groupLegalName || formData.organizationName;
+    const street = formData.entityStreet || formData.practiceAddress;
+    const addr = formData.entityStreet
+      ? `${formData.entityStreet}, ${formData.entityCity}, ${formData.entityAddrState || formData.state} ${formData.entityZip || formData.zip}`
+      : `${formData.practiceAddress}, ${formData.city}, ${formData.state} ${formData.zip}`;
+    if (!formData.w9Line1.trim() && legalName) set('w9Line1', legalName);
+    if (!formData.w9Line5.trim() && street) set('w9Line5', street);
+    if (!formData.w9Line6.trim() && addr.replace(/,\s*,/g, ',').trim()) set('w9Line6', addr);
+    if (!formData.w9Tin.trim() && formData.taxId) set('w9Tin', formData.taxId);
+    if (!formData.w9TinType) set('w9TinType', 'EIN');
   }, [formData, set]);
 
   useEffect(() => { prefillW9(); }, [prefillW9]);
+
+  useEffect(() => {
+    setSectionStatus(initSectionStatus(formData));
+    setOpenSections(getInitialOpenSections(formData));
+  }, [
+    formData.step6Sec1Complete,
+    formData.step6Sec2Complete,
+    formData.w9Signed,
+    formData.step6Sec4Complete,
+    formData.step6Sec5Complete,
+    formData.step6Sec6Complete,
+  ]);
 
   const sectionsComplete = BANKING_SECTION_ORDER.filter(id => sectionStatus[id] === 'completed').length;
   const progressPct = Math.round((sectionsComplete / BANKING_SECTION_ORDER.length) * 100);
   const allComplete = sectionsComplete === BANKING_SECTION_ORDER.length;
 
   const completeSection = (id: BankingSectionId) => {
+    const completeField = BANKING_SECTION_COMPLETE_FIELD[id];
+    if (completeField) set(completeField, true);
+
     const idx = BANKING_SECTION_ORDER.indexOf(id);
     const next: Record<BankingSectionId, SectionStatus> = { ...sectionStatus, [id]: 'completed' };
     if (idx < BANKING_SECTION_ORDER.length - 1) {
@@ -167,20 +214,43 @@ export const StepBankingPaymentSetup: React.FC<StepBankingPaymentSetupProps> = (
   };
 
   const handleAttest = (id: BankingSectionId, checked: boolean, attestKey: keyof OnboardingData) => {
-    if (!checked) {
-      set(attestKey, false as never);
-      if (sectionStatus[id] === 'completed') {
-        setSectionStatus(prev => ({ ...prev, [id]: 'active' }));
-      }
+    set(attestKey, checked as never);
+    if (!checked && attestErrors[id]) {
+      setAttestErrors(prev => ({ ...prev, [id]: undefined }));
+    }
+  };
+
+  const handleSectionContinue = (id: BankingSectionId) => {
+    const attestKey = BANKING_SECTION_ATTEST_FIELD[id];
+    if (attestKey && !formData[attestKey]) {
+      toast.error('Please complete the attestation checkbox before continuing');
       return;
     }
     const err = validateSection(id);
     if (err) {
       setAttestErrors(prev => ({ ...prev, [id]: err }));
+      toast.error(err);
       return;
     }
-    set(attestKey, true as never);
     completeSection(id);
+  };
+
+  const renderSectionContinue = (id: BankingSectionId) => {
+    const attestKey = BANKING_SECTION_ATTEST_FIELD[id];
+    const label = BANKING_SECTION_CONTINUE_LABEL[id];
+    if (!attestKey || !label) return null;
+    return (
+      <div className="ob-agreement-sc2">
+        <button
+          type="button"
+          className="ob-agreement-bc2"
+          disabled={!formData[attestKey]}
+          onClick={() => handleSectionContinue(id)}
+        >
+          {trimBtnArrow(label)} <ObArrowRight />
+        </button>
+      </div>
+    );
   };
 
   const syncAchToLegacy = (field: string, value: string) => {
@@ -194,10 +264,10 @@ export const StepBankingPaymentSetup: React.FC<StepBankingPaymentSetupProps> = (
   const sweepDisplay = useMemo(() => {
     if (!formData.sweepUseSection4) {
       return {
-        bank: formData.sweepOtherBankName || '—',
-        type: formData.sweepOtherAcctType || '—',
-        routing: formData.sweepOtherRouting || '—',
-        account: formData.sweepOtherAccount ? '••••' + formData.sweepOtherAccount.slice(-4) : '—',
+        bank: formData.sweepOtherBankName || '-',
+        type: formData.sweepOtherAcctType || '-',
+        routing: formData.sweepOtherRouting || '-',
+        account: formData.sweepOtherAccount ? '••••' + formData.sweepOtherAccount.slice(-4) : '-',
       };
     }
     return {
@@ -243,7 +313,7 @@ export const StepBankingPaymentSetup: React.FC<StepBankingPaymentSetupProps> = (
           <span className="ob-step6-sec-title">{BANKING_SECTION_TITLES[id]}</span>
           <span className="ob-step6-sec-sts">
             {status === 'completed' ? 'Complete ✓'
-              : status === 'active' ? 'In progress — complete to continue'
+              : status === 'active' ? 'In progress - complete to continue'
                 : `Complete Section ${BANKING_SECTION_ORDER[BANKING_SECTION_ORDER.indexOf(id) - 1]} to unlock`}
           </span>
         </span>
@@ -271,11 +341,7 @@ export const StepBankingPaymentSetup: React.FC<StepBankingPaymentSetupProps> = (
         </p>
       </div>
 
-      <div className="ob-info-callout ob-callout-secure">
-        <Landmark size={16} className="ob-callout-icon" />
-        <span>Your banking information is encrypted using AES-256. Dyad will only use these details for ACH remittance as outlined in your MSA.</span>
-      </div>
-
+    
       <div className="ob-step-sections-bar">
         <EnrollmentSectionsBarRow
           progressPct={progressPct}
@@ -284,6 +350,7 @@ export const StepBankingPaymentSetup: React.FC<StepBankingPaymentSetupProps> = (
         />
       </div>
 
+      <div className="ob-step6-sections">
       {/* Section 1: LPOA */}
       <div id="ob-step6-sec-1" className={`ob-step6-sec-card${openSections[1] ? ' ob-step6-sec-open' : ''}${sectionStatus[1] === 'completed' ? ' ob-step6-sec-done' : ''}`}>
         {renderHeader(1)}
@@ -300,6 +367,7 @@ export const StepBankingPaymentSetup: React.FC<StepBankingPaymentSetupProps> = (
             >
               {LPOA_ATTEST}
             </AttestBox>
+            {renderSectionContinue(1)}
           </div>
         )}
       </div>
@@ -384,6 +452,7 @@ export const StepBankingPaymentSetup: React.FC<StepBankingPaymentSetupProps> = (
             >
               {CIP_ATTEST}
             </AttestBox>
+            {renderSectionContinue(2)}
           </div>
         )}
       </div>
@@ -404,7 +473,7 @@ export const StepBankingPaymentSetup: React.FC<StepBankingPaymentSetupProps> = (
         {openSections[4] && sectionStatus[4] !== 'locked' && (
           <div className="ob-step6-sec-body">
             <div className="ob-callout ob-callout-warn">
-              <strong>Important Distinction.</strong> The bank account information below must be your practice&rsquo;s <strong>existing operating account</strong> — the account from which Dyad will debit monthly service fees. This is <em>not</em> the new Dyad lockbox account.
+              <strong>Important Distinction.</strong> The bank account information below must be your practice&rsquo;s <strong>existing operating account</strong> - the account from which Dyad will debit monthly service fees. This is <em>not</em> the new Dyad lockbox account.
             </div>
             <AchDocumentBody />
             <div className="ob-form-section-label" style={{ marginTop: 16 }}>Provider&rsquo;s Existing Operating Account (Account to be Debited)</div>
@@ -453,7 +522,7 @@ export const StepBankingPaymentSetup: React.FC<StepBankingPaymentSetupProps> = (
             </div>
             <div className="ob-bank-zp-label">Initiate Recurring Auto-ACH Payment</div>
             <ZohoPayWidget
-              bankDisplay={formData.bankName ? `${formData.bankName} · Routing ${formData.routingNumber || '—'}` : ''}
+              bankDisplay={formData.bankName ? `${formData.bankName} · Routing ${formData.routingNumber || '-'}` : ''}
               mandateActive={formData.achMandateActive}
               mandateId={formData.achMandateId}
               activatedAt={formData.achMandateActivatedAt}
@@ -467,6 +536,7 @@ export const StepBankingPaymentSetup: React.FC<StepBankingPaymentSetupProps> = (
             >
               {ACH_ATTEST_TEXT}
             </AttestBox>
+            {renderSectionContinue(4)}
           </div>
         )}
       </div>
@@ -484,7 +554,7 @@ export const StepBankingPaymentSetup: React.FC<StepBankingPaymentSetupProps> = (
               <div className="ob-form-row">
                 <div className="ob-field"><label className="ob-label">Sweep Day</label><input className="ob-input ob-input-readonly" readOnly value="Every Friday" /></div>
                 <div className="ob-field"><label className="ob-label">Frequency</label><input className="ob-input ob-input-readonly" readOnly value="Weekly" /></div>
-                <div className="ob-field"><label className="ob-label">Expected Settlement</label><input className="ob-input ob-input-readonly" readOnly value="1–2 business days" /></div>
+                <div className="ob-field"><label className="ob-label">Expected Settlement</label><input className="ob-input ob-input-readonly" readOnly value="1-2 business days" /></div>
               </div>
             </div>
             <div className="ob-bank-sw-line">
@@ -544,6 +614,7 @@ export const StepBankingPaymentSetup: React.FC<StepBankingPaymentSetupProps> = (
             >
               {SWEEP_ATTEST}
             </AttestBox>
+            {renderSectionContinue(5)}
           </div>
         )}
       </div>
@@ -575,8 +646,10 @@ export const StepBankingPaymentSetup: React.FC<StepBankingPaymentSetupProps> = (
             >
               {KYC_ATTEST}
             </AttestBox>
+            {renderSectionContinue(6)}
           </div>
         )}
+      </div>
       </div>
 
       {/* Document bundle */}
@@ -584,20 +657,20 @@ export const StepBankingPaymentSetup: React.FC<StepBankingPaymentSetupProps> = (
         <div className="ob-bank-dlbundle-head">
           <div className="ob-bank-dlbundle-icon">✓</div>
           <div>
-            <div className="ob-bank-dlbundle-title">Documents — Download or Print Your Banking Package</div>
+            <div className="ob-bank-dlbundle-title">Documents - Download or Print Your Banking Package</div>
             <div className="ob-bank-dlbundle-desc">Consolidates all six sections plus your executed IRS Form W-9 into a single document set.</div>
           </div>
         </div>
         {!formData.w9Signed && (
           <div className="ob-bank-dlbundle-status">
-            Form W-9 — <strong>not yet signed</strong>. Complete Section 3 to enable the complete document package.
+            Form W-9 - <strong>not yet signed</strong>. Complete Section 3 to enable the complete document package.
           </div>
         )}
         <div className="ob-bank-dlbundle-grid">
           <button type="button" className="ob-bank-dlbundle-btn" disabled={!allComplete || !formData.w9Signed} onClick={() => window.print()}>
             🖨️ Print Complete Document Package
           </button>
-          <button type="button" className="ob-bank-dlbundle-btn" disabled={!allComplete || !formData.w9Signed} onClick={() => downloadSection('Banking_Payment_Setup_Package', 'Dyad Banking & Payment Setup — Complete Package')}>
+          <button type="button" className="ob-bank-dlbundle-btn" disabled={!allComplete || !formData.w9Signed} onClick={() => downloadSection('Banking_Payment_Setup_Package', 'Dyad Banking & Payment Setup - Complete Package')}>
             ⬇️ Download Complete Document Package
           </button>
         </div>
@@ -607,7 +680,7 @@ export const StepBankingPaymentSetup: React.FC<StepBankingPaymentSetupProps> = (
       <div className={`ob-bank-finish-bar${allComplete ? ' ob-bank-finish-bar-ready' : ''}`}>
         <div className="ob-bank-finish-icon"><ShieldCheck size={22} /></div>
         <div className="ob-bank-finish-body">
-          <div className="ob-bank-finish-title">{allComplete ? 'All sections complete — ready to finish enrollment' : 'Complete all 6 sections to finish enrollment'}</div>
+          <div className="ob-bank-finish-title">{allComplete ? 'All sections complete - ready to finish enrollment' : 'Complete all 6 sections to finish enrollment'}</div>
           <div className="ob-bank-finish-sub">
             {allComplete ? 'Your banking authorizations and KYC documentation will be submitted securely.' : `${sectionsComplete} of 6 sections attested. Each section unlocks sequentially.`}
           </div>

@@ -83,17 +83,14 @@ export const DocumentUploadRow: React.FC<DocumentUploadRowProps> = ({
             </div>
           </div>
         ) : (
-          <div className="ob-dd-doc-pending">
-            <span className="ob-dd-doc-status ob-dd-doc-status-pending">Pending</span>
-            <button
-              type="button"
-              className="ob-dd-doc-upload-btn"
-              onClick={() => inputRef.current?.click()}
-            >
-              <Upload size={14} aria-hidden />
-              Upload
-            </button>
-          </div>
+          <button
+            type="button"
+            className="ob-dd-doc-upload-btn"
+            onClick={() => inputRef.current?.click()}
+          >
+            <Upload size={14} aria-hidden />
+            Upload
+          </button>
         )}
         <input
           ref={inputRef}

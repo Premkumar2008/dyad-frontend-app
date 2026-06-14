@@ -7,7 +7,7 @@ import api, { handleApiError } from './api';
 import { CalendarEventData, CalendarEventResponse } from '../types/landing';
 import { log } from '../utils/logger';
 import { formatDateTimeForAPI } from '../utils/dateTimeUtils';
-import { extractMeetingLinkFromResponse } from '../utils/calendarMeetLink';
+import { getCreateEventMeetingLink } from '../utils/calendarMeetLink';
 
 /**
  * Validates calendar event data before API submission
@@ -81,7 +81,7 @@ export const createCalendarEvent = async (
     const isOnboarding = eventData.isOnboarding
       || !!customTitle?.startsWith('Onboarding Request');
 
-    // Omit contactName for onboarding — legacy backends build "Contact Request from …" from it
+    // Omit contactName for onboarding - legacy backends build "Contact Request from …" from it
     const apiPayload = {
       name: contactName,
       ...(isOnboarding ? {} : { contactName }),
@@ -120,19 +120,19 @@ export const createCalendarEvent = async (
 
     // Make API call
     const response = await api.post<Record<string, unknown>>('/create-event', apiPayload);
-    const data = response.data ?? {};
-    const meetingLink = extractMeetingLinkFromResponse(data);
+    const raw = response.data ?? {};
+    const meetingLink = getCreateEventMeetingLink(raw) || undefined;
 
     log.info('Calendar event created successfully', 'calendarService', {
-      eventId: data.eventId,
+      eventId: raw.eventId,
       name: eventData.name,
       hasMeetingLink: !!meetingLink,
     });
 
     return {
-      success: (data.success as boolean | undefined) ?? true,
-      message: (data.message as string) || 'Event added to calendar',
-      eventId: data.eventId as string | undefined,
+      success: (raw.success as boolean | undefined) ?? true,
+      message: (raw.message as string) || 'Event added to calendar',
+      eventId: raw.eventId as string | undefined,
       meetingLink,
     };
     

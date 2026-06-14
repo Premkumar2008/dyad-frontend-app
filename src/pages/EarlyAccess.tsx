@@ -362,13 +362,13 @@ const EarlyAccess: React.FC = () => {
     try {
       const apiUrl = import.meta.env.VITE_API_URL || '';
 
-      // Step 1: pre-validate NPI against internal registry — hard stop if rejected or already submitted
+      // Step 1: pre-validate NPI against internal registry - hard stop if rejected or already submitted
       const checkRes = await axios.post(`${apiUrl}/api-early-access/check-npi`, { npi });
       if (!checkRes.data?.success || checkRes.data?.exists === true) {
         throw new Error(checkRes.data?.message || 'This NPI could not be validated. Please check the number and try again.');
       }
 
-      // Fetch allowed taxonomy codes once and cache them — hard stop if unavailable
+      // Fetch allowed taxonomy codes once and cache them - hard stop if unavailable
       if (allowedTaxonomiesRef.current === null) {
         const taxRes = await axios.get(`${apiUrl}/taxonomies`);
         if (!taxRes.data?.success || !Array.isArray(taxRes.data.data)) {
@@ -453,7 +453,7 @@ const EarlyAccess: React.FC = () => {
           enumType, orgName, contactName, title, phone, fullName, credential,
           displayName, taxonomyDesc, enumerationDate, lastUpdated, addr, npi,
           status: basic.status || 'Active',
-          authorizedOfficial: enumType === 'NPI-2' ? (contactName || '—') : '— (Type 1 NPI)',
+          authorizedOfficial: enumType === 'NPI-2' ? (contactName || '-') : '- (Type 1 NPI)',
         });
         setNpiEnumerationType(enumType);
         setShowNpiPanel(true);
@@ -792,7 +792,7 @@ const EarlyAccess: React.FC = () => {
                             <span className="ea-section-status ea-section-status--completed">Complete ✓</span>
                           )}
                           {status === 'active' && (
-                            <span className="ea-section-status ea-section-status--active">In progress — complete to continue</span>
+                            <span className="ea-section-status ea-section-status--active">In progress - complete to continue</span>
                           )}
                           {status === 'locked' && (
                             <span className="ea-section-status ea-section-status--locked">Complete previous section to unlock</span>
@@ -845,7 +845,7 @@ const EarlyAccess: React.FC = () => {
                                 {/* NPI field + verify button */}
                                 <div className="form-field form-field--full">
                                   <label htmlFor="npi">Practice or Provider NPI <span className="ea-required">*</span></label>
-                                  <p className="ea-field-hint">10-digit National Provider Identifier — Type 1 (individual) or Type 2 (organization). Verified live against the CMS NPPES registry.</p>
+                                  <p className="ea-field-hint">10-digit National Provider Identifier - Type 1 (individual) or Type 2 (organization). Verified live against the CMS NPPES registry.</p>
                                   <div className="ea-npi-row">
                                     <input
                                       id="npi"
@@ -946,11 +946,11 @@ const EarlyAccess: React.FC = () => {
                                         <div className="ea-npi-detail-grid">
                                           <div className="ea-npi-detail-cell">
                                             <div className="ea-npi-detail-label">PRIMARY TAXONOMY</div>
-                                            <div className="ea-npi-detail-value">{npiApiData.taxonomyDesc || '—'}</div>
+                                            <div className="ea-npi-detail-value">{npiApiData.taxonomyDesc || '-'}</div>
                                           </div>
                                           <div className="ea-npi-detail-cell">
                                             <div className="ea-npi-detail-label">ENUMERATION DATE</div>
-                                            <div className="ea-npi-detail-value ea-npi-detail-value--bold">{npiApiData.enumerationDate || '—'}</div>
+                                            <div className="ea-npi-detail-value ea-npi-detail-value--bold">{npiApiData.enumerationDate || '-'}</div>
                                           </div>
                                           {npiApiData.addr && (
                                             <div className="ea-npi-detail-cell ea-npi-detail-cell--full">
@@ -970,7 +970,7 @@ const EarlyAccess: React.FC = () => {
 
                                         <div className="ea-npi-panel-actions">
                                           <button type="button" className="ea-npi-confirm-btn" onClick={handleNpiConfirm}>
-                                            ✓ Confirm — this is my practice
+                                            ✓ Confirm - this is my practice
                                           </button>
                                           <button
                                             type="button"
@@ -1230,7 +1230,7 @@ const EarlyAccess: React.FC = () => {
                                 {errors.practiceType && (
                                   <span className="error-message">{errors.practiceType.message}</span>
                                 )}
-                                <p className="ea-field-note">Note: If your organization spans multiple categories or doesn't fit cleanly, select the closest match — we'll refine during the introduction call.</p>
+                                <p className="ea-field-note">Note: If your organization spans multiple categories or doesn't fit cleanly, select the closest match - we'll refine during the introduction call.</p>
                               </div>
                             )}
 

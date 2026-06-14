@@ -1,4 +1,5 @@
 import axios, { isAxiosError } from 'axios';
+import api from './api';
 
 export const NPI_LOOKUP_GENERIC_ERROR = 'Something went wrong. Please try again later.';
 
@@ -113,7 +114,7 @@ const mapDescSegmentToPracticeType = (segment: string): OnboardingPracticeTypeId
   return '';
 };
 
-/** Maps one taxonomy — splits comma-separated descriptions (e.g. "Anesthesiology, Pain Medicine"). */
+/** Maps one taxonomy - splits comma-separated descriptions (e.g. "Anesthesiology, Pain Medicine"). */
 export const mapSingleTaxonomyToPracticeTypes = (
   taxonomy: NpiTaxonomy,
   enumType = '',
@@ -262,7 +263,7 @@ const parseRegistryResponse = (npi: string, data: Record<string, unknown>): NpiA
     zip,
     npi,
     status: basic.status || 'Active',
-    authorizedOfficial: enumType === 'NPI-2' ? (contactName || '—') : '— (Type 1 NPI)',
+    authorizedOfficial: enumType === 'NPI-2' ? (contactName || '-') : '- (Type 1 NPI)',
     suggestedPracticeType,
     suggestedPracticeTypes,
     suggestedPrimarySpecialty,
@@ -271,7 +272,8 @@ const parseRegistryResponse = (npi: string, data: Record<string, unknown>): NpiA
 
 export const buildPrefillFromNpiData = (npiData: NpiApiData) => {
   const isOrg = npiData.enumType === 'NPI-2';
-  const organizationName = isOrg ? npiData.orgName : npiData.fullName;
+  // Type 1 (individual) NPIs have no organization name in NPPES
+  const organizationName = isOrg ? npiData.orgName : 'NA';
   const groupLegalName = isOrg ? npiData.orgName : npiData.fullName;
 
   let organizationType = '';
@@ -331,6 +333,82 @@ export const clearNpiDerivedFields = () => ({
   zip: '',
 });
 
+export interface OnboardingClientNpiCheckResult {
+  success: boolean;
+  exists: boolean;
+  status?: string;
+  message?: string;
+  submittedAt?: string;
+}
+
+const unwrapApiPayload = <T>(data: unknown): T => {
+  if (data && typeof data === 'object' && 'data' in data) {
+    const nested = (data as { data?: T }).data;
+    if (nested !== undefined && nested !== null) return nested;
+  }
+  return data as T;
+};
+
+export const checkOnboardingClientNpi = async (npi: string): Promise<OnboardingClientNpiCheckResult> => {
+  const res = await api.post('/onboarding-client/check-npi', { npi });
+  const payload = unwrapApiPayload<OnboardingClientNpiCheckResult>(res.data);
+
+  if (!payload?.success) {
+    throw new Error(
+      payload?.message || 'This NPI could not be validated. Please check the number and try again.',
+    );
+  }
+
+  if (payload.exists) {
+    throw new Error(
+      payload.message || 'An early access request with this NPI already exists.',
+    );
+  }
+
+  return payload;
+};
+
+const fetchNpiRegistryData = async (npi: string): Promise<NpiApiData> => {
+  const apiUrl = import.meta.env.VITE_API_URL || '';
+
+  if (allowedTaxonomiesCache === null) {
+    const taxRes = await axios.get(`${apiUrl}/taxonomies`);
+    if (!taxRes.data?.success || !Array.isArray(taxRes.data.data)) {
+      throw new Error('Unable to load eligible specialty list. Please try again.');
+    }
+    allowedTaxonomiesCache = taxRes.data.data as string[];
+  }
+
+  const response = await axios.post(`${apiUrl}/npi/registry`, { npi });
+  if (!response.data?.success) {
+    throw new Error('NPI not found. Please check the number and try again.');
+  }
+
+  const data = (response.data.data || response.data) as Record<string, unknown>;
+  const parsed = parseRegistryResponse(npi, data);
+
+  const allowedCodes = allowedTaxonomiesCache || [];
+  if (allowedCodes.length > 0) {
+    const npiCodes = parsed.taxonomies.map(t => t.code).filter(Boolean) as string[];
+    const isEligible = npiCodes.some(code => allowedCodes.includes(code));
+    if (!isEligible) {
+      throw new Error('The specialty associated with this NPI is not currently included as part of this phase.');
+    }
+  }
+
+  return parsed;
+};
+
+/** NPI verify flow for the provider onboarding overview (step 1). */
+export const lookupOnboardingNpiRegistry = async (npi: string): Promise<NpiApiData> => {
+  try {
+    await checkOnboardingClientNpi(npi);
+    return await fetchNpiRegistryData(npi);
+  } catch (error) {
+    throw new Error(formatNpiLookupError(error));
+  }
+};
+
 export const lookupNpiRegistry = async (npi: string): Promise<NpiApiData> => {
   try {
     const apiUrl = import.meta.env.VITE_API_URL || '';
@@ -340,32 +418,7 @@ export const lookupNpiRegistry = async (npi: string): Promise<NpiApiData> => {
       throw new Error(checkRes.data?.message || 'This NPI could not be validated. Please check the number and try again.');
     }
 
-    if (allowedTaxonomiesCache === null) {
-      const taxRes = await axios.get(`${apiUrl}/taxonomies`);
-      if (!taxRes.data?.success || !Array.isArray(taxRes.data.data)) {
-        throw new Error('Unable to load eligible specialty list. Please try again.');
-      }
-      allowedTaxonomiesCache = taxRes.data.data as string[];
-    }
-
-    const response = await axios.post(`${apiUrl}/npi/registry`, { npi });
-    if (!response.data?.success) {
-      throw new Error('NPI not found. Please check the number and try again.');
-    }
-
-    const data = (response.data.data || response.data) as Record<string, unknown>;
-    const parsed = parseRegistryResponse(npi, data);
-
-    const allowedCodes = allowedTaxonomiesCache || [];
-    if (allowedCodes.length > 0) {
-      const npiCodes = parsed.taxonomies.map(t => t.code).filter(Boolean) as string[];
-      const isEligible = npiCodes.some(code => allowedCodes.includes(code));
-      if (!isEligible) {
-        throw new Error('The specialty associated with this NPI is not currently included as part of this phase.');
-      }
-    }
-
-    return parsed;
+    return await fetchNpiRegistryData(npi);
   } catch (error) {
     throw new Error(formatNpiLookupError(error));
   }

@@ -1523,12 +1523,12 @@ input.ea-npi-success {
 }
 
 @media (max-width: 768px) {
-  /* No top padding offset — fixed sub-header is hidden until scroll triggers it */
+  /* No top padding offset - fixed sub-header is hidden until scroll triggers it */
   .early-access-main {
     padding: 0 0 2.5rem;
   }
 
-  /* Mobile intro — title + subtitle + in-flow progress bar */
+  /* Mobile intro - title + subtitle + in-flow progress bar */
   .ea-mobile-intro {
     display: block;
     padding-top:1rem;
@@ -1596,7 +1596,7 @@ input.ea-npi-success {
     display: none;
   }
 
-  /* Progress bar — single row: label | bar | % */
+  /* Progress bar - single row: label | bar | % */
   .ea-sub-header-right {
     width: 100%;
     min-width: unset;
@@ -1696,7 +1696,7 @@ input.ea-npi-success {
     min-width: 0;
   }
 
-  /* NPI panel — header */
+  /* NPI panel - header */
   .ea-npi-panel-header {
     flex-wrap: wrap;
     gap: 0.5rem;
@@ -1718,7 +1718,7 @@ input.ea-npi-success {
     font-size: 0.7rem;
   }
 
-  /* NPI panel — body */
+  /* NPI panel - body */
   .ea-npi-panel-body {
     padding: 0.875rem;
   }
@@ -1739,7 +1739,7 @@ input.ea-npi-success {
     border-right: none;
   }
 
-  /* OTP card header — 2-row grid on mobile */
+  /* OTP card header - 2-row grid on mobile */
   .ea-otp-card-header {
     display: grid;
     grid-template-columns: 38px 1fr;
@@ -1767,7 +1767,7 @@ input.ea-npi-success {
     padding: 0.25rem 0.65rem;
   }
 
-  /* OTP description — break long email address */
+  /* OTP description - break long email address */
   .ea-otp-card-desc {
     font-size: 0.82rem;
     overflow-wrap: break-word;
@@ -1778,7 +1778,7 @@ input.ea-npi-success {
     padding: 0.875rem;
   }
 
-  /* NPI panel — action buttons */
+  /* NPI panel - action buttons */
   .ea-npi-panel-actions {
     flex-direction: column;
     align-items: stretch;

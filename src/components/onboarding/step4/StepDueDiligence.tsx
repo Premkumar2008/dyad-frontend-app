@@ -1,6 +1,7 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   BarChart3,
+  CheckCircle2,
   ChevronDown,
   ChevronUp,
   DollarSign,
@@ -25,8 +26,15 @@ import {
 } from './dueDiligenceConstants';
 
 type Step4SectionId = 'provider' | 'financial' | 'docs';
+type Step4SectionStatus = 'completed' | 'active' | 'locked';
 
 const STEP4_SECTIONS: Step4SectionId[] = ['provider', 'financial', 'docs'];
+
+const STEP4_SECTION_NUM: Record<Step4SectionId, string> = {
+  provider: '1',
+  financial: '2',
+  docs: '3',
+};
 
 export interface StepDueDiligenceProps {
   formData: OnboardingData;
@@ -91,10 +99,7 @@ export const StepDueDiligence: React.FC<StepDueDiligenceProps> = ({
   const isFacility = formData.confirmedPracticeType === 'asc' || formData.practiceType === 'asc';
 
   const [providerEditing, setProviderEditing] = useState(false);
-  const [providerCollapsed, setProviderCollapsed] = useState(formData.step4ProviderConfirmed);
-  const [financialCollapsed, setFinancialCollapsed] = useState(formData.step4FinancialConfirmed);
-  const [docsCollapsed, setDocsCollapsed] = useState(formData.step4DocsConfirmed);
-  const [openSections, setOpenSections] = useState({
+  const [openSections, setOpenSections] = useState<Record<Step4SectionId, boolean>>({
     provider: !formData.step4ProviderConfirmed,
     financial: formData.step4ProviderConfirmed && !formData.step4FinancialConfirmed,
     docs: formData.step4FinancialConfirmed && !formData.step4DocsConfirmed,
@@ -145,6 +150,14 @@ export const StepDueDiligence: React.FC<StepDueDiligenceProps> = ({
     + (formData.step4DocsConfirmed ? 1 : 0);
   const step4ProgressPct = Math.round((step4SectionsComplete / 3) * 100);
 
+  useEffect(() => {
+    setOpenSections({
+      provider: !formData.step4ProviderConfirmed,
+      financial: formData.step4ProviderConfirmed && !formData.step4FinancialConfirmed,
+      docs: formData.step4FinancialConfirmed && !formData.step4DocsConfirmed,
+    });
+  }, [formData.step4ProviderConfirmed, formData.step4FinancialConfirmed, formData.step4DocsConfirmed]);
+
   const setDoc = (docId: DueDiligenceDocId, meta: DueDiligenceDocMeta | null) => {
     set('ddDocuments', { ...documents, [docId]: meta });
   };
@@ -166,6 +179,23 @@ export const StepDueDiligence: React.FC<StepDueDiligenceProps> = ({
     return missing;
   };
 
+  const completeSection = (id: Step4SectionId) => {
+    const idx = STEP4_SECTIONS.indexOf(id);
+    setOpenSections(prev => {
+      const next = { ...prev, [id]: false };
+      if (idx < STEP4_SECTIONS.length - 1) {
+        next[STEP4_SECTIONS[idx + 1]] = true;
+      }
+      return next;
+    });
+    setTimeout(() => {
+      const nextId = STEP4_SECTIONS[idx + 1];
+      if (nextId) {
+        document.getElementById(`ob-step4-section-${nextId}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 350);
+  };
+
   const confirmProvider = () => {
     const missing = validateProvider();
     if (missing.length) {
@@ -175,9 +205,7 @@ export const StepDueDiligence: React.FC<StepDueDiligenceProps> = ({
     setProvAttestError('');
     set('step4ProviderConfirmed', true);
     setProviderEditing(false);
-    setProviderCollapsed(true);
-    setOpenSections({ provider: false, financial: true, docs: false });
-    setTimeout(() => document.getElementById('ob-step4-financial')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 400);
+    completeSection('provider');
   };
 
   const confirmFinancial = () => {
@@ -195,9 +223,7 @@ export const StepDueDiligence: React.FC<StepDueDiligenceProps> = ({
     }
     setFinAttestError('');
     set('step4FinancialConfirmed', true);
-    setFinancialCollapsed(true);
-    setOpenSections({ provider: false, financial: false, docs: true });
-    setTimeout(() => document.getElementById('ob-step4-docs')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 400);
+    completeSection('financial');
   };
 
   const confirmDocs = () => {
@@ -206,8 +232,7 @@ export const StepDueDiligence: React.FC<StepDueDiligenceProps> = ({
       return;
     }
     set('step4DocsConfirmed', true);
-    setDocsCollapsed(true);
-    setOpenSections({ provider: false, financial: false, docs: false });
+    completeSection('docs');
   };
 
   const canSubmit =
@@ -224,13 +249,11 @@ export const StepDueDiligence: React.FC<StepDueDiligenceProps> = ({
   };
 
   const toggleSection = (id: Step4SectionId) => {
+    if (step4SectionStatus(id) === 'locked') return;
     setOpenSections(prev => ({ ...prev, [id]: !prev[id] }));
-    if (id === 'provider' && providerCollapsed) setProviderCollapsed(false);
-    if (id === 'financial' && financialCollapsed) setFinancialCollapsed(false);
-    if (id === 'docs' && docsCollapsed) setDocsCollapsed(false);
   };
 
-  const step4SectionStatus = (id: Step4SectionId): 'completed' | 'active' | 'locked' => {
+  const step4SectionStatus = (id: Step4SectionId): Step4SectionStatus => {
     if (id === 'provider') {
       if (formData.step4ProviderConfirmed) return 'completed';
       return 'active';
@@ -245,27 +268,51 @@ export const StepDueDiligence: React.FC<StepDueDiligenceProps> = ({
     return 'active';
   };
 
-  const renderCardHeader = (
-    sectionId: Step4SectionId,
+  const sectionLabel = (id: Step4SectionId) => {
+    const status = step4SectionStatus(id);
+    if (status === 'completed') return 'Complete';
+    if (status === 'active') return 'In progress - complete to continue';
+    const prevIdx = STEP4_SECTIONS.indexOf(id) - 1;
+    if (prevIdx >= 0) {
+      return `Complete Section ${STEP4_SECTION_NUM[STEP4_SECTIONS[prevIdx]]} to unlock`;
+    }
+    return 'Locked';
+  };
+
+  const renderSectionHeader = (
+    id: Step4SectionId,
     title: string,
-    badge: React.ReactNode,
-    extra?: React.ReactNode,
+    status: Step4SectionStatus,
+    open: boolean,
   ) => (
-    <div className="ob-dd-card-hdr">
-      <button
-        type="button"
-        className="ob-dd-card-hdr-main"
-        onClick={() => toggleSection(sectionId)}
-      >
-        <span className="ob-dd-card-title">{title}</span>
-        {badge}
-        <span className="ob-section-chevron">
-          {openSections[sectionId] ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+    <button
+      type="button"
+      className="ob-section-header ob-section-header-btn"
+      onClick={() => toggleSection(id)}
+      disabled={status === 'locked'}
+    >
+      <div className={`ob-section-badge${status === 'locked' ? ' ob-badge-locked' : status === 'completed' ? ' ob-badge-done' : ' ob-badge-inprogress'}`}>
+        {status === 'completed' ? '✓' : STEP4_SECTION_NUM[id]}
+      </div>
+      <div className="ob-section-meta">
+        <span className="ob-section-title">{title}</span>
+        <span className={`ob-section-status${
+          status === 'completed' ? ' ob-status-done'
+          : status === 'active' ? ' ob-status-inprogress'
+          : ''}`}>
+          {sectionLabel(id)}
         </span>
-      </button>
-      {extra}
-    </div>
+      </div>
+      <div className="ob-section-chevron">
+        {open ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+      </div>
+    </button>
   );
+
+  const sectionCardClass = (id: Step4SectionId) => {
+    const status = step4SectionStatus(id);
+    return `ob-section-card${openSections[id] ? ' ob-section-expanded' : ''}${status === 'completed' ? ' ob-section-complete' : ''}${status === 'locked' ? ' ob-section-locked' : ''}${status === 'active' ? ' ob-section-active-ring' : ''}`;
+  };
 
   return (
     <div className="ob-step-content ob-step4-layout">
@@ -294,7 +341,7 @@ export const StepDueDiligence: React.FC<StepDueDiligenceProps> = ({
             <span className="ob-dd-practice-label">Practice Type</span>
             <span className="ob-dd-practice-sep" />
             <span className="ob-dd-practice-confirmed">
-              <CheckCircle2Icon /> Confirmed
+              <CheckCircle2 size={12} className="ob-check-green" /> Confirmed
             </span>
           </div>
           <div className="ob-dd-practice-value">{practiceTypeTitle}</div>
@@ -307,49 +354,31 @@ export const StepDueDiligence: React.FC<StepDueDiligenceProps> = ({
         </p>
       </div>
 
+      <div className="ob-step4-sections">
       {/* Provider Information */}
-      <div
-        id="ob-step4-provider"
-        className={`ob-dd-card${providerCollapsed ? ' ob-dd-card-collapsed' : ''}${openSections.provider ? ' ob-dd-card-open' : ''}`}
-      >
-        {renderCardHeader(
-          'provider',
-          'Provider Information',
-          formData.step4ProviderConfirmed ? (
-            <span className="ob-dd-badge-confirmed">✓ Confirmed</span>
-          ) : (
-            <span className="ob-dd-badge-required">Required</span>
-          ),
-          <div className="ob-dd-card-actions">
-            {!providerCollapsed && (
-              <>
+      <div id="ob-step4-section-provider" className={sectionCardClass('provider')}>
+        {renderSectionHeader('provider', 'Provider Information', step4SectionStatus('provider'), openSections.provider)}
+        <div className={`ob-section-collapse${openSections.provider ? ' ob-section-collapse-open' : ''}`}>
+          <div className="ob-section-collapse-inner">
+            <div className="ob-section-body">
+            <div className="ob-step4-section-toolbar">
+              <button
+                type="button"
+                className={`ob-dd-edit-btn${providerEditing ? ' ob-dd-edit-btn-active' : ''}`}
+                onClick={() => setProviderEditing(e => !e)}
+              >
+                {providerEditing ? <><X size={12} /> Cancel</> : <><Pencil size={12} /> Edit</>}
+              </button>
+              {providerEditing && (
                 <button
                   type="button"
-                  className={`ob-dd-edit-btn${providerEditing ? ' ob-dd-edit-btn-active' : ''}`}
-                  onClick={() => setProviderEditing(e => !e)}
+                  className="ob-dd-save-btn"
+                  onClick={() => setProviderEditing(false)}
                 >
-                  {providerEditing ? <><X size={12} /> Cancel</> : <><Pencil size={12} /> Edit</>}
+                  <ObForwardButtonLabel label="Save" />
                 </button>
-                {providerEditing && (
-                  <button
-                    type="button"
-                    className="ob-dd-save-btn"
-                    onClick={() => setProviderEditing(false)}
-                  >
-                    <ObForwardButtonLabel label="Save" />
-                  </button>
-                )}
-              </>
-            )}
-            {providerCollapsed && (
-              <button type="button" className="ob-dd-expand-btn" onClick={() => { setProviderCollapsed(false); setOpenSections(s => ({ ...s, provider: true })); }}>
-                Expand
-              </button>
-            )}
-          </div>,
-        )}
-        {openSections.provider && !providerCollapsed && (
-          <div className="ob-dd-card-body">
+              )}
+            </div>
             <div className="ob-form-row">
               <div className="ob-field">
                 <label className="ob-label">Provider Name <span className="ob-confirmed-tag">✓ confirmed</span></label>
@@ -527,31 +556,17 @@ export const StepDueDiligence: React.FC<StepDueDiligenceProps> = ({
                 onConfirm={confirmProvider}
               />
             )}
+            </div>
           </div>
-        )}
+        </div>
       </div>
 
       {/* Financial Metrics */}
-      <div
-        id="ob-step4-financial"
-        className={`ob-dd-card${financialCollapsed ? ' ob-dd-card-collapsed' : ''}${openSections.financial ? ' ob-dd-card-open' : ''}`}
-      >
-        {renderCardHeader(
-          'financial',
-          'Key Financial Metrics',
-          formData.step4FinancialConfirmed ? (
-            <span className="ob-dd-badge-confirmed">✓ Confirmed</span>
-          ) : (
-            <span className="ob-dd-badge-required">Required</span>
-          ),
-          financialCollapsed ? (
-            <button type="button" className="ob-dd-expand-btn" onClick={() => { setFinancialCollapsed(false); setOpenSections(s => ({ ...s, financial: true })); }}>
-              Expand
-            </button>
-          ) : null,
-        )}
-        {openSections.financial && !financialCollapsed && (
-          <div className="ob-dd-card-body">
+      <div id="ob-step4-section-financial" className={sectionCardClass('financial')}>
+        {renderSectionHeader('financial', 'Key Financial Metrics', step4SectionStatus('financial'), openSections.financial)}
+        <div className={`ob-section-collapse${openSections.financial ? ' ob-section-collapse-open' : ''}`}>
+          <div className="ob-section-collapse-inner">
+            <div className="ob-section-body">
             <div className="ob-callout ob-callout-info">
               <strong>Why this matters:</strong> These metrics allow Dyad to benchmark your practice against
               specialty-specific performance standards and identify areas of opportunity before our first
@@ -637,36 +652,23 @@ export const StepDueDiligence: React.FC<StepDueDiligenceProps> = ({
                 disabled={!formData.step4ProviderConfirmed}
               />
             )}
+            </div>
           </div>
-        )}
+        </div>
       </div>
 
       {/* Documents */}
-      <div
-        id="ob-step4-docs"
-        className={`ob-dd-card${docsCollapsed ? ' ob-dd-card-collapsed' : ''}${openSections.docs ? ' ob-dd-card-open' : ''}`}
-      >
-        {renderCardHeader(
-          'docs',
-          'Required Document Uploads',
-          formData.step4DocsConfirmed ? (
-            <span className="ob-dd-badge-confirmed">✓ Confirmed</span>
-          ) : (
-            <span className="ob-dd-badge-required">Required</span>
-          ),
-          docsCollapsed ? (
-            <button type="button" className="ob-dd-expand-btn" onClick={() => { setDocsCollapsed(false); setOpenSections(s => ({ ...s, docs: true })); }}>
-              Expand
-            </button>
-          ) : null,
-        )}
-        {openSections.docs && !docsCollapsed && (
-          <div className="ob-dd-card-body">
+      <div id="ob-step4-section-docs" className={sectionCardClass('docs')}>
+        {renderSectionHeader('docs', 'Required Document Uploads', step4SectionStatus('docs'), openSections.docs)}
+        <div className={`ob-section-collapse${openSections.docs ? ' ob-section-collapse-open' : ''}`}>
+          <div className="ob-section-collapse-inner">
+            <div className="ob-section-body">
             <div className="ob-callout ob-callout-info">
               <strong>Minimum 12-month reporting window.</strong> To prepare an accurate and meaningful service
               proposal, Dyad requires no less than the most recent 12 consecutive months of the following reports.
             </div>
 
+            <div className="ob-dd-doc-table-wrap">
             <table className="ob-dd-doc-table">
               <thead>
                 <tr>
@@ -689,6 +691,7 @@ export const StepDueDiligence: React.FC<StepDueDiligenceProps> = ({
                 ))}
               </tbody>
             </table>
+            </div>
 
             <div className="ob-field ob-dd-gaps-field">
               <label className="ob-label">Notes on Report Availability or Gaps</label>
@@ -714,8 +717,10 @@ export const StepDueDiligence: React.FC<StepDueDiligenceProps> = ({
                 disabled={!formData.step4FinancialConfirmed}
               />
             )}
+            </div>
           </div>
-        )}
+        </div>
+      </div>
       </div>
 
       <div className="ob-info-banner">
@@ -732,7 +737,7 @@ export const StepDueDiligence: React.FC<StepDueDiligenceProps> = ({
 
       <div className="ob-step-bottom-zone">
         <EnrollmentSaveNotice />
-        <div className="ob-step-nav ob-step4-nav">
+        <div className="ob-step-footer ob-step-nav ob-step4-nav">
           <button type="button" className="ob-btn-secondary" onClick={onBack} disabled={isSubmitting}>
             <ObBackButtonLabel />
           </button>
@@ -749,13 +754,6 @@ export const StepDueDiligence: React.FC<StepDueDiligenceProps> = ({
     </div>
   );
 };
-
-const CheckCircle2Icon = () => (
-  <svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden>
-    <circle cx="7" cy="7" r="6" stroke="#BDBDBD" strokeWidth="1.2" />
-    <path d="M4.5 7L6.5 9L9.5 5.5" stroke="#BDBDBD" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
-);
 
 const PayerMixItem: React.FC<{
   label: string;
