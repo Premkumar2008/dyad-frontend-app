@@ -86,7 +86,8 @@ export const ONBOARDING_STEP_FIELD_MAP: Record<StepBucketKey, (keyof OnboardingD
     'w9TaxClass', 'w9LlcClass', 'w9OtherDesc', 'w9Line5', 'w9Line6', 'w9TinType', 'w9Tin',
     'w9EsignConsent', 'w9IrsCert', 'w9AuthDist', 'w9Signature', 'w9Signed', 'w9SignedAt', 'w9SignedHash',
     'w9Item2Flagged', 'achBankPhone', 'achBankAddress', 'achMandateActive', 'achMandateId',
-    'achMandateActivatedAt', 'step6Sec4Attested', 'step6Sec4Complete', 'sweepUseSection4', 'sweepOtherBankName',
+    'achMandateActivatedAt', 'achDebitAuthorized', 'zohoCustomerId', 'zohoPaymentMethodId', 'zohoPaymentMethodType',
+    'step6Sec4Attested', 'step6Sec4Complete', 'sweepUseSection4', 'sweepOtherBankName',
     'sweepOtherAcctType', 'sweepOtherRouting', 'sweepOtherAccount', 'step6Sec5Attested', 'step6Sec5Complete',
     'kycDocuments', 'step6Sec6Attested', 'step6Sec6Complete', 'step6EnrollmentComplete', 'step6ConfirmationId',
     'accountHolderName', 'bankName', 'routingNumber', 'accountNumber', 'accountType',
@@ -121,7 +122,7 @@ const ONBOARDING_BOOL_FIELD_SET = new Set<string>([
   'step5MsaAttested', 'step5ExhibitCAttested', 'step5FeeScheduleAttested',
   'msaPackageAgreed', 'msaPackageExecuted', 'msaAgreed',
   'step6Sec1Attested', 'step6Sec1Complete', 'step6Sec2Attested', 'step6Sec2Complete',
-  'w9EsignConsent', 'w9IrsCert', 'w9AuthDist', 'w9Signed', 'w9Item2Flagged', 'achMandateActive',
+  'w9EsignConsent', 'w9IrsCert', 'w9AuthDist', 'w9Signed', 'w9Item2Flagged', 'achMandateActive', 'achDebitAuthorized',
   'step6Sec4Attested', 'step6Sec4Complete', 'sweepUseSection4', 'step6Sec5Attested', 'step6Sec5Complete',
   'step6Sec6Attested', 'step6Sec6Complete', 'step6EnrollmentComplete',
 ]);

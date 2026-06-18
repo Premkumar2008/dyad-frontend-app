@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { ChevronDown, ChevronUp, Eye, EyeOff, Landmark, ShieldCheck } from 'lucide-react';
+import { ChevronDown, ChevronUp, Eye, EyeOff, ShieldCheck } from 'lucide-react';
 import toast from 'react-hot-toast';
 import type { OnboardingData } from '../../../pages/DyadOnboarding';
 import { EnrollmentSaveNotice } from '../EnrollmentSaveNotice';
@@ -8,12 +8,14 @@ import { formatAgreementAcceptance } from '../step3/agreementHelpers';
 import { FormW9Section } from './FormW9Section';
 import { KycUploadBar } from './KycUploadBar';
 import { ZohoPayWidget } from './ZohoPayWidget';
+import { EnrollmentSectionsBarRow } from '../EnrollmentSectionsBarRow';
 import {
   ACH_ATTEST_TEXT,
   AchDocumentBody,
   LpoaDocumentBody,
+  SWEEP_LEGAL_INTRO,
+  SWEEP_LEGAL_PROVISIONS,
 } from './bankingDocuments';
-import { EnrollmentSectionsBarRow } from '../EnrollmentSectionsBarRow';
 import {
   BANKING_SECTION_LABELS,
   BANKING_SECTION_ORDER,
@@ -253,7 +255,22 @@ export const StepBankingPaymentSetup: React.FC<StepBankingPaymentSetupProps> = (
     );
   };
 
+  const clearAchMandate = useCallback(() => {
+    set('achMandateActive', false);
+    set('achMandateId', '');
+    set('achMandateActivatedAt', '');
+    set('zohoPaymentMethodId', '');
+    set('zohoPaymentMethodType', '');
+    set('achDebitAuthorized', false);
+    set('step6Sec4Attested', false);
+    set('step6Sec4Complete', false);
+  }, [set]);
+
   const syncAchToLegacy = (field: string, value: string) => {
+    if (formData.achMandateActive) {
+      clearAchMandate();
+      toast('Bank account changed. Please re-activate the Auto-ACH mandate', { icon: '⚠️' });
+    }
     if (field === 'bankName') set('bankName', value);
     if (field === 'routing') set('routingNumber', value.replace(/\D/g, '').slice(0, 9));
     if (field === 'account') set('accountNumber', value.replace(/\D/g, ''));
@@ -313,13 +330,25 @@ export const StepBankingPaymentSetup: React.FC<StepBankingPaymentSetupProps> = (
           <span className="ob-step6-sec-title">{BANKING_SECTION_TITLES[id]}</span>
           <span className="ob-step6-sec-sts">
             {status === 'completed' ? 'Complete ✓'
-              : status === 'active' ? 'In progress - complete to continue'
+              : status === 'active' ? 'In progress. Complete to continue'
                 : `Complete Section ${BANKING_SECTION_ORDER[BANKING_SECTION_ORDER.indexOf(id) - 1]} to unlock`}
           </span>
         </span>
         {open ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
       </button>
     );
+  };
+
+  const jumpToSection = (id: BankingSectionId) => {
+    if (sectionStatus[id] === 'locked') return;
+    setOpenSections(() => {
+      const next = {} as Record<BankingSectionId, boolean>;
+      BANKING_SECTION_ORDER.forEach(s => { next[s] = s === id; });
+      return next;
+    });
+    setTimeout(() => {
+      document.getElementById(`ob-step6-sec-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 120);
   };
 
   const downloadSection = (title: string, content: string) => {
@@ -378,7 +407,7 @@ export const StepBankingPaymentSetup: React.FC<StepBankingPaymentSetupProps> = (
         {openSections[2] && sectionStatus[2] !== 'locked' && (
           <div className="ob-step6-sec-body">
             <div className="ob-callout ob-callout-info">
-              <strong>Customer Identification Program (CIP).</strong> Federal banking regulations require Live Oak Bank to verify the identity of individuals with significant responsibility to control, manage, or direct the practice.
+              <strong>Customer Identification Program (CIP).</strong> Federal banking regulations (31 CFR § 1020.220) require Live Oak Bank to verify the identity of individuals with significant responsibility to control, manage, or direct the practice. This information is transmitted securely and used solely for account verification.
             </div>
             <div className="ob-form-row">
               <div className="ob-field">
@@ -417,6 +446,7 @@ export const StepBankingPaymentSetup: React.FC<StepBankingPaymentSetupProps> = (
             <div className="ob-field">
               <label className="ob-label">Residential Address <span className="ob-req">*</span></label>
               <input className="ob-input" placeholder="Personal residential address (not business address)" value={formData.step6CipResAddress} onChange={e => set('step6CipResAddress', e.target.value)} />
+              <span className="ob-field-hint">Required by federal banking regulations. Must be a physical address, not a P.O. Box.</span>
             </div>
             <div className="ob-form-row">
               <div className="ob-field">
@@ -473,10 +503,10 @@ export const StepBankingPaymentSetup: React.FC<StepBankingPaymentSetupProps> = (
         {openSections[4] && sectionStatus[4] !== 'locked' && (
           <div className="ob-step6-sec-body">
             <div className="ob-callout ob-callout-warn">
-              <strong>Important Distinction.</strong> The bank account information below must be your practice&rsquo;s <strong>existing operating account</strong> - the account from which Dyad will debit monthly service fees. This is <em>not</em> the new Dyad lockbox account.
+              <strong>Important Distinction.</strong> The bank account information below must be your practice&rsquo;s <strong>existing operating account</strong>, the account from which Dyad will debit monthly service fees. This is <em>not</em> the new Dyad lockbox account being established through Live Oak Bank. The lockbox account will be provisioned separately upon completion of enrollment.
             </div>
             <AchDocumentBody />
-            <div className="ob-form-section-label" style={{ marginTop: 16 }}>Provider&rsquo;s Existing Operating Account (Account to be Debited)</div>
+            <div className="ob-form-section-label">Provider&rsquo;s Existing Operating Account (Account to be Debited)</div>
             <div className="ob-form-row">
               <div className="ob-field">
                 <label className="ob-label">Bank Name <span className="ob-req">*</span></label>
@@ -526,8 +556,24 @@ export const StepBankingPaymentSetup: React.FC<StepBankingPaymentSetupProps> = (
               mandateActive={formData.achMandateActive}
               mandateId={formData.achMandateId}
               activatedAt={formData.achMandateActivatedAt}
+              paymentMethodType={formData.zohoPaymentMethodType}
+              customerName={[formData.signerFirstName, formData.signerLastName].filter(Boolean).join(' ')
+                || `${formData.firstName} ${formData.lastName}`.trim()}
+              customerEmail={formData.signerEmail || formData.contactEmail}
+              customerPhone={formData.contactPhone}
+              onboardingId={formData.onboardingId}
+              zohoCustomerId={formData.zohoCustomerId}
+              achDebitAuthorized={formData.achDebitAuthorized}
+              onAchDebitAuthorizedChange={c => set('achDebitAuthorized', c)}
               disabled={!formData.bankName || formData.routingNumber.length !== 9 || !formData.accountNumber}
-              onActivate={(id, at) => { set('achMandateActive', true); set('achMandateId', id); set('achMandateActivatedAt', at); }}
+              onActivate={result => {
+                set('achMandateActive', true);
+                set('achMandateId', result.mandateId);
+                set('achMandateActivatedAt', result.activatedAt);
+                set('zohoCustomerId', result.customerId);
+                set('zohoPaymentMethodId', result.paymentMethodId);
+                set('zohoPaymentMethodType', result.paymentMethodType || 'ach_debit');
+              }}
             />
             <AttestBox
               checked={formData.step6Sec4Attested}
@@ -554,7 +600,7 @@ export const StepBankingPaymentSetup: React.FC<StepBankingPaymentSetupProps> = (
               <div className="ob-form-row">
                 <div className="ob-field"><label className="ob-label">Sweep Day</label><input className="ob-input ob-input-readonly" readOnly value="Every Friday" /></div>
                 <div className="ob-field"><label className="ob-label">Frequency</label><input className="ob-input ob-input-readonly" readOnly value="Weekly" /></div>
-                <div className="ob-field"><label className="ob-label">Expected Settlement</label><input className="ob-input ob-input-readonly" readOnly value="1-2 business days" /></div>
+                <div className="ob-field"><label className="ob-label">Expected Settlement</label><input className="ob-input ob-input-readonly" readOnly value="1–2 business days" /></div>
               </div>
             </div>
             <div className="ob-bank-sw-line">
@@ -572,10 +618,25 @@ export const StepBankingPaymentSetup: React.FC<StepBankingPaymentSetupProps> = (
               {formData.sweepUseSection4 ? (
                 <div className="ob-bank-sw-display">
                   <div className="ob-bank-sw-grid">
-                    <div><div className="ob-bank-sw-dl">Bank Name</div><div className="ob-bank-sw-dv">{sweepDisplay.bank}</div></div>
-                    <div><div className="ob-bank-sw-dl">Account Type</div><div className="ob-bank-sw-dv">{sweepDisplay.type}</div></div>
-                    <div><div className="ob-bank-sw-dl">Routing Number</div><div className="ob-bank-sw-dv">{sweepDisplay.routing}</div></div>
-                    <div><div className="ob-bank-sw-dl">Account Number</div><div className="ob-bank-sw-dv">{sweepDisplay.account}</div></div>
+                    <div>
+                      <div className="ob-bank-sw-dl">Bank Name</div>
+                      <div className={`ob-bank-sw-dv${!formData.bankName ? ' ob-bank-sw-dv-empty' : ''}`}>{sweepDisplay.bank}</div>
+                    </div>
+                    <div>
+                      <div className="ob-bank-sw-dl">Account Type</div>
+                      <div className={`ob-bank-sw-dv${!formData.accountType ? ' ob-bank-sw-dv-empty' : ''}`}>{sweepDisplay.type}</div>
+                    </div>
+                    <div>
+                      <div className="ob-bank-sw-dl">Routing Number (ABA)</div>
+                      <div className={`ob-bank-sw-dv${formData.routingNumber.length !== 9 ? ' ob-bank-sw-dv-empty' : ''}`}>{sweepDisplay.routing}</div>
+                    </div>
+                    <div>
+                      <div className="ob-bank-sw-dl">Account Number</div>
+                      <div className={`ob-bank-sw-dv${!formData.accountNumber ? ' ob-bank-sw-dv-empty' : ''}`}>{sweepDisplay.account}</div>
+                    </div>
+                  </div>
+                  <div className="ob-bank-sw-display-foot">
+                    This information is pulled from your bank account in Section 4 (used for fee debits). The same account will receive your weekly sweeps. To use a different account exclusively for sweeps, choose &ldquo;Specify a different account&rdquo; above.
                   </div>
                 </div>
               ) : (
@@ -583,7 +644,7 @@ export const StepBankingPaymentSetup: React.FC<StepBankingPaymentSetupProps> = (
                   <div className="ob-form-row">
                     <div className="ob-field">
                       <label className="ob-label">Bank Name <span className="ob-req">*</span></label>
-                      <input className="ob-input" value={formData.sweepOtherBankName} onChange={e => set('sweepOtherBankName', e.target.value)} />
+                      <input className="ob-input" value={formData.sweepOtherBankName} onChange={e => set('sweepOtherBankName', e.target.value)} placeholder="Bank name" />
                     </div>
                     <div className="ob-field">
                       <label className="ob-label">Account Type <span className="ob-req">*</span></label>
@@ -596,24 +657,35 @@ export const StepBankingPaymentSetup: React.FC<StepBankingPaymentSetupProps> = (
                   </div>
                   <div className="ob-form-row">
                     <div className="ob-field">
-                      <label className="ob-label">Routing Number <span className="ob-req">*</span></label>
-                      <input className="ob-input" maxLength={9} value={formData.sweepOtherRouting} onChange={e => set('sweepOtherRouting', e.target.value.replace(/\D/g, ''))} />
+                      <label className="ob-label">Routing Number (ABA) <span className="ob-req">*</span></label>
+                      <input className="ob-input" maxLength={9} value={formData.sweepOtherRouting} onChange={e => set('sweepOtherRouting', e.target.value.replace(/\D/g, ''))} placeholder="9-digit routing number" />
                     </div>
                     <div className="ob-field">
                       <label className="ob-label">Account Number <span className="ob-req">*</span></label>
-                      <input className="ob-input" value={formData.sweepOtherAccount} onChange={e => set('sweepOtherAccount', e.target.value.replace(/\D/g, ''))} />
+                      <input className="ob-input" value={formData.sweepOtherAccount} onChange={e => set('sweepOtherAccount', e.target.value.replace(/\D/g, ''))} placeholder="Account number" />
                     </div>
                   </div>
                 </div>
               )}
             </div>
-            <AttestBox
-              checked={formData.step6Sec5Attested}
-              onChange={c => handleAttest(5, c, 'step6Sec5Attested')}
-              error={attestErrors[5]}
-            >
-              {SWEEP_ATTEST}
-            </AttestBox>
+            <div className="ob-bank-sw-line ob-bank-sw-line-legal">
+              <div className="ob-bank-sw-head">Sweep Authorization &amp; Attestation</div>
+              <div className="ob-bank-sw-legal-box">
+                <p>{SWEEP_LEGAL_INTRO}</p>
+                <ol>
+                  {SWEEP_LEGAL_PROVISIONS.map(p => (
+                    <li key={p.title}><strong>{p.title}</strong> {p.text}</li>
+                  ))}
+                </ol>
+              </div>
+              <AttestBox
+                checked={formData.step6Sec5Attested}
+                onChange={c => handleAttest(5, c, 'step6Sec5Attested')}
+                error={attestErrors[5]}
+              >
+                {SWEEP_ATTEST}
+              </AttestBox>
+            </div>
             {renderSectionContinue(5)}
           </div>
         )}
@@ -625,7 +697,7 @@ export const StepBankingPaymentSetup: React.FC<StepBankingPaymentSetupProps> = (
         {openSections[6] && sectionStatus[6] !== 'locked' && (
           <div className="ob-step6-sec-body">
             <div className="ob-callout ob-callout-info">
-              <strong>Federal Banking Requirement.</strong> The Bank Secrecy Act and CIP regulations require Live Oak Bank to verify your practice&rsquo;s identity prior to opening a deposit account.
+              <strong>Federal Banking Requirement.</strong> The Bank Secrecy Act (BSA) and Customer Identification Program (CIP) regulations require Live Oak Bank to verify your practice&rsquo;s identity and legal status prior to opening a deposit account. All documents are transmitted securely via encrypted API.
             </div>
             {KYC_DOCUMENTS.map(doc => (
               <KycUploadBar
@@ -657,22 +729,66 @@ export const StepBankingPaymentSetup: React.FC<StepBankingPaymentSetupProps> = (
         <div className="ob-bank-dlbundle-head">
           <div className="ob-bank-dlbundle-icon">✓</div>
           <div>
-            <div className="ob-bank-dlbundle-title">Documents - Download or Print Your Banking Package</div>
-            <div className="ob-bank-dlbundle-desc">Consolidates all six sections plus your executed IRS Form W-9 into a single document set.</div>
+            <div className="ob-bank-dlbundle-title">Documents: Download or Print Your Banking Package</div>
+            <div className="ob-bank-dlbundle-desc">
+              Your Banking &amp; Payment Setup consolidates all six sections plus your executed IRS Form W-9 into a single legally-compliant document set. Use the buttons below to download or print the complete package or individual sections for your records.
+            </div>
           </div>
         </div>
-        {!formData.w9Signed && (
-          <div className="ob-bank-dlbundle-status">
-            Form W-9 - <strong>not yet signed</strong>. Complete Section 3 to enable the complete document package.
+        <div className="ob-bank-dlbundle-status">
+          <div className={`ob-bank-dlbundle-status-row${formData.w9Signed ? ' ob-bank-dlbundle-status-row-ready' : ''}`}>
+            <span className={`ob-bank-dlbundle-status-dot${formData.w9Signed ? ' ob-bank-dlbundle-status-dot-ready' : ''}`} aria-hidden="true" />
+            {formData.w9Signed ? (
+              <span>Form W-9: <strong>signed and included</strong> in the complete document package.</span>
+            ) : (
+              <span>Form W-9: <strong>not yet signed</strong>. Complete and sign the W-9 in Section 3 above to enable the Complete Document Package.</span>
+            )}
           </div>
-        )}
+        </div>
         <div className="ob-bank-dlbundle-grid">
           <button type="button" className="ob-bank-dlbundle-btn" disabled={!allComplete || !formData.w9Signed} onClick={() => window.print()}>
-            🖨️ Print Complete Document Package
+            <span className="ob-bank-dlbundle-btn-ico" aria-hidden="true">🖨️</span>
+            <span className="ob-bank-dlbundle-btn-label">
+              Print Complete Document Package
+              <small>Single print job: all 6 sections + executed W-9</small>
+            </span>
           </button>
           <button type="button" className="ob-bank-dlbundle-btn" disabled={!allComplete || !formData.w9Signed} onClick={() => downloadSection('Banking_Payment_Setup_Package', 'Dyad Banking & Payment Setup - Complete Package')}>
-            ⬇️ Download Complete Document Package
+            <span className="ob-bank-dlbundle-btn-ico" aria-hidden="true">⬇️</span>
+            <span className="ob-bank-dlbundle-btn-label">
+              Download Complete Document Package
+              <small>Consolidated PDF with all sections and executed W-9</small>
+            </span>
           </button>
+          {BANKING_SECTION_ORDER.map(id => (
+            <React.Fragment key={id}>
+              <button
+                type="button"
+                className="ob-bank-dlbundle-btn"
+                onClick={() => jumpToSection(id)}
+              >
+                <span className="ob-bank-dlbundle-btn-ico" aria-hidden="true">📄</span>
+                <span className="ob-bank-dlbundle-btn-label">
+                  {`Print Section ${id}: ${BANKING_SECTION_LABELS[id].replace(/^\d+\.\s*/, '')}`}
+                  <small>{BANKING_SECTION_LABELS[id].replace(/^\d+\.\s*/, '')}</small>
+                </span>
+              </button>
+              <button
+                type="button"
+                className="ob-bank-dlbundle-btn"
+                onClick={() => downloadSection(`Section_${id}_${BANKING_SECTION_TITLES[id].replace(/\s+/g, '_')}`, BANKING_SECTION_LABELS[id])}
+              >
+                <span className="ob-bank-dlbundle-btn-ico" aria-hidden="true">📄</span>
+                <span className="ob-bank-dlbundle-btn-label">
+                  {`Download Section ${id}`}
+                  <small>{BANKING_SECTION_LABELS[id].replace(/^\d+\.\s*/, '')}</small>
+                </span>
+              </button>
+            </React.Fragment>
+          ))}
+        </div>
+        <div className="ob-bank-dlbundle-foot">
+          <strong>Note.</strong> The Complete Document Package is the legally-binding consolidated document set. Per IRS Notice 2007-79 and the ESIGN Act (15 U.S.C. § 7001 et seq.), the executed W-9 must appear as the final dispositive document in the Package.
         </div>
       </div>
 

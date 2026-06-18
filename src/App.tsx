@@ -24,6 +24,7 @@ import { initializeSecurity } from './utils/security';
 import SecurityMonitor from './utils/securityMonitor';
 import AboutUsDetail from './pages/about-us-detail';
 import ServiceDetail from './pages/service-detail';
+import TeamExpertise from './pages/TeamExpertise';
 import ComingSoon from './pages/ComingSoon';
 import DyadOnboarding from './pages/DyadOnboarding';
 
@@ -49,6 +50,7 @@ function App() {
             <Route path="/reset-password" element={<ResetPassword />} />
              <Route path="/about-us-details" element={<AboutUsDetail />} />
              <Route path="/service-details" element={<ServiceDetail />} />
+             <Route path="/team-expertise" element={<TeamExpertise />} />
             <Route path="/mobile-terms" element={<MobileTerms />} />
             <Route path="/mobile-privacy-policy" element={<MobilePrivacyPolicy />} />
             <Route path="/early-access" element={<EarlyAccess />} />

@@ -1,0 +1,264 @@
+/* Onboarding Pipeline — admin operations view */
+
+.obp-table .adm2-tr--clickable {
+  cursor: pointer;
+}
+
+.obp-table .adm2-tr--clickable:hover {
+  background: #f8fafc;
+}
+
+.adm2-btn--sm {
+  padding: 0.35rem 0.65rem;
+  font-size: 0.75rem;
+}
+
+.obp-root {
+  font-family: inherit;
+}
+
+.obp-toolbar {
+  margin-bottom: 0.75rem;
+}
+
+.obp-error-banner {
+  margin-bottom: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+  font-size: 0.82rem;
+}
+
+.obp-table .adm2-th--actions,
+.obp-table .adm2-td--actions {
+  width: 88px;
+  text-align: right;
+}
+
+.obp-empty {
+  text-align: center;
+  color: #78909c;
+  padding: 2rem 1rem !important;
+}
+
+.obp-tr--stalled {
+  background: #fffbeb;
+}
+
+.obp-stage-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+  font-size: 0.72rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.obp-progress-cell {
+  min-width: 160px;
+}
+
+.obp-progress-label {
+  display: block;
+  font-size: 0.78rem;
+  color: #37474f;
+  margin-bottom: 0.35rem;
+}
+
+.obp-progress-bar {
+  height: 6px;
+  border-radius: 999px;
+  background: #e2e8f0;
+  overflow: hidden;
+}
+
+.obp-progress-fill {
+  height: 100%;
+  border-radius: inherit;
+  transition: width 0.2s ease;
+}
+
+.obp-days-stalled {
+  color: #d97706;
+  font-weight: 700;
+}
+
+.obp-milestones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.obp-milestone-chip {
+  display: inline-flex;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  background: #eef3fb;
+  color: #173e7a;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.obp-milestone-chip--ach {
+  background: #ecfdf5;
+  color: #0d9488;
+}
+
+.obp-milestone-chip--warn {
+  background: #fff7ed;
+  color: #ea580c;
+}
+
+.obp-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 0.75rem;
+  padding: 0 0.25rem;
+}
+
+.obp-pagination-meta {
+  font-size: 0.78rem;
+  color: #78909c;
+}
+
+.obp-pagination-btns {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* Detail modal */
+.obp-detail-modal {
+  max-width: 720px;
+}
+
+.obp-detail-progress {
+  margin-bottom: 1.25rem;
+  padding: 1rem 1.125rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #f8fafc;
+}
+
+.obp-detail-progress-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  font-size: 0.78rem;
+  color: #546e7a;
+}
+
+.obp-detail-progress-head strong {
+  color: #173e7a;
+  font-size: 0.95rem;
+}
+
+.obp-detail-progress-track {
+  height: 8px;
+  border-radius: 999px;
+  background: #e2e8f0;
+  overflow: hidden;
+  margin-bottom: 1rem;
+}
+
+.obp-detail-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #173e7a, #0891b2);
+  border-radius: inherit;
+}
+
+.obp-detail-steps {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0.35rem;
+}
+
+.obp-detail-step {
+  text-align: center;
+}
+
+.obp-detail-step-dot {
+  width: 1.65rem;
+  height: 1.65rem;
+  margin: 0 auto 0.35rem;
+  border-radius: 50%;
+  border: 2px solid #cbd5e1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: #94a3b8;
+  background: #fff;
+}
+
+.obp-detail-step--active .obp-detail-step-dot {
+  border-color: #173e7a;
+  color: #173e7a;
+  box-shadow: 0 0 0 3px rgba(23, 62, 122, 0.12);
+}
+
+.obp-detail-step--done .obp-detail-step-dot {
+  border-color: #16a34a;
+  background: #16a34a;
+  color: #fff;
+}
+
+.obp-detail-step-label {
+  font-size: 0.62rem;
+  line-height: 1.35;
+  color: #78909c;
+}
+
+.obp-detail-step--active .obp-detail-step-label {
+  color: #173e7a;
+  font-weight: 700;
+}
+
+.obp-detail-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.obp-stall-pill {
+  display: inline-flex;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  background: #fff7ed;
+  color: #ea580c;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.obp-milestone-pill {
+  display: inline-flex;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  background: #eef3fb;
+  color: #173e7a;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+@media (max-width: 1200px) {
+  .obp-detail-steps {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    row-gap: 0.75rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .obp-detail-steps {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

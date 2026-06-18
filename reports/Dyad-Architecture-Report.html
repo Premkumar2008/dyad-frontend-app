@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dyad Practice Solutions — Architecture Report</title>
+  <style>
+    @page { margin: 20mm 18mm; size: A4; }
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      font-size: 10.5pt;
+      line-height: 1.45;
+      color: #1a2332;
+      max-width: 210mm;
+      margin: 0 auto;
+      padding: 24px 32px;
+      background: #fff;
+    }
+    h1 { font-size: 22pt; color: #0a2d6e; margin: 0 0 6px; border-bottom: 3px solid #0a2d6e; padding-bottom: 10px; }
+    h2 { font-size: 14pt; color: #0a2d6e; margin: 28px 0 10px; page-break-after: avoid; }
+    h3 { font-size: 11pt; color: #2d4a6e; margin: 18px 0 8px; page-break-after: avoid; }
+    .meta { color: #5a6d8a; font-size: 9.5pt; margin-bottom: 24px; }
+    .meta p { margin: 2px 0; }
+    table { width: 100%; border-collapse: collapse; margin: 10px 0 16px; font-size: 9.5pt; page-break-inside: avoid; }
+    th, td { border: 1px solid #d0d9e8; padding: 7px 10px; text-align: left; vertical-align: top; }
+    th { background: #eef3fa; color: #0a2d6e; font-weight: 700; }
+    tr:nth-child(even) td { background: #fafbfd; }
+    pre, .diagram {
+      background: #f4f7fb;
+      border: 1px solid #d0d9e8;
+      border-radius: 6px;
+      padding: 12px 14px;
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 8.5pt;
+      line-height: 1.35;
+      overflow-x: auto;
+      white-space: pre;
+      page-break-inside: avoid;
+    }
+    ul { margin: 6px 0 12px; padding-left: 20px; }
+    li { margin: 4px 0; }
+    .pro { color: #0d6832; }
+    .con { color: #b91c1c; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 8pt; font-weight: 700; }
+    .badge-green { background: #dcfce7; color: #166534; }
+    .badge-red { background: #fee2e2; color: #991b1b; }
+    .badge-blue { background: #dbeafe; color: #1e40af; }
+    .summary-box {
+      background: #eef3fa;
+      border-left: 4px solid #0a2d6e;
+      padding: 12px 16px;
+      margin: 16px 0;
+      page-break-inside: avoid;
+    }
+    .page-break { page-break-before: always; }
+    @media print {
+      body { padding: 0; }
+      a { color: inherit; text-decoration: none; }
+    }
+  </style>
+</head>
+<body>
+
+<h1>Dyad Practice Solutions</h1>
+<h2 style="margin-top:0;border:none;font-size:13pt;color:#5a6d8a;">Application Architecture Report</h2>
+
+<div class="meta">
+  <p><strong>Project:</strong> healthcare-app (newui)</p>
+  <p><strong>Report Date:</strong> June 12, 2026</p>
+  <p><strong>Type:</strong> Frontend SPA with REST backend dependency</p>
+  <p><strong>Stack:</strong> React 19 · TypeScript · Vite 8 · React Router 7 · Axios</p>
+</div>
+
+<h2>1. Executive Summary</h2>
+<div class="summary-box">
+  Dyad Practice Solutions is a healthcare-focused single-page application combining marketing, early-access intake, multi-step client onboarding, and admin operations. The frontend (React + Vite) communicates with a separate Node/Express-style backend via REST. Three parallel user journeys exist: public marketing, authenticated admin operations, and OTP-gated client onboarding.
+</div>
+
+<h2>2. High-Level Architecture</h2>
+<pre class="diagram">┌─────────────────────────────────────────────────────────────────┐
+│                    Browser (React SPA)                           │
+│  Pages → Components (admin, onboarding, landing) → Services     │
+│  State: AuthContext | localStorage | SecureSessionStorage (AES)  │
+└───────────────────────────────┬─────────────────────────────────┘
+                                │ HTTPS / REST (Axios)
+                                ▼
+┌─────────────────────────────────────────────────────────────────┐
+│              Backend API (Node/Express — localhost:5000)         │
+│  Auth · Early Access · Onboarding · Calendar · NPI · Email       │
+└───────────────────────────────┬─────────────────────────────────┘
+                                │
+            ┌───────────────────┼───────────────────┐
+            ▼                   ▼                   ▼
+    Google Calendar      NPI Registry         Email (SMTP/SendGrid)
+    Calendly webhook     CMS data             OTP delivery</pre>
+
+<h2>3. Technology Stack</h2>
+<table>
+  <tr><th>Layer</th><th>Technology</th><th>Purpose</th></tr>
+  <tr><td>UI</td><td>React 19.2</td><td>Component-based UI</td></tr>
+  <tr><td>Language</td><td>TypeScript 5.9</td><td>Type safety</td></tr>
+  <tr><td>Build</td><td>Vite 8</td><td>Dev server, bundling</td></tr>
+  <tr><td>Routing</td><td>React Router 7</td><td>Client-side routing</td></tr>
+  <tr><td>HTTP</td><td>Axios 1.13</td><td>API with interceptors</td></tr>
+  <tr><td>Forms</td><td>React Hook Form + Yup</td><td>Validation</td></tr>
+  <tr><td>Styling</td><td>Tailwind + custom CSS</td><td>Hybrid styling</td></tr>
+  <tr><td>Security</td><td>crypto-js, reCAPTCHA</td><td>Token obfuscation, bot protection</td></tr>
+</table>
+
+<h2>4. Project Structure</h2>
+<pre class="diagram">src/
+├── App.tsx              Root router, security init
+├── pages/               DyadOnboarding, AdminEarlyAccess, EarlyAccess, Login…
+├── components/
+│   ├── admin/           Outreach, Active Clients, Schedule modals
+│   ├── onboarding/      Steps 3–6 (agreements, due diligence, MSA, banking)
+│   ├── landing/         Marketing sections
+│   └── auth/            LoginWithCodeForm
+├── contexts/            AuthContext (JWT)
+├── services/            13 API/domain services
+├── hooks/               useOnboardingSessionGuard
+└── utils/               security, sessionStorage, validation</pre>
+
+<h2>5. Routing & Access Control</h2>
+<table>
+  <tr><th>Route</th><th>Component</th><th>Protection</th></tr>
+  <tr><td>/</td><td>DyadLanding</td><td> Public</td></tr>
+  <tr><td>/early-access</td><td>EarlyAccess</td><td> Public</td></tr>
+  <tr><td>/client-onboarding-process</td><td>DyadOnboarding</td><td> OnboardingProtectedRoute (OTP)</td></tr>
+  <tr><td>/dyad-onboarding-access</td><td>DyadOnboarding</td><td> Public</td></tr>
+  <tr><td>/admin-early-access</td><td>AdminEarlyAccess</td><td> Admin localStorage token</td></tr>
+  <tr><td>/admin</td><td>Admin</td><td> JWT ProtectedRoute (admin)</td></tr>
+  <tr><td>/user/*</td><td>ComingSoon</td><td> JWT ProtectedRoute (user)</td></tr>
+</table>
+
+<h3>Three Parallel Auth Systems</h3>
+<ul>
+  <li><strong>AuthContext (JWT)</strong> — Login/register/OTP; encrypted sessionStorage; used for /admin and /user</li>
+  <li><strong>Admin Early Access</strong> — POST /admin/login; plain localStorage (adminAccessToken)</li>
+  <li><strong>Onboarding Client</strong> — Email OTP; dyad_onboarding_client_session (24h TTL)</li>
+</ul>
+
+<div class="page-break"></div>
+
+<h2>6. Feature Domains</h2>
+
+<h3>6.1 Marketing & Landing</h3>
+<ul><li>Hero, about, services, contact forms with reCAPTCHA</li><li>Calendly embed for scheduling</li></ul>
+
+<h3>6.2 Early Access</h3>
+<ul><li> Public intake with NPI validation and email OTP</li><li> Admin review: submissions, beta cohort, invite emails</li></ul>
+
+<h3>6.3 Client Onboarding (6 Steps)</h3>
+<table>
+  <tr><th>Step</th><th>Name</th><th>Features</th></tr>
+  <tr><td>1</td><td>Overview</td><td>NPI lookup, practice type</td></tr>
+  <tr><td>2</td><td>Schedule Intro Call</td><td>Google Calendar picker, email confirmation</td></tr>
+  <tr><td>3</td><td>Sign Agreements</td><td>NDA, BAA, e-signature</td></tr>
+  <tr><td>4</td><td>Due Diligence</td><td>Document uploads</td></tr>
+  <tr><td>5</td><td>Commercial Alignment</td><td>MSA, exhibits, fee schedule</td></tr>
+  <tr><td>6</td><td>Bank & Payment</td><td>W-9, Zoho Pay (UI mock)</td></tr>
+</table>
+<ul><li><strong>Persistence:</strong> localStorage (dyad_onboarding_v1) + POST /onboarding/step/:n</li></ul>
+
+<h3>6.4 Admin Operations</h3>
+<ul>
+  <li><strong>Outreach Schedule</strong> — Schedule calls, send emails, calendar integration</li>
+  <li><strong>Active Clients</strong> — Onboarding records, messaging</li>
+  <li><strong>Onboarding Pipeline, Reports, Settings</strong> — Stubs (nav disabled)</li>
+</ul>
+
+<h2>7. Services Layer</h2>
+<table>
+  <tr><th>Service</th><th>Responsibility</th></tr>
+  <tr><td>api.ts</td><td>Axios instance, JWT interceptors, token refresh</td></tr>
+  <tr><td>onboardingCalendarService.ts</td><td>Call scheduling, availability slots</td></tr>
+  <tr><td>onboardingStorageService.ts</td><td>Step-bucketed localStorage schema</td></tr>
+  <tr><td>onboardingHydrationService.ts</td><td>Server → local state merge</td></tr>
+  <tr><td>npiRegistryService.ts</td><td>NPI lookup, taxonomy mapping</td></tr>
+  <tr><td>emailService.ts + schedule services</td><td>Email templates, backend relay</td></tr>
+  <tr><td>onboardingClientAuthService.ts</td><td>OTP login, client session</td></tr>
+  <tr><td>onboardingSecurityService.ts</td><td>Idle timeout, session cleanup</td></tr>
+</table>
+
+<h2>8. External Integrations</h2>
+<table>
+  <tr><th>Integration</th><th>Usage</th><th>Status</th></tr>
+  <tr><td>Google Calendar</td><td>Onboarding & admin scheduling</td><td><span class="badge badge-green">Live via backend</span></td></tr>
+  <tr><td>Calendly</td><td>ContactUs, ScheduleCall</td><td><span class="badge badge-green">Embed</span></td></tr>
+  <tr><td>reCAPTCHA</td><td>Contact form</td><td><span class="badge badge-green">Live</span></td></tr>
+  <tr><td>NPI Registry</td><td>Early access, onboarding</td><td><span class="badge badge-green">Via backend</span></td></tr>
+  <tr><td>Email (SMTP/SendGrid)</td><td>OTP, confirmations</td><td><span class="badge badge-green">Backend relay</span></td></tr>
+  <tr><td>Zoho Pay</td><td>Step 6 banking</td><td><span class="badge badge-red">UI mock only</span></td></tr>
+</table>
+
+<div class="page-break"></div>
+
+<h2>9. Security Features</h2>
+
+<h3>Implemented</h3>
+<table>
+  <tr><th>Feature</th><th>Location</th><th>Description</th></tr>
+  <tr><td>JWT + refresh</td><td>AuthContext, api.ts</td><td>Bearer auth, 401 retry</td></tr>
+  <tr><td>Encrypted session</td><td>sessionStorage.ts</td><td>AES obfuscation (crypto-js)</td></tr>
+  <tr><td>Session timeout</td><td>SessionTimeout</td><td>30 min session, 25 min warning</td></tr>
+  <tr><td>Idle timeout</td><td>useOnboardingSessionGuard</td><td>9 min warning, 10 min logout</td></tr>
+  <tr><td>OTP verification</td><td>Login, register, early access</td><td>Email OTP flows</td></tr>
+  <tr><td>Route guards</td><td>ProtectedRoute, OnboardingProtectedRoute</td><td>Role & session checks</td></tr>
+  <tr><td>CSRF utilities</td><td>security.ts</td><td>Client-generated CSRF</td></tr>
+  <tr><td>Input sanitization</td><td>security.ts</td><td>InputSanitizer</td></tr>
+  <tr><td>Security monitor</td><td>securityMonitor.ts</td><td>Suspicious activity, concurrent sessions</td></tr>
+  <tr><td>reCAPTCHA</td><td>ContactForm</td><td>Bot protection</td></tr>
+</table>
+
+<h3>Security Gaps</h3>
+<table>
+  <tr><th>Issue</th><th>Risk</th><th>Recommendation</th></tr>
+  <tr><td>CSP/headers disabled</td><td>XSS, clickjacking</td><td>Enable via server headers</td></tr>
+  <tr><td>Hardcoded encryption key</td><td>Token exposure</td><td>HttpOnly cookies</td></tr>
+  <tr><td>Admin plain localStorage</td><td>XSS token theft</td><td>Secure server sessions</td></tr>
+  <tr><td>Refresh logout disabled</td><td>Stale sessions</td><td>Re-enable on 401</td></tr>
+  <tr><td>Demo mode</td><td>Auth bypass</td><td>Disable in production</td></tr>
+  <tr><td>Three auth systems</td><td>Inconsistent security</td><td>Consolidate</td></tr>
+</table>
+
+<h2>10. Scalability Analysis</h2>
+
+<h3>Strengths</h3>
+<ul>
+  <li>SPA + REST — frontend scales via CDN/static host</li>
+  <li>Service layer — clear API separation</li>
+  <li>Step-based onboarding — incremental persistence</li>
+  <li>Backend offloads NPI, calendar, email</li>
+</ul>
+
+<h3>Limitations</h3>
+<table>
+  <tr><th>Area</th><th>Limitation</th><th>Impact</th></tr>
+  <tr><td>DyadOnboarding.tsx</td><td>~3,300 lines monolith</td><td>Hard to maintain, slow load</td></tr>
+  <tr><td>localStorage</td><td>No cross-device sync</td><td>Poor multi-device UX</td></tr>
+  <tr><td>No state library</td><td>Context + localStorage only</td><td>Complexity at scale</td></tr>
+  <tr><td>No API caching</td><td>Re-fetch on navigation</td><td>Unnecessary load</td></tr>
+  <tr><td>Admin lists</td><td>No pagination</td><td>Performance at scale</td></tr>
+</table>
+
+<h3>Recommendations</h3>
+<ul>
+  <li>Split onboarding into lazy-loaded step routes</li>
+  <li>Add React Query/SWR for caching</li>
+  <li>Server-side sessions (Redis) for onboarding</li>
+  <li>Pagination for admin lists</li>
+  <li>CDN for static assets</li>
+</ul>
+
+<div class="page-break"></div>
+
+<h2>11. Pros and Cons</h2>
+
+<h3 class="pro">Pros</h3>
+<table>
+  <tr><th>#</th><th>Advantage</th></tr>
+  <tr><td>1</td><td>Modern stack — React 19, TypeScript, Vite</td></tr>
+  <tr><td>2</td><td>Clear domain separation — landing, early access, onboarding, admin</td></tr>
+  <tr><td>3</td><td>Structured 6-step onboarding with progress persistence</td></tr>
+  <tr><td>4</td><td>Multiple auth flows for different user types</td></tr>
+  <tr><td>5</td><td>Security utilities — timeout, idle guard, OTP, RBAC</td></tr>
+  <tr><td>6</td><td>Integrations — Calendar, NPI, email, Calendly</td></tr>
+  <tr><td>7</td><td>Offline resilience — localStorage draft saves</td></tr>
+  <tr><td>8</td><td>Form validation — React Hook Form + Yup</td></tr>
+  <tr><td>9</td><td>Admin tooling — outreach, active clients</td></tr>
+  <tr><td>10</td><td>Dev-friendly — Vite HMR, APIproxy</td></tr>
+</table>
+
+<h3 class="con">Cons</h3>
+<table>
+  <tr><th>#</th><th>Disadvantage</th></tr>
+  <tr><td>1</td><td>Monolithic onboarding page (~3,300 lines)</td></tr>
+  <tr><td>2</td><td>Three separate auth systems</td></tr>
+  <tr><td>3</td><td>Client-side token storage (XSS risk)</td></tr>
+  <tr><td>4</td><td>Security headers disabled</td></tr>
+  <tr><td>5</td><td>Mock integrations (Zoho Pay, demo mode)</td></tr>
+  <tr><td>6</td><td>No automated test suite</td></tr>
+  <tr><td>7</td><td>Mixed styling (Tailwind + large CSS files)</td></tr>
+  <tr><td>8</td><td>API URL inconsistency across services</td></tr>
+  <tr><td>9</td><td>Disabled admin features (pipeline, reports)</td></tr>
+  <tr><td>10</td><td>Tight backend coupling, no OpenAPI client</td></tr>
+</table>
+
+<h2>12. Conclusion</h2>
+<div class="summary-box">
+  <strong>Overall assessment:</strong> Solid foundation for MVP/pilot deployment. The application has a well-defined service layer, multi-step onboarding, and admin tooling. For production scale, prioritize: (1) security hardening — HttpOnly cookies, CSP, consolidated auth; (2) refactor onboarding monolith; (3) complete Zoho Pay integration; (4) add tests and API caching.
+</div>
+
+<h2>13. Deployment</h2>
+<ul>
+  <li><strong>Frontend:</strong> npm run build → static host / CDN</li>
+  <li><strong>Backend:</strong> Node server (e.g. Railway) at VITE_API_URL</li>
+  <li><strong>Env:</strong> VITE_API_URL, VITE_RECAPTCHA_SITE_KEY, calendar/email vars</li>
+</ul>
+
+<hr style="margin-top:32px;border:none;border-top:1px solid #d0d9e8;" />
+<p style="font-size:9pt;color:#8a9bb5;margin-top:12px;">Report generated from codebase analysis — June 12, 2026</p>
+
+</body>
+</html>

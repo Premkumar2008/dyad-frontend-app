@@ -972,7 +972,6 @@ header.dyad-header .dyad-nav-actions .dyad-nav .nav-list .dyad-nav .nav-link.act
   display: flex;
   align-items: center;
   justify-content: center;
-  align-items: flex-end;
   z-index: 2;
 }
 
@@ -983,7 +982,7 @@ header.dyad-header .dyad-nav-actions .dyad-nav .nav-list .dyad-nav .nav-link.act
   padding: 1rem 2rem;
   width: 100%;
   max-width: 1520px;
-  margin: 1.2rem auto;
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1001,7 +1000,7 @@ header.dyad-header .dyad-nav-actions .dyad-nav .nav-list .dyad-nav .nav-link.act
 }
 
 .video-title {
-  font-size: 62px;
+  font-size: clamp(1.875rem, 2.5vw + 1.25rem, 3.875rem);
   transition: transform 0.3s ease;
   font-weight: 600;
   color: white;
@@ -1011,11 +1010,20 @@ header.dyad-header .dyad-nav-actions .dyad-nav .nav-list .dyad-nav .nav-link.act
   line-height: 1.2;
   text-align: center;
   position: relative;
+  text-wrap: balance;
+}
+
+.title-lines-desktop {
+  display: block;
+}
+
+.title-lines-mobile {
+  display: none;
 }
 
 .title-line {
   display: block;
-  margin: 0rem 0;
+  margin: 0;
   opacity: 1;
   transform: none;
   filter: none;
@@ -1039,19 +1047,26 @@ header.dyad-header .dyad-nav-actions .dyad-nav .nav-list .dyad-nav .nav-link.act
 
 .video-subtitle {
   color: white;
-  font-size: 24px;
+  font-size: clamp(1.0625rem, 1.2vw + 0.75rem, 1.5rem);
   background-clip: text;
   text-align: justify;
   font-family: 'Prompt', sans-serif;
   font-weight: 400;
   line-height: 1.6;
-  max-width: fit-content;
+  max-width: 100%;
   width: 100%;
-  margin: 0 auto;
+  margin: clamp(1rem, 3vw, 2rem) auto 0;
   transition: transform 0.3s ease;
   cursor: default;
-  letter-spacing: 0.01em;
+  letter-spacing: normal;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  text-wrap: pretty;
+}
+
+@media (min-width: 1024px) {
+  .video-subtitle {
+    max-width: 90%;
+  }
 }
 
 .video-subtitle:hover {
@@ -1093,53 +1108,98 @@ header.dyad-header .dyad-nav-actions .dyad-nav .nav-list .dyad-nav .nav-link.act
   }
 }
 
-/* Video Banner - Medium Screens */
-@media (min-width: 1024px) and (max-width: 1520px) {
-  .video-title {
-    font-size: 50px !important;
+/* Video hero — desktop layout */
+@media (min-width: 768px) {
+  .video-overlay {
+    align-items: flex-end;
   }
-  
+
+  .video-content {
+    margin: 1.2rem auto;
+  }
+
+  .video-title {
+    font-size: 62px;
+    line-height: 1.2;
+    text-wrap: balance;
+  }
+
   .video-subtitle {
-    font-size: 24px !important;
+    font-size: 24px;
+    line-height: 1.6;
+    max-width: fit-content;
+    width: 100%;
+    margin: 2rem auto 0;
+    letter-spacing: 0.01em;
+    text-wrap: unset;
   }
 }
 
-/* Video Banner - Medium Screens */
 @media (min-width: 768px) and (max-width: 1024px) {
   .video-title {
     font-size: 38px !important;
   }
-  
+
   .video-subtitle {
     font-size: 21px !important;
   }
 }
 
-@media (min-width: 425px) and (max-width: 768px) {
+@media (min-width: 1024px) and (max-width: 1520px) {
   .video-title {
-    font-size: 34px !important;
+    font-size: 50px !important;
   }
-  
-  .video-subtitle {
-    font-size: 19px !important;
-  }
-}
 
-@media (max-width: 425px) {
-  .video-content {
-    padding: 1rem 1rem !important;
-    width: 100% !important;
-}
- .video-title {
+  .video-subtitle {
     font-size: 24px !important;
   }
-  
+}
+
+@media (min-width: 1024px) {
   .video-subtitle {
-    margin-top:1rem;
-    font-size: 18px !important;
+    max-width: 90%;
   }
 }
 
+/* Video hero — mobile layout (phones only; 768px+ uses desktop title) */
+@media (max-width: 767px) {
+  .video-content {
+    padding: 1rem;
+    width: 100%;
+  }
+
+  .title-container {
+    width: 100%;
+    padding: 0 1rem;
+    box-sizing: border-box;
+  }
+
+  .title-lines-desktop {
+    display: none;
+  }
+
+  .title-lines-mobile {
+    display: block;
+  }
+
+  .title-lines-mobile .title-line {
+    white-space: nowrap;
+  }
+
+  .video-title {
+    font-size: clamp(1.625rem, 7vw, 2.25rem) !important;
+    line-height: 1.3;
+    text-wrap: unset;
+  }
+
+  .video-subtitle {
+    font-size: clamp(0.9375rem, 2.5vw + 0.5rem, 1.0625rem) !important;
+    margin-top: 1.5rem;
+    width: 100%;
+    padding: 0 0.25rem;
+    box-sizing: border-box;
+  }
+}
 
 
 
@@ -1594,18 +1654,16 @@ padding : 0.5rem 0.5rem 0.rem 0rem !important
   .dyad-landing-container {
     min-height: 100vh;
   }
-.video-subtitle{
-width: 94%;
-}
 .scroller{
     top:84px !important
    }
-.leadership-image img{
-  height: unset !important;
-  width: unset !important;
+.leadership-section .leadership-image img {
+  height: 100% !important;
+  width: 100% !important;
 }
-.leadership-image{
+.leadership-section .leadership-image {
   height: 350px !important;
+  min-height: 350px !important;
 }
 .login-form-section .dyad-logo img{
 margin-top: 1.5rem;
@@ -1622,10 +1680,6 @@ margin-top: 1.5rem;
     padding:0rem !important
   }
 
-  .video-title {
-   
-    line-height: 1.4 !important;
-  }
   .footer-column-title{
     margin-bottom: 2rem !important;
   }
@@ -2461,9 +2515,7 @@ margin-top: 1.5rem;
     gap: 0.25rem;
     margin-bottom: 1.5rem;
   }
-.title-container{
-  width: 100% !important
-}
+
   .about-tab {
     padding: 0.5rem 0.875rem;
     font-size: 0.8rem;
@@ -4808,12 +4860,31 @@ margin-top: 1.5rem;
   background: white;
   opacity: 0;
   visibility: hidden;
-  align-items: center;
-  justify-content: center;
-  padding: 1.5rem 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  padding: 1.25rem 1.5rem;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
   z-index: 10;
   transition: opacity 0.3s ease, visibility 0.3s ease;
+  overflow-x: hidden;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+.service-card-description-overlay::-webkit-scrollbar {
+  width: 6px;
+}
+
+.service-card-description-overlay::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.service-card-description-overlay::-webkit-scrollbar-thumb {
+  background: #173e7a;
+  border-radius: 3px;
 }
 
 /* Show Description on Hover */
@@ -4833,11 +4904,24 @@ margin-top: 1.5rem;
 .description-content h3 {
   font-size: 1.5rem;
   font-weight: 700;
-  margin-bottom: 0rem;
+  margin-bottom: 0.5rem;
   color: #222222;
   text-decoration: none;
   position: relative;
   display: inline-block;
+  flex-shrink: 0;
+}
+
+.service-card-description-overlay .description-features li {
+  padding: 0.35rem 0;
+  font-size: 15px;
+  line-height: 1.4;
+  align-items: flex-start;
+}
+
+.service-card-description-overlay .description-features li div svg {
+  margin-top: 2px;
+  flex-shrink: 0;
 }
 
 .description-features ul {
@@ -5164,8 +5248,14 @@ margin-top: 1.5rem;
   padding: 4rem 0;
   background: #8b8b8b0f;
   position: relative;
-  border-bottom: 2px solid #e2e8f0;
+  border-top: 1px solid #e5e7eb;
+  border-bottom: 1px solid #e5e7eb;
   width: 100%;
+  --leadership-image-bg: #ebebeb;
+}
+
+.leadership-section .leadership-card {
+  border: 1px solid #e5e7eb;
 }
 
 .leadership-section::before {
@@ -5307,8 +5397,26 @@ margin-top: 1.5rem;
   transition: transform 0.6s ease;
 }
 
+.leadership-section .leadership-image {
+  background-color: var(--leadership-image-bg);
+  overflow: hidden;
+  min-height: 350px;
+}
+
+.leadership-section .leadership-image img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+}
+
 .leadership-card:hover .leadership-image img {
   transform: scale(1.08);
+}
+
+.leadership-section .leadership-card:hover .leadership-image img {
+  transform: scale(1.05);
 }
 
 /* Leadership Content - for cards 1 & 3 (right side) */
@@ -5452,9 +5560,10 @@ margin-top: 1.5rem;
     flex-direction: column !important;
   }
   
-  .leadership-image {
-    background: #f5f5f5;
-    height: 300px !important;
+  .leadership-section .leadership-image {
+    background-color: var(--leadership-image-bg) !important;
+    height: 350px !important;
+    min-height: 350px !important;
     width: 100% !important;
     order: 1 !important;
     position: relative !important;
@@ -5474,37 +5583,24 @@ margin-top: 1.5rem;
   }
   
   .leadership-card:nth-child(1) .leadership-image-bg {
-    background-image: url('/assets/images/leadershipmb1.jpeg') !important;
+    background-image: url('/assets/images/leadershipteam1.png') !important;
   }
   
   .leadership-card:nth-child(2) .leadership-image-bg {
-    background-image: url('/assets/images/leadershipmb2.jpeg') !important;
+    background-image: url('/assets/images/leadershipteam2.png') !important;
   }
   
   .leadership-card:nth-child(3) .leadership-image-bg {
-    background-image: url('/assets/images/leadershipmb3.jpeg') !important;
+    background-image: url('/assets/images/leadershipteam3.png') !important;
   }
   
-  .leadership-image img {
-    object-position: top !important;
+  .leadership-section .leadership-image img {
+    object-position: center center !important;
     object-fit: contain !important;
     width: 100% !important;
     height: 100% !important;
     position: relative !important;
     z-index: 1 !important;
-    content: url('/assets/images/leadershipmb1.jpeg') !important;
-  }
-  
-  .leadership-card:nth-child(1) .leadership-image img {
-    content: url('/assets/images/leadershipmb1.jpeg') !important;
-  }
-  
-  .leadership-card:nth-child(2) .leadership-image img {
-    content: url('/assets/images/leadershipmb2.jpeg') !important;
-  }
-  
-  .leadership-card:nth-child(3) .leadership-image img {
-    content: url('/assets/images/leadershipmb3.jpeg') !important;
   }
   
   .leadership-content {
@@ -5516,10 +5612,6 @@ margin-top: 1.5rem;
   /* Remove rectangle icon on mobile */
   .content-arrow {
     display: none;
-  }
-
-  .leadership-image {
-    height: 220px;
   }
 
   .leadership-content {
@@ -5583,8 +5675,16 @@ margin-top: 1.5rem;
     display: none;
   }
 
-  .leadership-image {
-    height: 200px;
+  .leadership-section .leadership-image {
+    height: 350px !important;
+    min-height: 350px !important;
+  }
+
+  .leadership-section .leadership-image img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: contain !important;
+    object-position: center center !important;
   }
 
   .leadership-content {

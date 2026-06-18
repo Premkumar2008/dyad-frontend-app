@@ -154,27 +154,18 @@ const DyadLanding: React.FC = () => {
     setActiveMenu('About Us');
     setIsAboutDropdownOpen(false);
     setHoveredMenu(null);
+
+    if (item.name === 'Team & Expertise' || item.href === '/team-expertise') {
+      navigate('/team-expertise');
+      return;
+    }
     
-    // For Our Team & Expertise, open popup first, then scroll to leadership section
-    if (item.name === 'Our Team & Expertise') {
-      const card = aboutContent.find(c => c.id === item.cardId);
-      if (card) {
-        setSelectedAboutCard(card);
-        // Scroll to leadership section after popup is open
-        setTimeout(() => {
-          handleNavClick('About Us', item.href);
-        }, 100);
-      }
-    } else {
-      // For other items, open popup first, then scroll in background
-      const card = aboutContent.find(c => c.id === item.cardId);
-      if (card) {
-        setSelectedAboutCard(card);
-        // Scroll to about section after popup is open
-        setTimeout(() => {
-          handleNavClick('About Us', item.href);
-        }, 100);
-      }
+    const card = aboutContent.find(c => c.id === item.cardId);
+    if (card) {
+      setSelectedAboutCard(card);
+      setTimeout(() => {
+        handleNavClick('About Us', item.href);
+      }, 100);
     }
   };
 
@@ -227,9 +218,24 @@ const DyadLanding: React.FC = () => {
   
   const handleAboutCardClick = (cardId: number) => {
     const card = aboutContent.find(item => item.id === cardId);
-    if (card) {
-      setSelectedAboutCard(card);
+    if (!card) return;
+
+    if (card.link) {
+      navigate(card.link);
+      return;
     }
+
+    setSelectedAboutCard(card);
+  };
+
+  const handleAboutMobileCardClick = (cardId: number) => {
+    const card = aboutContent.find(item => item.id === cardId);
+    if (card?.link) {
+      navigate(card.link);
+      return;
+    }
+
+    toggleMobileCard(cardId);
   };
 
   const closeAboutPopup = () => {
@@ -248,33 +254,6 @@ const DyadLanding: React.FC = () => {
     setExpandedserviceMobileCard(expandedserviceMobileCard === cardId ? null : cardId);
   };
   
-  const leadershipData = [
-    {
-      id: 1,
-      name: 'S. Jaikumar',
-      title: 'Founder',
-      description: 'Brings over 26 years of institutional treasury, capital markets, and financial risk management experience to her role. She has held senior leadership positions at Capital Group, Latham & Watkins, Western Digital Corporation, Levi Strauss & Co., BNP Paribas, and ProLogis. Across these roles, she has directed oversight of $2.5 trillion in global securities valuations, structured over $35 billion in syndicated financings, managed over $40 billion in global derivatives portfolios, and has overseen treasury operations across 110 countries. She holds a Master of Science in Financial Analysis and Investment Management and a Master of Business Administration in Finance. She is an FAA-certified private pilot.',
-      image: '/assets/images/leadershipnew1.jpeg',
-      mobileImage: '/assets/images/leadershipmb1.jpeg'
-    },
-    {
-      id: 2,
-      name: 'A. Subramaniam ',
-      title: 'Chief Technology and AI Solutions Officer',
-      description: 'Brings over 27 years architecting enterprise data, AI, and automation platforms across healthcare and financial services at major health care insurers and global banks.  At Bank of America, he served as Vice President and India Head of Data Practice, supporting 14 million wealth management clients across a multi million dollar platform. He subsequently built and scaled an AI and data analytics practice from 5 to 130 professionals, delivering over 50 production AI and GenAI accelerators across banking, lending, and healthcare. He holds a Post Graduate Diploma in Business Analytics and Business Intelligence and is an adjunct professor at Johns Hopkins University for AI graduate studies.',
-      image: '/assets/images/leadershipnew2.jpeg',
-      mobileImage: '/assets/images/leadershipmb2.jpeg'
-    },
-    {
-      id: 3,
-      name: 'S. Rajan',
-      title: 'Chief Operating Officer',
-      description: 'Brings over 27 years of healthcare finance operations leadership to his role. He previously served as Senior Vice President of Global Revenue Cycle Operations at a Veritas Capital portfolio company, where he held P&L responsibility for $190 million in revenue and led an organization of over 15,000 individuals globally. Prior to that, he served as President of Global Revenue Cycle Operations at a Carlyle Group company, scaling revenue from $108 million to $160 million and expanding EBITDA by six percent. He holds a Post Graduate Diploma in Business Administration in Finance, a Master of Business Administration, and a Six Sigma Black Belt from KPMG. He is a licensed private pilot.',
-      image: '/assets/images/leadershipnew3.jpeg',
-      mobileImage: '/assets/images/leadershipmb3.jpeg'
-    }
-  ];
-
   const aboutContent = [
     {
       id: 0,
@@ -316,7 +295,8 @@ const DyadLanding: React.FC = () => {
       title: 'Team & Expertise',
       subtitle: 'The people behind our success',
       paragraph: 'Our team brings together decades of experience in healthcare, technology, and business operations. With backgrounds in leading healthcare institutions, technology companies, and financial services, our experts understand the unique challenges facing modern medical practices and are committed to delivering solutions that drive success.',
-      image: '/assets/images/aboutus6.webp'
+      image: '/assets/images/aboutus6.webp',
+      link: '/team-expertise'
     }
   ];
 
@@ -378,7 +358,8 @@ const DyadLanding: React.FC = () => {
         'Payment posting & Reconciliation',
         'Re-bill processing',
         'Underpayments detection & recovery',
-        'Auto-routing of qualified claims to NSA Federal IDR/Arbitration'
+        'Auto-routing of qualified claims to NSA Federal IDR/Arbitration',
+        'Auto-routing of qualified claims to State Federal IDR/Arbitration'
       ]
     },
     {
@@ -417,7 +398,7 @@ const DyadLanding: React.FC = () => {
     { name: 'Values & Principles', href: '#about', cardId: 2 },
     { name: 'Approach & Methodology', href: '#about', cardId: 3 },
     { name: 'Innovative Technologies', href: '#about', cardId: 4 },
-    { name: 'Team & Expertise', href: '#leadership', cardId: 5 }
+    { name: 'Team & Expertise', href: '/team-expertise', cardId: 5 }
   ];
 
   const whoWeServeDropdownItems = [
@@ -503,10 +484,18 @@ const DyadLanding: React.FC = () => {
             <div className="video-content">
               <div className="title-container">
                 <h1 className="video-title">
-                  <span className="title-line">A Bold New Partnership Model<br />for Smarter Healthcare Finance Operations</span>
-                
+                  <span className="title-lines-desktop">
+                    <span className="title-line">A Bold New Partnership Model</span>
+                    <span className="title-line">for Smarter Healthcare Finance Operations</span>
+                  </span>
+                  <span className="title-lines-mobile">
+                    <span className="title-line">A Bold New</span>
+                    <span className="title-line">Partnership Model for</span>
+                    <span className="title-line">Smarter Healthcare</span>
+                    <span className="title-line">Finance Operations</span>
+                  </span>
                 </h1>
-                <p className="video-subtitle" style={{ marginTop: '2rem' }}>
+                <p className="video-subtitle">
           We’re rewriting the rules. By uniting industry expertise, innovative technologies, and operational risk controls, we’re introducing a scalable integrated model that supports physician practices, anesthesia groups, and ambulatory surgery centers across the outpatient procedural ecosystem, designed to measurably improve practice economics.
           </p> </div>
             </div>
@@ -665,7 +654,7 @@ const DyadLanding: React.FC = () => {
         <div className="">
           <div className="mobile-cards-container">
             {aboutContent.map((card) => (
-              <div key={card.id} className={`mobile-card ${expandedMobileCard === card.id ? 'expanded' : ''}`} onClick={() => toggleMobileCard(card.id)}>
+              <div key={card.id} className={`mobile-card ${expandedMobileCard === card.id ? 'expanded' : ''}`} onClick={() => handleAboutMobileCardClick(card.id)}>
                 <div className="mobile-card-image">
                   <img src={card.image} alt={card.title} />
                 </div>
@@ -678,7 +667,7 @@ const DyadLanding: React.FC = () => {
                     <div className="mobile-card-arrow">
                       <div className="mobile-arrow-circle" onClick={(e) => {
                         e.stopPropagation();
-                        toggleMobileCard(card.id);
+                        handleAboutMobileCardClick(card.id);
                       }}>
                       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="lucide lucide-chevron-right-circle w-6 h-6" style={{color: '#173e7a'}}><circle cx="12" cy="12" r="10"></circle><path d="m10 8 4 4-4 4"></path></svg>        </div>
                     </div>
@@ -693,42 +682,6 @@ const DyadLanding: React.FC = () => {
         </div>
       </section>
       </section>
-
-    
-
-     
-
-      {/* Leadership Section */}
-      <section className="leadership-section" id="leadership">
-        <div className="leadership-container">
-          <div className="leadership-header">
-            <h2 className="leadership-title">Our Team</h2>
-            <p className="leadership-subtitle">
-            Dyad was built on the simple conviction that the same financial discipline that governs global financial platforms should apply to healthcare revenue.
-            </p>
-          </div>
-          <div className="leadership-grid">
-            {leadershipData.map((leader, index) => (
-              <div
-                key={leader.id}
-                className={`leadership-card ${index % 2 === 1 ? 'reversed' : ''}`}
-              >
-                <div className="leadership-image">
-                
-                  <img src={leader.image} alt={leader.name} data-mobile-src={leader.mobileImage} />
-                </div>
-                <div className="leadership-content">
-                  <h3 className="leader-name">{leader.name}</h3>
-                  <p className="leader-title">{leader.title}</p>
-                  <p className="leader-description">{leader.description}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-    
 
       {/* Our Services Section */}
       <section className="services-section " id="services">

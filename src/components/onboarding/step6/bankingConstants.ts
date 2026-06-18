@@ -14,8 +14,8 @@ export const BANKING_SECTION_LABELS: Record<BankingSectionId, string> = {
 export const BANKING_SECTION_TITLES: Record<BankingSectionId, string> = {
   1: 'Limited Power of Attorney',
   2: 'Authorized Signatory & Account Opening Information',
-  3: 'Form W-9 - Request for Taxpayer Identification Number and Certification',
-  4: 'Exhibit E - ACH Authorization Agreement',
+  3: 'Form W-9: Request for Taxpayer Identification Number and Certification',
+  4: 'Exhibit E: ACH Authorization Agreement',
   5: 'Weekly Sweep Schedule & Destination Authorization',
   6: 'Know Your Customer (KYC) Documentation',
 };

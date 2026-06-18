@@ -14,6 +14,7 @@ export const ADMIN_ENABLED_VIEW_IDS: AdminViewId[] = [
   'early-access',
   'outreach-schedule',
   'active-clients',
+  'onboarding-pipeline',
 ];
 
 export const isAdminViewEnabled = (id: AdminViewId): boolean =>

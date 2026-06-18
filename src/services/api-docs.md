@@ -250,6 +250,134 @@ For production:
 REACT_APP_API_URL=https://your-api-domain.com/api
 ```
 
+## Zoho Pay — ACH Mandate (Onboarding Step 6)
+
+Based on Zoho Payments OpenAPI (`customers.yml`, `payment-method-session.yml`, `payment-session.yml`).
+
+**Zoho base URL:** `https://payments.zoho.com/api/v1`  
+**Widget script:** `https://static.zohocdn.com/zpay/zpay-js/v1/zpayments.js`  
+**OAuth scopes:** `ZohoPay.customers.CREATE`, `ZohoPay.paymentmethods.CREATE`, `ZohoPay.paymentmethods.READ`
+
+### End-to-end flow (recommended — save ACH payment method)
+
+1. **Frontend** → `POST /api/zoho-pay/ach-mandate/setup`
+2. **Backend** → Zoho `POST /customers?account_id={id}` (name + email required)
+3. **Backend** → Zoho `POST /paymentmethodsessions?account_id={id}` with `{ customer_id, description }`
+4. **Backend** → return session IDs to frontend
+5. **Frontend** → embedded widget `requestPaymentMethod({ payment_method: "ach_debit", transaction_type: "add", customer_id, payment_method_session_id })`
+6. **Frontend** → `POST /api/zoho-pay/ach-mandate/confirm` with `payment_method_session_id`
+7. **Backend** → Zoho `GET /paymentmethodsessions/{payment_method_session_id}?account_id={id}` — verify `status: succeeded` and `payment_method.type: ach_debit`
+
+### Setup session
+**Dyad endpoint:** `POST /api/zoho-pay/ach-mandate/setup`
+
+**Request body:**
+```json
+{
+  "email": "signer@practice.com",
+  "name": "Jane Doe",
+  "phone": "+15551234567",
+  "onboardingId": "ob_abc123",
+  "description": "Dyad onboarding ACH mandate · ob_abc123"
+}
+```
+
+**Backend Zoho calls:**
+
+`POST https://payments.zoho.com/api/v1/customers?account_id=23137556`
+```json
+{ "name": "Jane Doe", "email": "signer@practice.com", "phone": "+15551234567" }
+```
+
+`POST https://payments.zoho.com/api/v1/paymentmethodsessions?account_id=23137556`
+```json
+{ "customer_id": "1987000000724207", "description": "Dyad onboarding ACH mandate · ob_abc123" }
+```
+
+**Response to frontend** (OpenAPI shape — nested or flat both accepted):
+```json
+{
+  "payment_method_session": {
+    "payment_method_session_id": "1987000000724209",
+    "customer_id": "1987000000724207",
+    "description": "Dyad onboarding ACH mandate · ob_abc123",
+    "created_time": 1708950672
+  }
+}
+```
+
+### Confirm mandate
+**Dyad endpoint:** `POST /api/zoho-pay/ach-mandate/confirm`
+
+**Request body:**
+```json
+{
+  "onboardingId": "ob_abc123",
+  "customer_id": "1987000000724207",
+  "payment_method_id": "1987000000724215",
+  "payment_method_session_id": "1987000000724209"
+}
+```
+
+**Backend Zoho call:**
+
+`GET https://payments.zoho.com/api/v1/paymentmethodsessions/1987000000724209?account_id=23137556`
+
+**Response to frontend** (when session succeeded):
+```json
+{
+  "payment_method_session": {
+    "payment_method_session_id": "1987000000724209",
+    "customer_id": "1987000000724207",
+    "status": "succeeded",
+    "payment_method": {
+      "payment_method_id": "1987000000724215",
+      "type": "ach_debit",
+      "status": "active",
+      "created_time": 1708950672
+    }
+  }
+}
+```
+
+The frontend stores `payment_method_id` as the mandate reference in onboarding state.
+
+### Alternate flow — payment session + checkout widget
+
+Use when collecting an initial ACH payment instead of saving a payment method:
+
+1. Backend → `POST /paymentsessions?account_id={id}` with `amount`, `currency`, `description`, and `configurations.allowed_payment_methods: ["ach_debit"]`
+2. Frontend widget → `requestPaymentMethod({ transaction_type: "payment", payments_session_id, amount, currency_code, ... })`
+3. Backend confirm → `GET /paymentsessions/{payments_session_id}?account_id={id}` to verify payment status
+
+### Frontend environment variables
+```env
+VITE_ZOHO_PAY_ACCOUNT_ID=your_account_id
+VITE_ZOHO_PAY_API_KEY=your_widget_api_key_from_developers_space
+VITE_ZOHO_PAY_DOMAIN=US
+VITE_ZOHO_PAY_USE_MOCK=false
+```
+
+Set `VITE_ZOHO_PAY_USE_MOCK=true` only for local UI testing without Zoho credentials.
+
+### Backend example implementation
+
+See `backend-examples/zoho-pay-ach-mandate.js` — mount at `/api/zoho-pay` on your Express server, or run standalone:
+
+```bash
+node backend-examples/zoho-pay-ach-mandate.js
+```
+
+Server env vars: `ZOHO_PAY_ACCOUNT_ID`, `ZOHO_CLIENT_ID`, `ZOHO_CLIENT_SECRET`, `ZOHO_REFRESH_TOKEN`
+
+### Recurring charges (post-enrollment)
+
+After onboarding saves `zohoCustomerId` + `zohoPaymentMethodId`, charge monthly fees server-side:
+
+`POST /api/zoho-pay/ach-mandate/charge` → Zoho `POST /payments` with saved `payment_method_id` and `customer_id` (see `payments.yml`).
+
+TypeScript OpenAPI-aligned types: `src/types/zohoPayApi.ts`
+
 ## Testing
 
 The application includes demo mode functionality:

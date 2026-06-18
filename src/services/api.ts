@@ -245,10 +245,22 @@ export const sendOnboardingScheduleConfirmation = async (
 };
 
 // Error handling utility
+const getRequestUrl = (error: unknown): string => {
+  if (error && typeof error === 'object' && 'config' in error) {
+    const config = (error as { config?: { url?: string } }).config;
+    return String(config?.url ?? '').toLowerCase();
+  }
+  return '';
+};
+
+const isOtpVerificationRequest = (url: string): boolean =>
+  /verify-otp|verify-login-otp/.test(url);
+
 export const handleApiError = (error: any): string => {
   if (error.response) {
     // Server responded with error status
     const { status, data } = error.response;
+    const requestUrl = getRequestUrl(error);
     
     switch (status) {
       case 400:
@@ -258,6 +270,9 @@ export const handleApiError = (error: any): string => {
       case 403:
         return data.message || 'Access denied. You do not have permission to perform this action.';
       case 404:
+        if (isOtpVerificationRequest(requestUrl)) {
+          return 'Invalid OTP. Please try again.';
+        }
         return data.message || 'Resource not found. Please check your request and try again.';
       case 408:
         return 'Request timeout. Please try again.';

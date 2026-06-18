@@ -47,6 +47,20 @@ export const AchDocumentBody: React.FC = () => (
   </div>
 );
 
+export const SWEEP_LEGAL_INTRO =
+  'By checking the box below, the Provider, through its undersigned authorized representative:';
+
+export const SWEEP_LEGAL_PROVISIONS = [
+  { title: 'Authorization.', text: 'Authorizes Dyad Practice Solutions, LLC (“Dyad”) to initiate weekly ACH credit transfers from the Dyad lockbox account at Live Oak Banking Company, N.A. to the Designated Operating Account specified above (the “Designated Account”).' },
+  { title: 'Account Verification.', text: 'Confirms that the Bank Name, Routing Number, Account Number, and Account Type for the Designated Account have been reviewed for accuracy by the Provider, and that the Designated Account is owned and controlled by the Provider.' },
+  { title: 'Reliance.', text: 'Acknowledges that Dyad will rely on the Designated Account information provided herein in initiating weekly sweeps, and that the Provider bears sole responsibility for the accuracy and completeness of such information.' },
+  { title: 'Indemnification.', text: 'Agrees to indemnify and hold harmless Dyad and Live Oak Banking Company, N.A. from any liability, damages, fees, or losses resulting from misdirected funds caused by incorrect, incomplete, or out-of-date Designated Account information provided by the Provider, including without limitation routing number, account number, account type, or beneficiary name discrepancies.' },
+  { title: 'Settlement Timing.', text: 'Acknowledges that sweep settlement timing is typically one (1) to two (2) business days from initiation, subject to the NACHA Operating Rules, the receiving bank’s processing schedule, ACH network cut-off times, weekend hold periods, and federal banking holidays.' },
+  { title: 'Account Changes.', text: 'Agrees that any change to the Designated Account information must be communicated to Dyad in writing at least ten (10) business days prior to the desired effective date, and that Dyad may continue to send sweeps to the previously authorized account until the change has been processed and confirmed by Dyad.' },
+  { title: 'Revocation.', text: 'Acknowledges that this sweep authorization remains in effect until revoked in writing with at least ten (10) business days advance notice to support@dyadmd.com, and that revocation does not affect any sweep already initiated prior to the revocation effective date.' },
+  { title: 'Governing Authority.', text: 'Confirms this authorization is executed pursuant to the NACHA Operating Rules, the Electronic Fund Transfer Act (15 U.S.C. § 1693 et seq.), Regulation E (12 C.F.R. Part 1005), the Uniform Commercial Code Article 4A (where applicable), and the Master Services Agreement between Dyad and the Provider, each of which the Provider has reviewed and agrees to.' },
+];
+
 export const ACH_ATTEST_TEXT = (
   <>
     <strong>(i) Authority.</strong> I possess the legal capacity and authority to bind the Provider to this Authorization and to execute this agreement on the Provider&rsquo;s behalf.<br /><br />

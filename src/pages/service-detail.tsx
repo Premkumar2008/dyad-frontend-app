@@ -143,7 +143,9 @@ const AboutUsDetail: React.FC = () => {
         'Accounts Receivable (AR)',
         'Payment posting & Reconciliation',
         'Re-bill processing',
-        'Underpayments detection & recovery'
+        'Underpayments detection & recovery',
+        'Auto-routing of qualified claims to NSA Federal IDR/Arbitration',
+        'Auto-routing of qualified claims to State Federal IDR/Arbitration'
       ]
     },
     {

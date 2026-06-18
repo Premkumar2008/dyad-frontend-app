@@ -1,0 +1,10 @@
+.team-expertise-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.team-expertise-page .leadership-section {
+  flex: 1;
+  padding-top: 2rem;
+}

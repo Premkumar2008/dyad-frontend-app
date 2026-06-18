@@ -27,7 +27,7 @@ const aboutDropdownItems = [
   { name: 'Values & Principles', href: '#about', cardId: 2 },
   { name: 'Approach & Methodology', href: '#about', cardId: 3 },
   { name: 'Innovative Technologies', href: '#about', cardId: 4 },
-  { name: 'Team & Expertise', href: '#leadership', cardId: 5 },
+  { name: 'Team & Expertise', href: '/team-expertise', cardId: 5 },
 ];
 
 const whoWeServeDropdownItems = [
@@ -57,8 +57,12 @@ const LandingHeader: React.FC<LandingHeaderProps> = ({ activePage = 'Home', hide
   const handleEarlyAccess = () => navigate('/early-access')
   const handleContactRequest = () => navigate('/contact');
 
-  const handleAboutDropdownItemClick = (href: string) => {
-    navigate('/', { state: { scrollTo: href } });
+  const handleAboutDropdownItemClick = (dropdownItem: { name: string; href: string; cardId: number }) => {
+    if (dropdownItem.name === 'Team & Expertise') {
+      navigate('/team-expertise');
+    } else {
+      navigate('/', { state: { scrollTo: dropdownItem.href, cardId: dropdownItem.cardId } });
+    }
     setIsAboutDropdownOpen(false);
     setIsMobileMenuOpen(false);
   };
@@ -156,7 +160,7 @@ const LandingHeader: React.FC<LandingHeaderProps> = ({ activePage = 'Home', hide
                             aboutDropdownItems.map((dropdownItem) => (
                               <a
                                 key={dropdownItem.name}
-                                onClick={(e) => { e.preventDefault(); handleAboutDropdownItemClick(dropdownItem.href); }}
+                                onClick={(e) => { e.preventDefault(); handleAboutDropdownItemClick(dropdownItem); }}
                                 className="dropdown-item"
                                 style={dropdownItemStyle}
                               >
@@ -290,7 +294,7 @@ const LandingHeader: React.FC<LandingHeaderProps> = ({ activePage = 'Home', hide
                           aboutDropdownItems.map((dropdownItem) => (
                             <a
                               key={dropdownItem.name}
-                              onClick={(e) => { e.preventDefault(); handleAboutDropdownItemClick(dropdownItem.href); }}
+                              onClick={(e) => { e.preventDefault(); handleAboutDropdownItemClick(dropdownItem); }}
                               className="mobile-dropdown-item"
                               style={mobileDropdownItemStyle}
                             >

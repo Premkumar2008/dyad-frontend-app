@@ -1,5 +1,6 @@
 import axios from 'axios';
 import type { CSSProperties } from 'react';
+import { apiPayloadToStorageRecord, deepCamelizeKeys } from './onboardingStorageService';
 
 export interface OnboardingListRecord {
   id: number;
@@ -53,10 +54,35 @@ const initialsFromText = (text: string): string => {
   return `${parts[0][0] ?? ''}${parts[parts.length - 1][0] ?? ''}`.toUpperCase();
 };
 
-const readStep1Payload = (payload: Record<string, unknown> | undefined) => {
-  const step1 = payload?.step1;
-  if (!step1 || typeof step1 !== 'object') return undefined;
-  return step1 as Record<string, unknown>;
+const isPlainObject = (value: unknown): value is Record<string, unknown> =>
+  !!value && typeof value === 'object' && !Array.isArray(value);
+
+const readStringField = (source: Record<string, unknown>, ...keys: string[]): string | null => {
+  for (const key of keys) {
+    const value = source[key];
+    if (typeof value === 'string' && value.trim()) return value.trim();
+  }
+  return null;
+};
+
+const unwrapStepBucket = (
+  block: Record<string, unknown>,
+  stepKey: string,
+): Record<string, unknown> => {
+  const nested = block[stepKey];
+  if (isPlainObject(nested)) return nested;
+  return block;
+};
+
+const readStep1Payload = (record: OnboardingListRecord): Record<string, unknown> | undefined => {
+  if (isPlainObject(record.step_1_payload)) {
+    return unwrapStepBucket(record.step_1_payload, 'step1');
+  }
+  const payload = record.payload ?? {};
+  if (isPlainObject(payload.step1)) {
+    return payload.step1;
+  }
+  return undefined;
 };
 
 const readNpiApiData = (step1: Record<string, unknown> | undefined) => {
@@ -128,7 +154,7 @@ export interface ActiveClientsFetchResult {
 
 export const mapOnboardingRecordToClientRow = (record: OnboardingListRecord): ActiveClientRow => {
   const payload = record.payload ?? {};
-  const step1 = readStep1Payload(payload);
+  const step1 = readStep1Payload(record);
   const npiApiData = readNpiApiData(step1);
 
   const providerName = typeof npiApiData?.fullName === 'string' ? npiApiData.fullName.trim() : '';
@@ -191,24 +217,109 @@ export interface OnboardingRecordsFetchResult {
   total: number | null;
 }
 
+/** Normalize a single GET /api/onboarding list item (snake_case + step_N_payload). */
+export const normalizeOnboardingListRecord = (raw: unknown): OnboardingListRecord | null => {
+  if (!isPlainObject(raw)) return null;
+
+  const camelRoot = deepCamelizeKeys(raw) as Record<string, unknown>;
+  const storage = apiPayloadToStorageRecord(raw);
+
+  const npiFromStep1 = readStringField(storage.step1, 'npi');
+  const npiApiData = storage.step1.npiApiData;
+  const npiFromApi = isPlainObject(npiApiData) ? readStringField(npiApiData, 'npi') : null;
+
+  const payload: Record<string, unknown> = {
+    currentStep: storage.currentStep,
+    highestStepReached: storage.highestStepReached,
+    step1: storage.step1,
+    step2: storage.step2,
+    step3: storage.step3,
+    step4: storage.step4,
+    step5: storage.step5,
+    step6: storage.step6,
+    ...storage.step1,
+    ...storage.step2,
+    ...storage.step3,
+    ...storage.step4,
+    ...storage.step5,
+    ...storage.step6,
+  };
+
+  const bucketOrNull = (bucket: Record<string, unknown>) =>
+    Object.keys(bucket).length > 0 ? bucket : null;
+
+  return {
+    id: Number(camelRoot.id) || 0,
+    onboarding_id: storage.onboardingId
+      || readStringField(camelRoot, 'onboardingId', 'onboarding_id')
+      || '',
+    step: storage.currentStep,
+    payload,
+    step_1_payload: bucketOrNull(storage.step1),
+    step_2_payload: bucketOrNull(storage.step2),
+    step_3_payload: bucketOrNull(storage.step3),
+    step_4_payload: bucketOrNull(storage.step4),
+    step_5_payload: bucketOrNull(storage.step5),
+    step_6_payload: bucketOrNull(storage.step6),
+    npi: readStringField(camelRoot, 'npi') ?? npiFromStep1 ?? npiFromApi,
+    contact_email: storage.contactEmail
+      || readStringField(camelRoot, 'contactEmail', 'contact_email'),
+    contact_name: readStringField(camelRoot, 'contactName', 'contact_name'),
+    call_event_id: readStringField(camelRoot, 'callEventId', 'call_event_id'),
+    status: readStringField(camelRoot, 'status') ?? 'onboarding',
+    created_at: readStringField(camelRoot, 'createdAt', 'created_at') ?? '',
+    updated_at: storage.updatedAt
+      || readStringField(camelRoot, 'updatedAt', 'updated_at')
+      || '',
+    completedSteps: Array.isArray(camelRoot.completedSteps)
+      ? camelRoot.completedSteps.map(Number).filter(n => n > 0)
+      : undefined,
+  };
+};
+
+const parseOnboardingListBody = (body: unknown): { records: unknown[]; total: number | null } => {
+  if (Array.isArray(body)) {
+    return { records: body, total: body.length };
+  }
+  if (!isPlainObject(body)) return { records: [], total: null };
+
+  if (Array.isArray(body.data)) {
+    const total = typeof body.total === 'number' ? body.total : body.data.length;
+    return { records: body.data, total };
+  }
+
+  if (isPlainObject(body.data)) {
+    const nested = body.data as Record<string, unknown>;
+    if (Array.isArray(nested.records)) {
+      const total = typeof nested.total === 'number' ? nested.total : nested.records.length;
+      return { records: nested.records, total };
+    }
+    if (Array.isArray(nested.items)) {
+      const total = typeof nested.total === 'number' ? nested.total : nested.items.length;
+      return { records: nested.items, total };
+    }
+  }
+
+  return { records: [], total: typeof body.total === 'number' ? body.total : null };
+};
+
 export const fetchOnboardingRecords = async (
   token: string,
 ): Promise<OnboardingRecordsFetchResult> => {
   const apiUrl = import.meta.env.VITE_API_URL || '/api';
-  const res = await axios.get<OnboardingListResponse>(`${apiUrl}/onboarding`, {
+  const res = await axios.get(`${apiUrl}/onboarding`, {
     headers: { Authorization: `Bearer ${token}` },
   });
-  const body = res.data;
 
-  const records = Array.isArray(body?.data)
-    ? body.data
-    : Array.isArray(body)
-      ? (body as unknown as OnboardingListRecord[])
-      : [];
+  const { records: rawRecords, total } = parseOnboardingListBody(res.data);
+  const records = rawRecords
+    .map(normalizeOnboardingListRecord)
+    .filter((record): record is OnboardingListRecord => record != null);
 
-  const total = typeof body?.total === 'number' ? body.total : (records.length > 0 ? records.length : null);
-
-  return { records, total };
+  return {
+    records,
+    total: total ?? (records.length > 0 ? records.length : null),
+  };
 };
 
 export const fetchOnboardingList = async (token: string): Promise<ActiveClientsFetchResult> => {

@@ -197,8 +197,8 @@ export const NdaExhibitA: React.FC<NdaExhibitAProps> = (props) => {
 
       <AgreementSub>
         (i) Notwithstanding anything to the contrary in this Agreement, all ideas, developments,
-        methods, workflows, deliverables, reports, analyses, designs, or other materials &mdash;
-        whether tangible or intangible &mdash; created, developed, or derived by Dyad (or its
+        methods, workflows, deliverables, reports, analyses, designs, or other materials,
+        whether tangible or intangible, created, developed, or derived by Dyad (or its
         personnel or vendors) in connection with or as a result of the Purpose or the services
         contemplated hereunder, including but not limited to written content, documentation,
         frameworks, automations, software artifacts, and design elements, shall be deemed proprietary
@@ -209,7 +209,7 @@ export const NdaExhibitA: React.FC<NdaExhibitAProps> = (props) => {
         by Dyad in connection with or as a result of the Purpose, even if informed by the
         Provider&rsquo;s Confidential Information, shall be deemed proprietary to Dyad, provided that
         such materials do not incorporate or disclose the Provider&rsquo;s Confidential Information or
-        data protected under Section 1(a) &ndash; (e).
+        data protected under Section 1(a)-(e).
       </AgreementSub>
 
       <AgreementSub>

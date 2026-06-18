@@ -69,7 +69,7 @@ const AboutUsDetail: React.FC = () => {
     { name: 'Our Values & Principles', href: '#our-values-&-principles' },
     { name: 'Our Approach & Methodology', href: '#our-approach-&-methodology' },
     { name: 'Our Innovative Technologies', href: '#our-innovative-technologies' },
-    { name: 'Our Team & Expertise', href: '#our-team-&-expertise' }
+    { name: 'Our Team & Expertise', href: '/team-expertise' }
   ];
   const whoWeServeDropdownItems = [
     { name: 'Surgical & Procedural Specialties' },
@@ -120,12 +120,17 @@ const AboutUsDetail: React.FC = () => {
     setIsWhoWeServeDropdownOpen(isOpen);
   };
 
-  const handleAboutDropdownItemClick = (href: string) => {
+  const handleAboutDropdownItemClick = (item: { name: string; href: string }) => {
     setIsAboutDropdownOpen(false);
     setIsMobileMenuOpen(false);
-    
+
+    if (item.name === 'Our Team & Expertise') {
+      navigate('/team-expertise');
+      return;
+    }
+
     // Extract the section ID from href (remove #)
-    const sectionId = href.replace('#', '');
+    const sectionId = item.href.replace('#', '');
     const element = document.getElementById(sectionId);
     
     if (element) {
@@ -269,7 +274,7 @@ const AboutUsDetail: React.FC = () => {
                                 key={dropdownItem.name}
                                 onClick={(e) => {
                                   e.preventDefault();
-                                  handleAboutDropdownItemClick(dropdownItem.href);
+                                  handleAboutDropdownItemClick(dropdownItem);
                                 }}
                                 href={dropdownItem.href}
                                 className="dropdown-item"
@@ -421,7 +426,7 @@ const AboutUsDetail: React.FC = () => {
                                 key={dropdownItem.name}
                                 onClick={(e) => {
                                   e.preventDefault();
-                                  handleAboutDropdownItemClick(dropdownItem.href);
+                                  handleAboutDropdownItemClick(dropdownItem);
                                 }}
                                 className="mobile-dropdown-item"
                                 style={{
