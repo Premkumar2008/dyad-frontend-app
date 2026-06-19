@@ -30,7 +30,7 @@ export const AchDocumentBody: React.FC = () => (
     <h4>ACH Authorization Consent Statement</h4>
     <p>By signing below, the Provider expressly authorizes Dyad Practice Solutions, LLC to electronically initiate recurring ACH debits and credits to and from the designated Provider Operating Account listed herein, pursuant to the Electronic Fund Transfer Act, Regulation E, and NACHA Operating Rules.</p>
     <h4>Third-Party Payment Processor</h4>
-    <p>Provider acknowledges and consents that Dyad has engaged Zoho Payment Services Inc. and the &ldquo;Zoho Pay&rdquo; payment platform as its contracted third-party payment service provider for the origination of all ACH debit and credit entries authorized hereunder.</p>
+    <p>Provider acknowledges and consents that Dyad may engage a contracted third-party payment service provider for the origination of all ACH debit and credit entries authorized hereunder.</p>
     <p><strong>Independence from Lockbox Infrastructure.</strong> The Live Oak Banking Company / Anatomy Financial lockbox infrastructure established under the Limited Power of Attorney (Section 1) is unrelated to and shall not be involved in the origination, processing, settlement, or any other aspect of the service fee debits authorized under this Exhibit E.</p>
     <h4>Billing &amp; Reconciliation Process</h4>
     <p><strong>Variable Monthly Amounts</strong>: The ACH debit amount will vary based on the services provided to the Provider for the billing period, in accordance with the fee schedule outlined in Exhibit D of the MSA.</p>
@@ -64,7 +64,7 @@ export const SWEEP_LEGAL_PROVISIONS = [
 export const ACH_ATTEST_TEXT = (
   <>
     <strong>(i) Authority.</strong> I possess the legal capacity and authority to bind the Provider to this Authorization and to execute this agreement on the Provider&rsquo;s behalf.<br /><br />
-    <strong>(ii) ACH Authorization.</strong> I authorize Dyad Practice Solutions, LLC, acting through Zoho Pay and its sponsor ODFI, to initiate recurring variable-amount ACH debit entries from the Provider Operating Account specified above.<br /><br />
+    <strong>(ii) ACH Authorization.</strong> I authorize Dyad Practice Solutions, LLC and its designated ACH processor to initiate recurring variable-amount ACH debit entries from the Provider Operating Account specified above.<br /><br />
     <strong>(iii) Independence from Lockbox.</strong> I acknowledge that the Authorized Account is the Provider&rsquo;s existing operating account and is wholly distinct from the Live Oak Bank lockbox account established under Section 1.<br /><br />
     <strong>(iv) Regulatory Framework.</strong> I acknowledge that this Authorization is given pursuant to EFTA, Regulation E, and NACHA Operating Rules.<br /><br />
     <strong>(v) Notice of Variable Amounts.</strong> I have received clear notice of the variable nature of debit amounts, monthly frequency, and debit trigger timing.<br /><br />

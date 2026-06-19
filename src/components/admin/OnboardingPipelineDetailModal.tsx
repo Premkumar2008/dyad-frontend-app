@@ -92,7 +92,6 @@ export const OnboardingPipelineDetailModal: React.FC<OnboardingPipelineDetailMod
               {row.stageLabel}
             </span>
             {row.isStalled && <span className="obp-stall-pill">Stalled · {row.daysInStage}d</span>}
-            {row.achMandateActive && <span className="obp-milestone-pill">ACH mandate active</span>}
             {row.callScheduled && <span className="obp-milestone-pill">Call scheduled</span>}
           </div>
 

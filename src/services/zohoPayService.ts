@@ -1,11 +1,5 @@
 import api, { handleApiError } from './api';
-import type { ZohoPayDomain } from '../types/zohoPay';
-import type {
-  ZohoPaymentMethodSession,
-  ZohoPaymentMethodSessionCreateResponse,
-  ZohoPaymentMethodSessionRetrieveResponse,
-  ZohoPaymentSessionCreateResponse,
-} from '../types/zohoPayApi';
+import type { ZohoPayDomain, ZohoPayInitConfig, ZohoPayWidgetSuccess } from '../types/zohoPay';
 
 export interface ZohoPayWidgetConfig {
   accountId: string;
@@ -13,68 +7,40 @@ export interface ZohoPayWidgetConfig {
   domain: ZohoPayDomain;
 }
 
-/** Primary US flow: save ACH via payment method session widget. */
-export type AchMandateFlow = 'payment_method' | 'payment';
-
-export interface AchMandateSetupRequest {
-  email: string;
-  name: string;
-  phone?: string;
-  onboardingId?: string;
-  reference?: string;
-  description?: string;
-  customerId?: string;
-}
-
-export interface AchMandateSetupResponse {
-  flow: AchMandateFlow;
-  customerId: string;
-  paymentMethodSessionId?: string;
-  paymentsSessionId?: string;
+export interface CreatePaymentSessionRequest {
   amount?: string;
-  currencyCode?: string;
-  currencySymbol?: string;
-  business?: string;
-  description?: string;
-  invoiceNumber?: string;
-}
-
-export interface AchMandateConfirmRequest {
+  currency?: string;
   onboardingId?: string;
-  customerId?: string;
-  paymentMethodId?: string;
+  email?: string;
+  name?: string;
+}
+
+export interface CreatePaymentSessionResponse {
+  sessionId: string;
+  amount: string;
+  currencyCode: string;
+}
+
+export interface SaveMandateRequest {
+  onboardingId?: string;
   paymentId?: string;
-  paymentsSessionId?: string;
-  paymentMethodSessionId?: string;
-}
-
-export interface AchMandateConfirmResponse {
-  mandateId: string;
-  status: string;
-  paymentMethodId: string;
+  paymentMethodId?: string;
   customerId?: string;
-  paymentMethodType?: string;
-  sessionStatus?: string;
+  mandateId?: string;
+  sessionId?: string;
+  widgetResult?: ZohoPayWidgetSuccess;
 }
 
-export interface ZohoAchActivateResult {
-  mandateId: string;
-  paymentMethodId: string;
-  customerId: string;
-  activatedAt: string;
-  status: string;
-  paymentMethodType?: string;
-  sessionStatus?: string;
+export interface SaveMandateResponse {
+  success: boolean;
+  mandateId?: string;
+  paymentId?: string;
+  paymentMethodId?: string;
 }
 
 const asRecord = (value: unknown): Record<string, unknown> => (
   value && typeof value === 'object' ? value as Record<string, unknown> : {}
 );
-
-const parsePayload = (data: unknown): Record<string, unknown> => {
-  const root = asRecord(data);
-  return asRecord(root.data ?? root);
-};
 
 const readString = (record: Record<string, unknown>, ...keys: string[]): string | undefined => {
   for (const key of keys) {
@@ -82,111 +48,6 @@ const readString = (record: Record<string, unknown>, ...keys: string[]): string 
     if (typeof value === 'string' && value.trim()) return value.trim();
   }
   return undefined;
-};
-
-const readNestedRecord = (record: Record<string, unknown>, ...keys: string[]): Record<string, unknown> => {
-  for (const key of keys) {
-    const nested = asRecord(record[key]);
-    if (Object.keys(nested).length > 0) return nested;
-  }
-  return {};
-};
-
-/** Parse Dyad backend or passthrough Zoho create-session payloads. */
-export const parseAchMandateSetupResponse = (data: unknown): AchMandateSetupResponse => {
-  const nested = parsePayload(data);
-
-  const paymentMethodSession = readNestedRecord(
-    nested,
-    'payment_method_session',
-    'paymentMethodSession',
-  ) as ZohoPaymentMethodSession;
-
-  const paymentSession = readNestedRecord(
-    nested,
-    'payments_session',
-    'paymentSession',
-  ) as ZohoPaymentSessionCreateResponse['payments_session'];
-
-  const customerId = readString(nested, 'customerId', 'customer_id')
-    ?? paymentMethodSession.customer_id;
-
-  const paymentMethodSessionId = readString(
-    nested,
-    'paymentMethodSessionId',
-    'payment_method_session_id',
-  ) ?? paymentMethodSession.payment_method_session_id;
-
-  const paymentsSessionId = readString(nested, 'paymentsSessionId', 'payments_session_id')
-    ?? paymentSession?.payments_session_id;
-
-  const flow: AchMandateFlow = paymentsSessionId && !paymentMethodSessionId ? 'payment' : 'payment_method';
-
-  if (!customerId) {
-    throw new Error('ACH setup response is missing customer_id');
-  }
-
-  if (flow === 'payment_method' && !paymentMethodSessionId) {
-    throw new Error('ACH setup response is missing payment_method_session_id');
-  }
-
-  if (flow === 'payment' && !paymentsSessionId) {
-    throw new Error('ACH setup response is missing payments_session_id');
-  }
-
-  return {
-    flow,
-    customerId,
-    paymentMethodSessionId,
-    paymentsSessionId,
-    amount: readString(nested, 'amount') ?? paymentSession?.amount,
-    currencyCode: readString(nested, 'currencyCode', 'currency_code', 'currency') ?? 'USD',
-    currencySymbol: readString(nested, 'currencySymbol', 'currency_symbol') ?? '$',
-    business: readString(nested, 'business'),
-    description: readString(nested, 'description') ?? paymentSession?.description,
-    invoiceNumber: readString(nested, 'invoiceNumber', 'invoice_number') ?? paymentSession?.invoice_number,
-  };
-};
-
-/** Parse Dyad backend confirm or passthrough Zoho retrieve-session payloads. */
-export const parseAchMandateConfirmResponse = (data: unknown): AchMandateConfirmResponse => {
-  const nested = parsePayload(data);
-
-  const paymentMethodSession = readNestedRecord(
-    nested,
-    'payment_method_session',
-    'paymentMethodSession',
-  ) as ZohoPaymentMethodSessionRetrieveResponse['payment_method_session'];
-
-  const paymentMethod = paymentMethodSession?.payment_method;
-
-  const paymentMethodId = readString(nested, 'paymentMethodId', 'payment_method_id')
-    ?? paymentMethod?.payment_method_id;
-
-  const mandateId = readString(nested, 'mandateId', 'mandate_id') ?? paymentMethodId;
-
-  if (!mandateId || !paymentMethodId) {
-    throw new Error('Server did not return a payment_method_id');
-  }
-
-  const sessionStatus = readString(
-    asRecord(paymentMethodSession),
-    'status',
-  ) ?? readString(nested, 'sessionStatus', 'session_status');
-
-  const paymentMethodStatus = readString(
-    asRecord(paymentMethod),
-    'status',
-  ) ?? readString(nested, 'status') ?? 'active';
-
-  return {
-    mandateId,
-    paymentMethodId,
-    customerId: readString(nested, 'customerId', 'customer_id') ?? paymentMethodSession?.customer_id,
-    status: paymentMethodStatus,
-    paymentMethodType: paymentMethod?.type ?? readString(nested, 'paymentMethodType', 'payment_method_type'),
-    sessionStatus,
-  };
 };
 
 export const getZohoPayWidgetConfig = (): ZohoPayWidgetConfig | null => {
@@ -198,49 +59,77 @@ export const getZohoPayWidgetConfig = (): ZohoPayWidgetConfig | null => {
   return { accountId, apiKey, domain };
 };
 
+export const getZohoPayInitConfig = (): ZohoPayInitConfig | null => {
+  const widgetConfig = getZohoPayWidgetConfig();
+  if (!widgetConfig) return null;
+
+  return {
+    account_id: widgetConfig.accountId,
+    domain: widgetConfig.domain,
+    otherOptions: { api_key: widgetConfig.apiKey },
+  };
+};
+
 export const isZohoPayConfigured = (): boolean => Boolean(getZohoPayWidgetConfig());
 
 export const isZohoPayMockMode = (): boolean => import.meta.env.VITE_ZOHO_PAY_USE_MOCK === 'true';
 
-export const createAchMandateSetupSession = async (
-  payload: AchMandateSetupRequest,
-): Promise<AchMandateSetupResponse> => {
+export const getZohoPaySetupAmount = (): string => (
+  import.meta.env.VITE_ZOHO_PAY_SETUP_AMOUNT?.trim() || '49.99'
+);
+
+export const parseCreateSessionResponse = (data: unknown): CreatePaymentSessionResponse => {
+  const root = asRecord(data);
+  const nested = asRecord(root.data ?? root);
+
+  const sessionId = readString(nested, 'sessionId', 'session_id', 'paymentsSessionId', 'payments_session_id')
+    ?? readString(asRecord(nested.payments_session), 'payments_session_id');
+
+  const amount = readString(nested, 'amount') ?? getZohoPaySetupAmount();
+  const currencyCode = readString(nested, 'currencyCode', 'currency_code', 'currency') ?? 'USD';
+
+  if (!sessionId) {
+    throw new Error('Backend did not return a payment session id');
+  }
+
+  return { sessionId, amount, currencyCode };
+};
+
+export const createPaymentSession = async (
+  payload: CreatePaymentSessionRequest = {},
+): Promise<CreatePaymentSessionResponse> => {
   try {
-    const response = await api.post('/zoho-pay/ach-mandate/setup', {
+    const response = await api.post('/create-session', {
+      amount: payload.amount ?? getZohoPaySetupAmount(),
+      currency: payload.currency ?? 'USD',
+      onboardingId: payload.onboardingId,
       email: payload.email,
       name: payload.name,
-      phone: payload.phone,
-      onboardingId: payload.onboardingId,
-      reference: payload.reference,
-      customer_id: payload.customerId,
-      description: payload.description
-        ?? (payload.onboardingId
-          ? `Dyad onboarding ACH mandate · ${payload.onboardingId}`
-          : 'Dyad onboarding ACH mandate setup'),
     });
-    return parseAchMandateSetupResponse(response.data);
+    return parseCreateSessionResponse(response.data);
   } catch (error) {
     throw new Error(handleApiError(error));
   }
 };
 
-export const confirmAchMandateSetup = async (
-  payload: AchMandateConfirmRequest,
-): Promise<AchMandateConfirmResponse> => {
-  if (!payload.paymentMethodSessionId && !payload.paymentsSessionId) {
-    throw new Error('Missing payment_method_session_id for confirmation');
-  }
-
+export const saveMandate = async (payload: SaveMandateRequest): Promise<SaveMandateResponse> => {
   try {
-    const response = await api.post('/zoho-pay/ach-mandate/confirm', {
+    const response = await api.post('/save-mandate', {
       onboardingId: payload.onboardingId,
-      customer_id: payload.customerId,
-      payment_method_id: payload.paymentMethodId,
+      session_id: payload.sessionId,
       payment_id: payload.paymentId,
-      payments_session_id: payload.paymentsSessionId,
-      payment_method_session_id: payload.paymentMethodSessionId,
+      payment_method_id: payload.paymentMethodId,
+      customer_id: payload.customerId,
+      mandate_id: payload.mandateId,
+      ...payload.widgetResult,
     });
-    return parseAchMandateConfirmResponse(response.data);
+    const nested = asRecord(response.data?.data ?? response.data);
+    return {
+      success: nested.success !== false,
+      mandateId: readString(nested, 'mandateId', 'mandate_id'),
+      paymentId: readString(nested, 'paymentId', 'payment_id'),
+      paymentMethodId: readString(nested, 'paymentMethodId', 'payment_method_id'),
+    };
   } catch (error) {
     throw new Error(handleApiError(error));
   }

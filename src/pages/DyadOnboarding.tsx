@@ -235,12 +235,9 @@ export interface OnboardingData {
   achBankPhone: string;
   achBankAddress: string;
   achMandateActive: boolean;
-  achMandateId: string;
-  achMandateActivatedAt: string;
-  achDebitAuthorized: boolean;
-  zohoCustomerId: string;
+  zohoPaymentId: string;
   zohoPaymentMethodId: string;
-  zohoPaymentMethodType: string;
+  zohoMandateId: string;
   step6Sec4Attested: boolean;
   step6Sec4Complete: boolean;
   sweepUseSection4: boolean;
@@ -422,12 +419,9 @@ const INITIAL_DATA: OnboardingData = {
   achBankPhone: '',
   achBankAddress: '',
   achMandateActive: false,
-  achMandateId: '',
-  achMandateActivatedAt: '',
-  achDebitAuthorized: false,
-  zohoCustomerId: '',
+  zohoPaymentId: '',
   zohoPaymentMethodId: '',
-  zohoPaymentMethodType: '',
+  zohoMandateId: '',
   step6Sec4Attested: false,
   step6Sec4Complete: false,
   sweepUseSection4: true,
@@ -462,7 +456,7 @@ const ONBOARDING_BOOL_FIELDS: (keyof OnboardingData)[] = [
   'step5FeeScheduleAttested', 'msaPackageAgreed', 'msaPackageExecuted', 'msaAgreed',
   'step6Sec1Attested', 'step6Sec1Complete', 'step6Sec2Attested', 'step6Sec2Complete',
   'w9EsignConsent', 'w9IrsCert', 'w9AuthDist',
-  'w9Signed', 'w9Item2Flagged', 'achMandateActive', 'achDebitAuthorized', 'step6Sec4Attested', 'step6Sec4Complete',
+  'w9Signed', 'w9Item2Flagged', 'achMandateActive', 'step6Sec4Attested', 'step6Sec4Complete',
   'sweepUseSection4', 'step6Sec5Attested', 'step6Sec5Complete', 'step6Sec6Attested', 'step6Sec6Complete',
   'step6EnrollmentComplete',
 ];

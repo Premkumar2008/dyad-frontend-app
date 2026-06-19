@@ -71,7 +71,6 @@ export const SettingsPanel: React.FC = () => {
               {[
                 { name: 'SendGrid', status: 'Connected', detail: 'Transactional email delivery' },
                 { name: 'Google Calendar', status: 'Connected', detail: 'Introduction call scheduling' },
-                { name: 'Zoho Pay', status: 'Connected', detail: 'ACH mandate processing' },
                 { name: 'Live Oak Bank API', status: 'Pending', detail: 'Banking verification webhooks' },
               ].map(i => (
                 <div key={i.name} className="adm2-integration-row">

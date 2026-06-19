@@ -7137,331 +7137,6 @@
   margin-bottom: 10px;
 }
 
-/* Zoho Pay */
-.ob-bank-zp-label {
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: #1a1a1a;
-  margin: 22px 0 10px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.ob-bank-zp-label::before {
-  content: '';
-  display: inline-block;
-  width: 3px;
-  height: 13px;
-  background: #e42527;
-  border-radius: var(--ob-radius);
-}
-
-.ob-bank-zp-wrap {
-  border: 1.5px solid #e0e0e0;
-  border-radius: var(--ob-radius);
-  overflow: hidden;
-  margin-bottom: 16px;
-}
-
-.ob-bank-zp-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 14px 18px;
-  background: #f5f7fa;
-  border-bottom: 1px solid #e0e0e0;
-}
-
-.ob-bank-zp-brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.ob-bank-zp-mark {
-  width: 32px;
-  height: 32px;
-  border-radius: var(--ob-radius);
-  background: linear-gradient(135deg, #e42527, #f38b00);
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-}
-
-.ob-bank-zp-bn {
-  font-size: 0.88rem;
-  font-weight: 700;
-  color: #1a1a1a;
-}
-
-.ob-bank-zp-bs {
-  font-size: 0.62rem;
-  color: #78909c;
-}
-
-.ob-bank-zp-sec {
-  font-size: 0.62rem;
-  color: #2e7d32;
-  font-weight: 600;
-}
-
-.ob-bank-zp-body {
-  padding: 16px 18px;
-}
-
-.ob-bank-zp-row {
-  margin-bottom: 14px;
-}
-
-.ob-bank-zp-llabel {
-  font-size: 0.62rem;
-  font-weight: 700;
-  color: #78909c;
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
-  margin-bottom: 6px;
-}
-
-.ob-bank-zp-card {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 14px;
-  border: 1.5px solid #ececec;
-  border-radius: var(--ob-radius);
-  background: #fff;
-}
-
-.ob-bank-zp-mlogo {
-  width: 36px;
-  height: 36px;
-  border-radius: var(--ob-radius);
-  background: #0a2d6e;
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  flex-shrink: 0;
-}
-
-.ob-bank-zp-cinfo {
-  flex: 1;
-  min-width: 0;
-}
-
-.ob-bank-zp-ctitle {
-  font-size: 0.82rem;
-  font-weight: 700;
-  color: #1a1a1a;
-}
-
-.ob-bank-zp-csub {
-  font-size: 0.68rem;
-  color: #78909c;
-}
-
-.ob-bank-zp-pill {
-  font-size: 0.58rem;
-  font-weight: 700;
-  padding: 3px 8px;
-  border-radius: var(--ob-radius);
-  background: #eef6fb;
-  color: #0a2d6e;
-  flex-shrink: 0;
-}
-
-.ob-bank-zp-pill-verified {
-  background: #e8f5e9;
-  color: #2e7d32;
-}
-
-.ob-bank-zp-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  background: #fff;
-  border: 1px solid #e5e7eb;
-  border-radius: 7px;
-  overflow: hidden;
-}
-
-.ob-bank-zp-gi {
-  padding: 10px 13px;
-  border-bottom: 1px solid #eef0f2;
-  border-right: 1px solid #eef0f2;
-}
-
-.ob-bank-zp-gi:nth-child(2n) {
-  border-right: none;
-}
-
-.ob-bank-zp-gi:nth-last-child(-n+2) {
-  border-bottom: none;
-}
-
-.ob-bank-zp-cta {
-  width: 100%;
-  background: #e42527;
-  color: #fff;
-  border: none;
-  padding: 13px 18px;
-  border-radius: 7px;
-  font-weight: 700;
-  font-size: 0.82rem;
-  cursor: pointer;
-  margin-top: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  font-family: var(--ob-font-family);
-  transition: opacity 0.2s, transform 0.1s, background 0.3s;
-}
-
-.ob-bank-zp-cta:hover:not(:disabled):not(.ob-bank-zp-cta-activated) {
-  opacity: 0.92;
-}
-
-.ob-bank-zp-cta-activated {
-  background: #eaf6eb;
-  color: #2e7d32;
-  cursor: default;
-}
-
-.ob-bank-zp-cta:disabled:not(.ob-bank-zp-cta-activated) {
-  background: #c8cdd3;
-  cursor: not-allowed;
-  opacity: 0.7;
-}
-
-.ob-bank-zp-cta-loading {
-  cursor: wait;
-}
-
-.ob-bank-zp-error {
-  margin-top: 10px;
-  padding: 10px 12px;
-  border-radius: var(--ob-radius);
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-  color: #991b1b;
-  font-size: 0.78rem;
-  line-height: 1.45;
-}
-
-.ob-bank-zp-notice {
-  margin-bottom: 14px;
-  padding: 10px 12px;
-  border-radius: var(--ob-radius);
-  font-size: 0.78rem;
-  line-height: 1.45;
-}
-
-.ob-bank-zp-notice-demo {
-  background: #eff6ff;
-  border: 1px solid #bfdbfe;
-  color: #1e40af;
-}
-
-.ob-bank-zp-notice-warn {
-  background: #fffbeb;
-  border: 1px solid #fde68a;
-  color: #92400e;
-}
-
-.ob-bank-zp-auth {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  margin: 14px 0 12px;
-  padding: 12px 14px;
-  border: 1px solid #e0e0e0;
-  border-radius: var(--ob-radius);
-  background: #fafbfc;
-  font-size: 0.76rem;
-  line-height: 1.5;
-  color: #333;
-  cursor: pointer;
-}
-
-.ob-bank-zp-auth input {
-  margin-top: 3px;
-  flex-shrink: 0;
-  accent-color: #002855;
-}
-
-.ob-bank-zp-mandate-show {
-  display: block;
-  animation: ob-zp-fade 0.35s ease;
-}
-
-@keyframes ob-zp-fade {
-  from { opacity: 0; transform: translateY(4px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.ob-bank-zp-gl {
-  font-size: 0.56rem;
-  color: #78909c;
-  font-weight: 600;
-  text-transform: uppercase;
-}
-
-.ob-bank-zp-gv {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: #1a1a1a;
-}
-
-.ob-bank-zp-mandate {
-  padding: 14px;
-  background: #e8f5e9;
-  border: 1.5px solid #a5d6a7;
-  border-radius: var(--ob-radius);
-}
-
-.ob-bank-zp-ma-head {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 10px;
-}
-
-.ob-bank-zp-ma-icon {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: #2e7d32;
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-}
-
-.ob-bank-zp-ma-title {
-  font-size: 0.88rem;
-  font-weight: 700;
-  color: #1b5e20;
-}
-
-.ob-bank-zp-ma-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 8px;
-}
-
-.ob-bank-zp-foot {
-  padding: 10px 18px;
-  background: #fafbfc;
-  border-top: 1px solid #ececec;
-  font-size: 0.62rem;
-  color: #78909c;
-  text-align: center;
-}
 
 /* Sweep */
 .ob-bank-sw-line {
@@ -8351,4 +8026,93 @@
 
 .ob-idle-modal-btn-secondary:hover {
   background: #d1d5db;
+}
+
+/* Zoho ACH setup widget (Step 6) */
+.zoho-ach-setup {
+  margin: 20px 0 16px;
+}
+
+.zoho-ach-setup-note {
+  margin: 0 0 10px;
+  font-size: 0.75rem;
+  line-height: 1.45;
+}
+
+.zoho-ach-setup-note--demo {
+  color: #546e7a;
+}
+
+.zoho-ach-setup-note--warn {
+  color: #b45309;
+}
+
+.zoho-ach-setup-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 220px;
+  padding: 12px 20px;
+  border: none;
+  border-radius: var(--ob-radius);
+  background: #002855;
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.zoho-ach-setup-btn:hover:not(:disabled) {
+  background: #001a3d;
+}
+
+.zoho-ach-setup-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.zoho-ach-setup-btn--loading {
+  opacity: 0.85;
+}
+
+.zoho-ach-setup-done {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1.5px solid #a5d6a7;
+  border-radius: var(--ob-radius);
+  background: #e8f5e9;
+}
+
+.zoho-ach-setup-done-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #2e7d32;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.zoho-ach-setup-done-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #1b5e20;
+}
+
+.zoho-ach-setup-done-ref {
+  font-size: 0.72rem;
+  color: #2e7d32;
+  margin-top: 2px;
+}
+
+.zoho-ach-setup-error {
+  margin: 10px 0 0;
+  font-size: 0.75rem;
+  color: #c62828;
 }

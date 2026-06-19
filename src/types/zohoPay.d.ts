@@ -8,31 +8,27 @@ export interface ZohoPayInitConfig {
   };
 }
 
-export interface ZohoPayAddress {
-  name?: string;
-  email?: string;
-  phone?: string;
-  address_line1?: string;
-  address_line2?: string;
-  city?: string;
-  state?: string;
-  country?: string;
-  postal_code?: string;
+export interface ZohoPayMandateOptions {
+  type: 'recurring' | string;
+  description?: string;
 }
 
 export interface ZohoPayRequestPaymentMethodOptions {
-  payment_method?: 'card' | 'ach_debit';
-  transaction_type: 'payment' | 'add';
-  payments_session_id?: string;
-  payment_method_session_id?: string;
-  customer_id?: string;
   amount?: string;
   currency_code?: string;
+  payments_session_id?: string;
+  payment_methods?: string[];
+  mandate?: ZohoPayMandateOptions;
   currency_symbol?: string;
   business?: string;
   description?: string;
   invoice_number?: string;
-  address?: ZohoPayAddress;
+  reference_number?: string;
+  address?: {
+    name?: string;
+    email?: string;
+    phone?: string;
+  };
 }
 
 export interface ZohoPayWidgetSuccess {
@@ -41,11 +37,6 @@ export interface ZohoPayWidgetSuccess {
   mandate_id?: string;
   customer_id?: string;
   [key: string]: unknown;
-}
-
-export interface ZohoPayWidgetError {
-  code?: string;
-  message?: string;
 }
 
 export interface ZPaymentsInstance {

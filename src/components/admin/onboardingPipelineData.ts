@@ -153,7 +153,6 @@ export interface PipelineRow {
   isStalled: boolean;
   updatedAt: string;
   createdAt: string;
-  achMandateActive: boolean;
   callScheduled: boolean;
   record: OnboardingListRecord;
 }
@@ -162,7 +161,6 @@ export const mapRecordToPipelineRow = (record: OnboardingListRecord): PipelineRo
   const client = mapOnboardingRecordToClientRow(record);
   const payload = readPayload(record);
   const step2 = readStepBucket(record, 2);
-  const step6 = readStepBucket(record, 6);
   const stageId = resolvePipelineStageId(record);
   const stage = getStageMeta(stageId);
 
@@ -190,7 +188,6 @@ export const mapRecordToPipelineRow = (record: OnboardingListRecord): PipelineRo
     isStalled: daysInStage >= STALLED_DAYS,
     updatedAt,
     createdAt,
-    achMandateActive: Boolean(payload.achMandateActive ?? step6.achMandateActive),
     callScheduled: Boolean(payload.calendlyScheduled ?? step2.calendlyScheduled),
     record,
   };

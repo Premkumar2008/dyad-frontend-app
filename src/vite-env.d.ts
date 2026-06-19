@@ -11,6 +11,7 @@ interface ImportMetaEnv {
   readonly VITE_ZOHO_PAY_API_KEY?: string
   readonly VITE_ZOHO_PAY_DOMAIN?: string
   readonly VITE_ZOHO_PAY_USE_MOCK?: string
+  readonly VITE_ZOHO_PAY_SETUP_AMOUNT?: string
 }
 
 interface ImportMeta {

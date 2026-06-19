@@ -7,7 +7,7 @@ import { ObArrowRight, ObBackButtonLabel, ObForwardButtonLabel, trimBtnArrow } f
 import { formatAgreementAcceptance } from '../step3/agreementHelpers';
 import { FormW9Section } from './FormW9Section';
 import { KycUploadBar } from './KycUploadBar';
-import { ZohoPayWidget } from './ZohoPayWidget';
+import { ZohoAchSetupWidget } from './ZohoAchSetupWidget';
 import { EnrollmentSectionsBarRow } from '../EnrollmentSectionsBarRow';
 import {
   ACH_ATTEST_TEXT,
@@ -196,7 +196,7 @@ export const StepBankingPaymentSetup: React.FC<StepBankingPaymentSetupProps> = (
         || formData.routingNumber.length !== 9 || !formData.accountNumber || !formData.accountType) {
         return 'Please complete all operating account fields';
       }
-      if (!formData.achMandateActive) return 'Please activate the Zoho Pay Auto-ACH mandate';
+      if (!formData.achMandateActive) return 'Please set up ACH payment via Zoho Pay';
     }
     if (id === 5) {
       if (!formData.sweepUseSection4) {
@@ -257,11 +257,9 @@ export const StepBankingPaymentSetup: React.FC<StepBankingPaymentSetupProps> = (
 
   const clearAchMandate = useCallback(() => {
     set('achMandateActive', false);
-    set('achMandateId', '');
-    set('achMandateActivatedAt', '');
+    set('zohoPaymentId', '');
     set('zohoPaymentMethodId', '');
-    set('zohoPaymentMethodType', '');
-    set('achDebitAuthorized', false);
+    set('zohoMandateId', '');
     set('step6Sec4Attested', false);
     set('step6Sec4Complete', false);
   }, [set]);
@@ -269,7 +267,7 @@ export const StepBankingPaymentSetup: React.FC<StepBankingPaymentSetupProps> = (
   const syncAchToLegacy = (field: string, value: string) => {
     if (formData.achMandateActive) {
       clearAchMandate();
-      toast('Bank account changed. Please re-activate the Auto-ACH mandate', { icon: '⚠️' });
+      toast('Bank account changed — please set up ACH payment again', { icon: '⚠️' });
     }
     if (field === 'bankName') set('bankName', value);
     if (field === 'routing') set('routingNumber', value.replace(/\D/g, '').slice(0, 9));
@@ -550,29 +548,20 @@ export const StepBankingPaymentSetup: React.FC<StepBankingPaymentSetupProps> = (
                 <option>Savings Account</option>
               </select>
             </div>
-            <div className="ob-bank-zp-label">Initiate Recurring Auto-ACH Payment</div>
-            <ZohoPayWidget
-              bankDisplay={formData.bankName ? `${formData.bankName} · Routing ${formData.routingNumber || '-'}` : ''}
-              mandateActive={formData.achMandateActive}
-              mandateId={formData.achMandateId}
-              activatedAt={formData.achMandateActivatedAt}
-              paymentMethodType={formData.zohoPaymentMethodType}
-              customerName={[formData.signerFirstName, formData.signerLastName].filter(Boolean).join(' ')
-                || `${formData.firstName} ${formData.lastName}`.trim()}
-              customerEmail={formData.signerEmail || formData.contactEmail}
-              customerPhone={formData.contactPhone}
+            <ZohoAchSetupWidget
+              customerName={signerName}
+              customerEmail={signerEmail}
+              customerPhone={signerPhone}
               onboardingId={formData.onboardingId}
-              zohoCustomerId={formData.zohoCustomerId}
-              achDebitAuthorized={formData.achDebitAuthorized}
-              onAchDebitAuthorizedChange={c => set('achDebitAuthorized', c)}
+              mandateActive={formData.achMandateActive}
+              paymentId={formData.zohoPaymentId}
+              paymentMethodId={formData.zohoPaymentMethodId}
               disabled={!formData.bankName || formData.routingNumber.length !== 9 || !formData.accountNumber}
-              onActivate={result => {
+              onMandateSaved={result => {
                 set('achMandateActive', true);
-                set('achMandateId', result.mandateId);
-                set('achMandateActivatedAt', result.activatedAt);
-                set('zohoCustomerId', result.customerId);
+                set('zohoPaymentId', result.paymentId);
                 set('zohoPaymentMethodId', result.paymentMethodId);
-                set('zohoPaymentMethodType', result.paymentMethodType || 'ach_debit');
+                set('zohoMandateId', result.mandateId);
               }}
             />
             <AttestBox

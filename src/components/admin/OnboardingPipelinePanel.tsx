@@ -274,9 +274,8 @@ export const OnboardingPipelinePanel: React.FC = () => {
                 <td className="adm2-td">
                   <div className="obp-milestones">
                     {row.callScheduled && <span className="obp-milestone-chip">Call</span>}
-                    {row.achMandateActive && <span className="obp-milestone-chip obp-milestone-chip--ach">ACH</span>}
                     {row.isStalled && <span className="obp-milestone-chip obp-milestone-chip--warn">Stalled</span>}
-                    {!row.callScheduled && !row.achMandateActive && !row.isStalled && (
+                    {!row.callScheduled && !row.isStalled && (
                       <span className="adm2-dash">—</span>
                     )}
                   </div>
