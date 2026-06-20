@@ -235,6 +235,7 @@ export interface OnboardingData {
   achBankPhone: string;
   achBankAddress: string;
   achMandateActive: boolean;
+  zohoCustomerId: string;
   zohoPaymentId: string;
   zohoPaymentMethodId: string;
   zohoMandateId: string;
@@ -419,6 +420,7 @@ const INITIAL_DATA: OnboardingData = {
   achBankPhone: '',
   achBankAddress: '',
   achMandateActive: false,
+  zohoCustomerId: '',
   zohoPaymentId: '',
   zohoPaymentMethodId: '',
   zohoMandateId: '',

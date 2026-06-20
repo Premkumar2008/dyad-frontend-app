@@ -196,7 +196,7 @@ export const StepBankingPaymentSetup: React.FC<StepBankingPaymentSetupProps> = (
         || formData.routingNumber.length !== 9 || !formData.accountNumber || !formData.accountType) {
         return 'Please complete all operating account fields';
       }
-      if (!formData.achMandateActive) return 'Please set up ACH payment via Zoho Pay';
+      if (!formData.achMandateActive) return 'Please authorize recurring ACH via Zoho Pay';
     }
     if (id === 5) {
       if (!formData.sweepUseSection4) {
@@ -257,6 +257,7 @@ export const StepBankingPaymentSetup: React.FC<StepBankingPaymentSetupProps> = (
 
   const clearAchMandate = useCallback(() => {
     set('achMandateActive', false);
+    set('zohoCustomerId', '');
     set('zohoPaymentId', '');
     set('zohoPaymentMethodId', '');
     set('zohoMandateId', '');
@@ -559,6 +560,7 @@ export const StepBankingPaymentSetup: React.FC<StepBankingPaymentSetupProps> = (
               disabled={!formData.bankName || formData.routingNumber.length !== 9 || !formData.accountNumber}
               onMandateSaved={result => {
                 set('achMandateActive', true);
+                set('zohoCustomerId', result.customerId);
                 set('zohoPaymentId', result.paymentId);
                 set('zohoPaymentMethodId', result.paymentMethodId);
                 set('zohoMandateId', result.mandateId);

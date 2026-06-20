@@ -3,32 +3,37 @@ import type { ZohoPayDomain, ZohoPayInitConfig, ZohoPayWidgetSuccess } from '../
 
 export interface ZohoPayWidgetConfig {
   accountId: string;
-  apiKey: string;
   domain: ZohoPayDomain;
 }
 
-export interface CreatePaymentSessionRequest {
-  amount?: string;
-  currency?: string;
+export interface EnsureCustomerRequest {
+  name: string;
+  email: string;
+  phone?: string;
   onboardingId?: string;
-  email?: string;
-  name?: string;
+}
+
+export interface EnsureCustomerResponse {
+  customerId: string;
+}
+
+export interface CreatePaymentSessionRequest {
+  amount?: string | number;
+  currency?: string;
+  customerId: string;
+  plan?: string;
 }
 
 export interface CreatePaymentSessionResponse {
-  sessionId: string;
+  paymentsSessionId: string;
   amount: string;
   currencyCode: string;
 }
 
 export interface SaveMandateRequest {
+  customerId: string;
+  result: ZohoPayWidgetSuccess;
   onboardingId?: string;
-  paymentId?: string;
-  paymentMethodId?: string;
-  customerId?: string;
-  mandateId?: string;
-  sessionId?: string;
-  widgetResult?: ZohoPayWidgetSuccess;
 }
 
 export interface SaveMandateResponse {
@@ -52,13 +57,13 @@ const readString = (record: Record<string, unknown>, ...keys: string[]): string 
 
 export const getZohoPayWidgetConfig = (): ZohoPayWidgetConfig | null => {
   const accountId = import.meta.env.VITE_ZOHO_PAY_ACCOUNT_ID?.trim();
-  const apiKey = import.meta.env.VITE_ZOHO_PAY_API_KEY?.trim();
   const domain = import.meta.env.VITE_ZOHO_PAY_DOMAIN?.trim() || 'US';
 
-  if (!accountId || !apiKey) return null;
-  return { accountId, apiKey, domain };
+  if (!accountId) return null;
+  return { accountId, domain };
 };
 
+/** ZPayments init — account_id + domain only (otherOptions empty per Zoho checkout guide). */
 export const getZohoPayInitConfig = (): ZohoPayInitConfig | null => {
   const widgetConfig = getZohoPayWidgetConfig();
   if (!widgetConfig) return null;
@@ -66,7 +71,7 @@ export const getZohoPayInitConfig = (): ZohoPayInitConfig | null => {
   return {
     account_id: widgetConfig.accountId,
     domain: widgetConfig.domain,
-    otherOptions: { api_key: widgetConfig.apiKey },
+    otherOptions: {},
   };
 };
 
@@ -74,37 +79,67 @@ export const isZohoPayConfigured = (): boolean => Boolean(getZohoPayWidgetConfig
 
 export const isZohoPayMockMode = (): boolean => import.meta.env.VITE_ZOHO_PAY_USE_MOCK === 'true';
 
-export const getZohoPaySetupAmount = (): string => (
-  import.meta.env.VITE_ZOHO_PAY_SETUP_AMOUNT?.trim() || '49.99'
+export const getZohoPaySetupAmount = (): number => {
+  const raw = import.meta.env.VITE_ZOHO_PAY_SETUP_AMOUNT?.trim() || '49.99';
+  const parsed = Number.parseFloat(raw);
+  return Number.isNaN(parsed) ? 49.99 : parsed;
+};
+
+export const getZohoPayPlan = (): string => (
+  import.meta.env.VITE_ZOHO_PAY_PLAN?.trim() || 'monthly'
 );
 
-export const parseCreateSessionResponse = (data: unknown): CreatePaymentSessionResponse => {
-  const root = asRecord(data);
-  const nested = asRecord(root.data ?? root);
+export const parseEnsureCustomerResponse = (data: unknown): EnsureCustomerResponse => {
+  const nested = asRecord(asRecord(data).data ?? data);
+  const customerId = readString(nested, 'customerId', 'customer_id')
+    ?? readString(asRecord(nested.customer), 'customer_id');
 
-  const sessionId = readString(nested, 'sessionId', 'session_id', 'paymentsSessionId', 'payments_session_id')
-    ?? readString(asRecord(nested.payments_session), 'payments_session_id');
-
-  const amount = readString(nested, 'amount') ?? getZohoPaySetupAmount();
-  const currencyCode = readString(nested, 'currencyCode', 'currency_code', 'currency') ?? 'USD';
-
-  if (!sessionId) {
-    throw new Error('Backend did not return a payment session id');
+  if (!customerId) {
+    throw new Error('Backend did not return customerId');
   }
 
-  return { sessionId, amount, currencyCode };
+  return { customerId };
+};
+
+export const parseCreateSessionResponse = (data: unknown): CreatePaymentSessionResponse => {
+  const nested = asRecord(asRecord(data).data ?? data);
+
+  const paymentsSessionId = readString(nested, 'paymentsSessionId', 'payments_session_id', 'sessionId', 'session_id')
+    ?? readString(asRecord(nested.payments_session), 'payments_session_id');
+
+  const amount = readString(nested, 'amount') ?? String(getZohoPaySetupAmount());
+  const currencyCode = readString(nested, 'currencyCode', 'currency_code', 'currency') ?? 'USD';
+
+  if (!paymentsSessionId) {
+    throw new Error('Backend did not return payments_session_id');
+  }
+
+  return { paymentsSessionId, amount, currencyCode };
+};
+
+export const ensureCustomer = async (payload: EnsureCustomerRequest): Promise<EnsureCustomerResponse> => {
+  try {
+    const response = await api.post('/customer', {
+      name: payload.name,
+      email: payload.email,
+      phone: payload.phone,
+      onboardingId: payload.onboardingId,
+    });
+    return parseEnsureCustomerResponse(response.data);
+  } catch (error) {
+    throw new Error(handleApiError(error));
+  }
 };
 
 export const createPaymentSession = async (
-  payload: CreatePaymentSessionRequest = {},
+  payload: CreatePaymentSessionRequest,
 ): Promise<CreatePaymentSessionResponse> => {
   try {
     const response = await api.post('/create-session', {
       amount: payload.amount ?? getZohoPaySetupAmount(),
       currency: payload.currency ?? 'USD',
-      onboardingId: payload.onboardingId,
-      email: payload.email,
-      name: payload.name,
+      customerId: payload.customerId,
+      plan: payload.plan ?? getZohoPayPlan(),
     });
     return parseCreateSessionResponse(response.data);
   } catch (error) {
@@ -115,20 +150,18 @@ export const createPaymentSession = async (
 export const saveMandate = async (payload: SaveMandateRequest): Promise<SaveMandateResponse> => {
   try {
     const response = await api.post('/save-mandate', {
+      customerId: payload.customerId,
+      result: payload.result,
       onboardingId: payload.onboardingId,
-      session_id: payload.sessionId,
-      payment_id: payload.paymentId,
-      payment_method_id: payload.paymentMethodId,
-      customer_id: payload.customerId,
-      mandate_id: payload.mandateId,
-      ...payload.widgetResult,
     });
     const nested = asRecord(response.data?.data ?? response.data);
+    const result = asRecord(payload.result);
+
     return {
       success: nested.success !== false,
-      mandateId: readString(nested, 'mandateId', 'mandate_id'),
-      paymentId: readString(nested, 'paymentId', 'payment_id'),
-      paymentMethodId: readString(nested, 'paymentMethodId', 'payment_method_id'),
+      mandateId: readString(nested, 'mandateId', 'mandate_id') ?? readString(result, 'mandate_id'),
+      paymentId: readString(nested, 'paymentId', 'payment_id') ?? readString(result, 'payment_id'),
+      paymentMethodId: readString(nested, 'paymentMethodId', 'payment_method_id') ?? readString(result, 'payment_method_id'),
     };
   } catch (error) {
     throw new Error(handleApiError(error));

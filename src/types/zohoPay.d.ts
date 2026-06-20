@@ -3,9 +3,7 @@ export type ZohoPayDomain = 'US' | 'IN' | string;
 export interface ZohoPayInitConfig {
   account_id: string;
   domain: ZohoPayDomain;
-  otherOptions: {
-    api_key: string;
-  };
+  otherOptions: Record<string, unknown>;
 }
 
 export interface ZohoPayMandateOptions {
@@ -14,16 +12,15 @@ export interface ZohoPayMandateOptions {
 }
 
 export interface ZohoPayRequestPaymentMethodOptions {
-  amount?: string;
-  currency_code?: string;
   payments_session_id?: string;
-  payment_methods?: string[];
+  payment_method?: 'ach' | 'ach_debit' | 'card' | string;
+  amount?: string | number;
+  currency_code?: string;
   mandate?: ZohoPayMandateOptions;
+  payment_methods?: string[];
   currency_symbol?: string;
   business?: string;
   description?: string;
-  invoice_number?: string;
-  reference_number?: string;
   address?: {
     name?: string;
     email?: string;

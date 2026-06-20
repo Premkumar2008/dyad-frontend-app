@@ -1,16 +1,11 @@
 /**
- * Zoho Pay widget backend — create payment session + persist mandate result.
+ * Zoho Pay widget backend — customer, session, mandate persistence.
  *
- * Mount on your Express app:
- *   const zohoPay = require('./backend-examples/zoho-pay-widget');
- *   app.use('/api', zohoPay);
- *
- * Or run standalone:
  *   node backend-examples/zoho-pay-widget.js
  *
  * Env:
- *   VITE_ZOHO_PAY_ACCOUNT_ID
- *   VITE_ZOHO_PAY_API_KEY  (or ZOHO_OAUTH_TOKEN)
+ *   VITE_ZOHO_PAY_ACCOUNT_ID (or ZOHO_PAY_ACCOUNT_ID)
+ *   ZOHO_OAUTH_TOKEN (or VITE_ZOHO_PAY_API_KEY as fallback)
  */
 
 require('dotenv').config();
@@ -70,27 +65,42 @@ function zohoRequest(method, path, body) {
   });
 }
 
-async function createPaymentSession(amount, currency, description, email, name) {
+async function createOrFindCustomer(name, email, phone, onboardingId) {
+  const body = {
+    name: name || email,
+    email,
+    ...(phone ? { phone } : {}),
+    ...(onboardingId ? { meta_data: [{ key: 'onboarding_id', value: String(onboardingId) }] } : {}),
+  };
+
+  const data = await zohoRequest('POST', '/customers', body);
+  const customerId = data?.customer?.customer_id;
+  if (!customerId) throw new Error('Zoho did not return customer_id');
+  return customerId;
+}
+
+async function createPaymentSession(amount, currency, customerId, plan) {
+  const description = plan === 'monthly'
+    ? 'Dyad monthly recurring ACH authorization'
+    : `Dyad ${plan} recurring ACH authorization`;
+
   const data = await zohoRequest('POST', '/paymentsessions', {
     amount: Number.parseFloat(amount),
     currency,
     description,
+    customer_id: customerId,
     configurations: {
       allowed_payment_methods: ['ach_debit'],
-      hosted_page_parameters: {
-        email,
-        name: name || email,
-      },
     },
   });
 
   const session = data?.payments_session;
-  const sessionId = session?.payments_session_id;
-  if (!sessionId) throw new Error('Zoho did not return payments_session_id');
+  const paymentsSessionId = session?.payments_session_id;
+  if (!paymentsSessionId) throw new Error('Zoho did not return payments_session_id');
 
   return {
-    session_id: sessionId,
-    amount: String(session.amount ?? amount),
+    payments_session_id: paymentsSessionId,
+    amount: session.amount ?? amount,
     currency_code: session.currency ?? currency,
   };
 }
@@ -119,39 +129,44 @@ function readBody(req) {
   });
 }
 
+async function handleCustomer(body) {
+  const { name, email, phone, onboardingId } = body;
+  if (!email) throw new Error('email is required');
+
+  const customerId = await createOrFindCustomer(name, email, phone, onboardingId);
+  return { success: true, customerId, customer_id: customerId };
+}
+
 async function handleCreateSession(body) {
-  const amount = String(body.amount ?? '49.99');
+  const amount = body.amount ?? 49.99;
   const currency = body.currency ?? 'USD';
-  const description = body.description
-    ?? (body.onboardingId ? `Dyad ACH setup · ${body.onboardingId}` : 'Dyad ACH mandate setup');
+  const customerId = body.customerId ?? body.customer_id;
+  const plan = body.plan ?? 'monthly';
+  if (!customerId) throw new Error('customerId is required');
 
-  const session = await createPaymentSession(
-    amount,
-    currency,
-    description,
-    body.email,
-    body.name,
-  );
-
-  return { success: true, ...session };
+  const session = await createPaymentSession(amount, currency, customerId, plan);
+  return { success: true, plan, ...session };
 }
 
 async function handleSaveMandate(body) {
-  // Persist to your database — this example echoes identifiers for frontend confirmation.
-  const paymentId = body.payment_id ?? body.paymentId;
-  const paymentMethodId = body.payment_method_id ?? body.paymentMethodId;
-  const mandateId = body.mandate_id ?? body.mandateId ?? paymentMethodId;
+  const customerId = body.customerId ?? body.customer_id;
+  const result = body.result ?? body;
 
+  const paymentId = result.payment_id ?? result.paymentId;
+  const paymentMethodId = result.payment_method_id ?? result.paymentMethodId;
+  const mandateId = result.mandate_id ?? result.mandateId ?? paymentMethodId;
+
+  if (!customerId) throw new Error('customerId is required');
   if (!paymentId && !paymentMethodId && !mandateId) {
-    throw new Error('No payment or mandate identifiers in widget result');
+    throw new Error('No payment or mandate references in widget result');
   }
 
   return {
     success: true,
+    customer_id: customerId,
     payment_id: paymentId,
     payment_method_id: paymentMethodId,
     mandate_id: mandateId,
-    session_id: body.session_id ?? body.sessionId,
     onboarding_id: body.onboardingId ?? body.onboarding_id,
   };
 }
@@ -167,6 +182,15 @@ async function routeRequest(req, res) {
   }
 
   const url = req.url?.split('?')[0];
+
+  if (req.method === 'POST' && url === '/api/customer') {
+    try {
+      const body = await readBody(req);
+      return sendJson(res, 201, await handleCustomer(body));
+    } catch (err) {
+      return sendJson(res, 500, { success: false, message: err.message });
+    }
+  }
 
   if (req.method === 'POST' && url === '/api/create-session') {
     try {
@@ -196,6 +220,7 @@ async function routeRequest(req, res) {
 if (require.main === module) {
   http.createServer(routeRequest).listen(PORT, () => {
     console.log(`Zoho Pay widget server → http://localhost:${PORT}`);
+    console.log('  POST /api/customer');
     console.log('  POST /api/create-session');
     console.log('  POST /api/save-mandate');
   });

@@ -1,8 +1,9 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
-import { ZOHO_PAY_MERCHANT_NAME, ZOHO_RECURRING_MANDATE_DESCRIPTION } from '../../../constants/zohoPay';
 import {
   createPaymentSession,
+  ensureCustomer,
+  getZohoPayPlan,
   getZohoPaySetupAmount,
   isZohoPayConfigured,
   isZohoPayMockMode,
@@ -12,6 +13,7 @@ import type { ZohoPayWidgetSuccess } from '../../../types/zohoPay';
 import { closeZPaymentsInstance, getZPaymentsInstance, loadZohoPayScript } from '../../../utils/zohoPayLoader';
 
 export interface ZohoAchMandateResult {
+  customerId: string;
   paymentId: string;
   paymentMethodId: string;
   mandateId: string;
@@ -28,6 +30,13 @@ interface ZohoAchSetupWidgetProps {
   paymentMethodId?: string;
   disabled?: boolean;
   onMandateSaved: (result: ZohoAchMandateResult) => void;
+}
+
+interface CheckoutContext {
+  customerId: string;
+  paymentsSessionId: string;
+  amount: number;
+  currencyCode: string;
 }
 
 const isWidgetClosedError = (err: unknown): boolean => (
@@ -60,125 +69,170 @@ export const ZohoAchSetupWidget: React.FC<ZohoAchSetupWidgetProps> = ({
   disabled = false,
   onMandateSaved,
 }) => {
-  const [loading, setLoading] = useState(false);
+  const [checkoutReady, setCheckoutReady] = useState(false);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [payLoading, setPayLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+
+  const checkoutRef = useRef<CheckoutContext | null>(null);
+  const startCheckoutRef = useRef<(() => Promise<void>) | null>(null);
 
   const configured = isZohoPayConfigured();
   const mockMode = isZohoPayMockMode();
   const setupAmount = getZohoPaySetupAmount();
 
-  useEffect(() => {
-    if ((configured || mockMode) && !mockMode) {
-      loadZohoPayScript().catch(() => {
-        // Handled again when the user clicks Set up ACH Payment.
-      });
-    }
-  }, [configured, mockMode]);
+  const startCheckout = useCallback(async () => {
+    if (mandateActive || mockMode) return;
 
-  const handleSetupAch = useCallback(async () => {
-    if (disabled || mandateActive || loading) return;
+    if (!customerEmail.trim()) return;
 
-    if (!customerEmail.trim()) {
-      toast.error('Contact email is required before setting up ACH');
-      return;
-    }
+    if (!configured) return;
 
-    if (!mockMode && !configured) {
-      toast.error('Zoho Pay is not configured. Set VITE_ZOHO_PAY_ACCOUNT_ID and VITE_ZOHO_PAY_API_KEY.');
-      return;
-    }
-
-    setLoading(true);
+    setCheckoutLoading(true);
     setErrorMessage('');
+    setCheckoutReady(false);
+    checkoutRef.current = null;
 
     try {
-      if (mockMode) {
-        const mockResult: ZohoAchMandateResult = {
-          sessionId: `MOCK-SES-${Date.now()}`,
-          paymentId: `MOCK-PAY-${Math.random().toString(36).slice(2, 8).toUpperCase()}`,
-          paymentMethodId: `MOCK-PM-${Math.random().toString(36).slice(2, 8).toUpperCase()}`,
-          mandateId: `MOCK-MND-${Math.random().toString(36).slice(2, 8).toUpperCase()}`,
-        };
-        onMandateSaved(mockResult);
-        toast.success('ACH mandate saved (demo mode)');
-        return;
-      }
+      await loadZohoPayScript();
+
+      const { customerId } = await ensureCustomer({
+        name: customerName.trim() || customerEmail.trim(),
+        email: customerEmail.trim(),
+        phone: customerPhone.trim() || undefined,
+        onboardingId: onboardingId.trim() || undefined,
+      });
 
       const session = await createPaymentSession({
         amount: setupAmount,
         currency: 'USD',
-        onboardingId: onboardingId.trim() || undefined,
-        email: customerEmail.trim(),
-        name: customerName.trim() || customerEmail.trim(),
+        customerId,
+        plan: getZohoPayPlan(),
       });
 
-      const instance = await getZPaymentsInstance();
+      await getZPaymentsInstance();
 
-      try {
-        const widgetResult = await instance.requestPaymentMethod({
-          amount: session.amount,
-          currency_code: session.currencyCode,
-          payments_session_id: session.sessionId,
-          payment_methods: ['us_bank_account'],
-          mandate: {
-            type: 'recurring',
-            description: ZOHO_RECURRING_MANDATE_DESCRIPTION,
-          },
-          business: ZOHO_PAY_MERCHANT_NAME,
-          description: ZOHO_RECURRING_MANDATE_DESCRIPTION,
-          address: {
-            name: customerName.trim() || undefined,
-            email: customerEmail.trim() || undefined,
-            phone: customerPhone.trim() || undefined,
-          },
-        });
-
-        const ids = readWidgetIds(widgetResult);
-        if (!ids.paymentMethodId && !ids.paymentId) {
-          throw new Error('Zoho Pay did not return payment or mandate identifiers');
-        }
-
-        await saveMandate({
-          onboardingId: onboardingId.trim() || undefined,
-          sessionId: session.sessionId,
-          paymentId: ids.paymentId || undefined,
-          paymentMethodId: ids.paymentMethodId || undefined,
-          mandateId: ids.mandateId || undefined,
-          customerId: typeof widgetResult.customer_id === 'string' ? widgetResult.customer_id : undefined,
-          widgetResult,
-        });
-
-        onMandateSaved({
-          sessionId: session.sessionId,
-          paymentId: ids.paymentId || ids.paymentMethodId,
-          paymentMethodId: ids.paymentMethodId || ids.paymentId,
-          mandateId: ids.mandateId || ids.paymentMethodId || ids.paymentId,
-        });
-        toast.success('ACH payment method saved');
-      } finally {
-        await closeZPaymentsInstance();
-      }
+      checkoutRef.current = {
+        customerId,
+        paymentsSessionId: session.paymentsSessionId,
+        amount: Number.parseFloat(session.amount) || setupAmount,
+        currencyCode: session.currencyCode,
+      };
+      setCheckoutReady(true);
     } catch (err) {
-      if (isWidgetClosedError(err)) return;
-      const message = err instanceof Error ? err.message : 'Unable to set up ACH payment';
+      const message = err instanceof Error ? err.message : 'Unable to prepare Zoho Pay checkout';
       setErrorMessage(message);
-      toast.error(message);
     } finally {
-      setLoading(false);
+      setCheckoutLoading(false);
     }
   }, [
     configured,
     customerEmail,
     customerName,
     customerPhone,
+    mandateActive,
+    mockMode,
+    onboardingId,
+    setupAmount,
+  ]);
+
+  startCheckoutRef.current = startCheckout;
+
+  useEffect(() => {
+    if (!mandateActive && !mockMode && configured && customerEmail.trim()) {
+      startCheckoutRef.current?.();
+    }
+  }, [mandateActive, mockMode, configured, customerEmail, customerName, onboardingId]);
+
+  const handleAuthorizeAch = useCallback(async () => {
+    if (disabled || mandateActive || payLoading) return;
+
+    if (!customerEmail.trim()) {
+      toast.error('Contact email is required before authorizing ACH');
+      return;
+    }
+
+    if (mockMode) {
+      const mockResult: ZohoAchMandateResult = {
+        customerId: `MOCK-CUS-${Math.random().toString(36).slice(2, 8).toUpperCase()}`,
+        sessionId: `MOCK-SES-${Date.now()}`,
+        paymentId: `MOCK-PAY-${Math.random().toString(36).slice(2, 8).toUpperCase()}`,
+        paymentMethodId: `MOCK-PM-${Math.random().toString(36).slice(2, 8).toUpperCase()}`,
+        mandateId: `MOCK-MND-${Math.random().toString(36).slice(2, 8).toUpperCase()}`,
+      };
+      onMandateSaved(mockResult);
+      toast.success('ACH mandate saved (demo mode)');
+      return;
+    }
+
+    if (!configured) {
+      toast.error('Zoho Pay is not configured. Set VITE_ZOHO_PAY_ACCOUNT_ID.');
+      return;
+    }
+
+    if (!checkoutRef.current) {
+      toast.error('Checkout is still loading — please wait');
+      return;
+    }
+
+    const checkout = checkoutRef.current;
+    setPayLoading(true);
+    setErrorMessage('');
+
+    try {
+      const instance = await getZPaymentsInstance();
+
+      try {
+        const result = await instance.requestPaymentMethod({
+          payments_session_id: checkout.paymentsSessionId,
+          payment_method: 'ach',
+          amount: checkout.amount,
+          currency_code: checkout.currencyCode,
+          mandate: { type: 'recurring' },
+        });
+
+        const ids = readWidgetIds(result);
+        if (!ids.paymentMethodId && !ids.paymentId) {
+          throw new Error('Zoho Pay did not return payment or mandate references');
+        }
+
+        await saveMandate({
+          customerId: checkout.customerId,
+          result,
+          onboardingId: onboardingId.trim() || undefined,
+        });
+
+        onMandateSaved({
+          customerId: checkout.customerId,
+          sessionId: checkout.paymentsSessionId,
+          paymentId: ids.paymentId || ids.paymentMethodId,
+          paymentMethodId: ids.paymentMethodId || ids.paymentId,
+          mandateId: ids.mandateId || ids.paymentMethodId || ids.paymentId,
+        });
+        toast.success('Recurring ACH authorized');
+      } finally {
+        await closeZPaymentsInstance();
+      }
+    } catch (err) {
+      if (isWidgetClosedError(err)) return;
+      const message = err instanceof Error ? err.message : 'Payment authorization failed';
+      setErrorMessage(message);
+      toast.error(message);
+    } finally {
+      setPayLoading(false);
+    }
+  }, [
+    configured,
+    customerEmail,
     disabled,
-    loading,
     mandateActive,
     mockMode,
     onboardingId,
     onMandateSaved,
-    setupAmount,
+    payLoading,
   ]);
+
+  const loading = checkoutLoading || payLoading;
 
   return (
     <div className="zoho-ach-setup">
@@ -187,15 +241,17 @@ export const ZohoAchSetupWidget: React.FC<ZohoAchSetupWidgetProps> = ({
       )}
       {!mandateActive && !mockMode && !configured && (
         <p className="zoho-ach-setup-note zoho-ach-setup-note--warn">
-          Add VITE_ZOHO_PAY_ACCOUNT_ID and VITE_ZOHO_PAY_API_KEY to enable Zoho Pay.
+          Add VITE_ZOHO_PAY_ACCOUNT_ID to enable Zoho Pay.
         </p>
       )}
+
+      <div id="zpay-card" className="zoho-ach-setup-card" aria-hidden={mandateActive} />
 
       {mandateActive ? (
         <div className="zoho-ach-setup-done">
           <span className="zoho-ach-setup-done-icon" aria-hidden="true">✓</span>
           <div>
-            <div className="zoho-ach-setup-done-title">ACH mandate active</div>
+            <div className="zoho-ach-setup-done-title">Recurring ACH authorized</div>
             {(paymentMethodId || paymentId) && (
               <div className="zoho-ach-setup-done-ref">
                 Ref: {paymentMethodId || paymentId}
@@ -208,11 +264,15 @@ export const ZohoAchSetupWidget: React.FC<ZohoAchSetupWidgetProps> = ({
           type="button"
           id="pay-btn"
           className={`zoho-ach-setup-btn${loading ? ' zoho-ach-setup-btn--loading' : ''}`}
-          onClick={handleSetupAch}
-          disabled={disabled || loading}
+          onClick={handleAuthorizeAch}
+          disabled={disabled || loading || (!mockMode && configured && !checkoutReady)}
           aria-busy={loading}
         >
-          {loading ? 'Opening Zoho Pay…' : 'Set up ACH Payment'}
+          {payLoading
+            ? 'Opening Zoho Pay…'
+            : checkoutLoading
+              ? 'Preparing checkout…'
+              : 'Authorize Recurring ACH'}
         </button>
       )}
 

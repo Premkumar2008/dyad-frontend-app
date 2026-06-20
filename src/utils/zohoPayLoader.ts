@@ -2,7 +2,6 @@ import { ZOHO_PAY_SCRIPT_URL } from '../constants/zohoPay';
 import { getZohoPayInitConfig } from '../services/zohoPayService';
 import type { ZohoPayInitConfig, ZPaymentsInstance } from '../types/zohoPay';
 
-let scriptPromise: Promise<void> | null = null;
 let zPaymentsInstance: ZPaymentsInstance | null = null;
 
 export function loadZohoPayScript(): Promise<void> {
@@ -10,25 +9,20 @@ export function loadZohoPayScript(): Promise<void> {
     return Promise.resolve();
   }
 
-  if (!scriptPromise) {
-    scriptPromise = new Promise((resolve, reject) => {
-      const existing = document.querySelector<HTMLScriptElement>(`script[src="${ZOHO_PAY_SCRIPT_URL}"]`);
-      if (existing) {
-        existing.addEventListener('load', () => resolve());
-        existing.addEventListener('error', () => reject(new Error('Failed to load Zoho Pay script')));
+  return new Promise((resolve, reject) => {
+    const existing = document.querySelector<HTMLScriptElement>(`script[src="${ZOHO_PAY_SCRIPT_URL}"]`);
+    if (existing) {
+      if (typeof window.ZPayments === 'function') {
+        resolve();
         return;
       }
+      existing.addEventListener('load', () => resolve());
+      existing.addEventListener('error', () => reject(new Error('Failed to load Zoho Pay script')));
+      return;
+    }
 
-      const script = document.createElement('script');
-      script.src = ZOHO_PAY_SCRIPT_URL;
-      script.async = true;
-      script.onload = () => resolve();
-      script.onerror = () => reject(new Error('Failed to load Zoho Pay script'));
-      document.head.appendChild(script);
-    });
-  }
-
-  return scriptPromise;
+    reject(new Error('Zoho Pay script not found — add zpayments.js to index.html'));
+  });
 }
 
 export async function getZPaymentsInstance(config?: ZohoPayInitConfig): Promise<ZPaymentsInstance> {
@@ -40,7 +34,7 @@ export async function getZPaymentsInstance(config?: ZohoPayInitConfig): Promise<
 
   const initConfig = config ?? getZohoPayInitConfig();
   if (!initConfig) {
-    throw new Error('Zoho Pay is not configured. Set VITE_ZOHO_PAY_ACCOUNT_ID and VITE_ZOHO_PAY_API_KEY.');
+    throw new Error('Zoho Pay is not configured. Set VITE_ZOHO_PAY_ACCOUNT_ID.');
   }
 
   if (!zPaymentsInstance) {
@@ -57,4 +51,8 @@ export async function closeZPaymentsInstance(): Promise<void> {
   } catch {
     // Widget may already be closed.
   }
+}
+
+export function resetZPaymentsInstance(): void {
+  zPaymentsInstance = null;
 }

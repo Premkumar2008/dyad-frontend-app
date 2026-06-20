@@ -8033,6 +8033,18 @@
   margin: 20px 0 16px;
 }
 
+.zoho-ach-setup-card {
+  min-height: 48px;
+  margin-bottom: 14px;
+  border: 1px dashed #d0d5dd;
+  border-radius: var(--ob-radius);
+  background: #fafbfc;
+}
+
+.zoho-ach-setup-card:empty {
+  display: none;
+}
+
 .zoho-ach-setup-note {
   margin: 0 0 10px;
   font-size: 0.75rem;
