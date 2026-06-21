@@ -8128,3 +8128,11 @@
   font-size: 0.75rem;
   color: #c62828;
 }
+
+/* Zoho Pay checkout overlay — above onboarding sidebar; never hide #root */
+body > div[id*="zpay"]:not(#root),
+body > div[class*="zpay"]:not(#root),
+body > iframe[src*="zoho"],
+body > iframe[src*="zpay"] {
+  z-index: 99999 !important;
+}

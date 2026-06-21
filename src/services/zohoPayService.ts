@@ -28,6 +28,7 @@ export interface CreatePaymentSessionResponse {
   paymentsSessionId: string;
   amount: string;
   currencyCode: string;
+  apiKey?: string;
 }
 
 export interface SaveMandateRequest {
@@ -63,15 +64,17 @@ export const getZohoPayWidgetConfig = (): ZohoPayWidgetConfig | null => {
   return { accountId, domain };
 };
 
-/** ZPayments init — account_id + domain only (otherOptions empty per Zoho checkout guide). */
-export const getZohoPayInitConfig = (): ZohoPayInitConfig | null => {
+/** ZPayments init — uses widget api_key from env or create-session response. */
+export const getZohoPayInitConfig = (apiKey?: string): ZohoPayInitConfig | null => {
   const widgetConfig = getZohoPayWidgetConfig();
   if (!widgetConfig) return null;
+
+  const key = apiKey?.trim() || import.meta.env.VITE_ZOHO_PAY_API_KEY?.trim();
 
   return {
     account_id: widgetConfig.accountId,
     domain: widgetConfig.domain,
-    otherOptions: {},
+    otherOptions: key ? { api_key: key } : {},
   };
 };
 
@@ -109,15 +112,20 @@ export const parseCreateSessionResponse = (data: unknown): CreatePaymentSessionR
 
   const amount = readString(nested, 'amount') ?? String(getZohoPaySetupAmount());
   const currencyCode = readString(nested, 'currencyCode', 'currency_code', 'currency') ?? 'USD';
+  const apiKey = readString(nested, 'apiKey', 'api_key');
 
   if (!paymentsSessionId) {
     throw new Error('Backend did not return payments_session_id');
   }
 
-  return { paymentsSessionId, amount, currencyCode };
+  return { paymentsSessionId, amount, currencyCode, apiKey };
 };
 
 export const ensureCustomer = async (payload: EnsureCustomerRequest): Promise<EnsureCustomerResponse> => {
+  if (!payload.onboardingId?.trim()) {
+    throw new Error('Onboarding ID is required before Zoho Pay checkout');
+  }
+
   try {
     const response = await api.post('/customer', {
       name: payload.name,
