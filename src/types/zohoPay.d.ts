@@ -22,6 +22,8 @@ export interface ZohoPayRequestPaymentMethodOptions {
   currency_code?: string;
   mandate?: ZohoPayMandateOptions;
   payment_methods?: string[];
+  customer_id?: string;
+  payment_method_session_id?: string;
   currency_symbol?: string;
   business?: string;
   description?: string;

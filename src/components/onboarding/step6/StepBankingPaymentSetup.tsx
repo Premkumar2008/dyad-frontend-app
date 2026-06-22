@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { ChevronDown, ChevronUp, Eye, EyeOff, ShieldCheck } from 'lucide-react';
+import { ChevronDown, ChevronUp, ShieldCheck } from 'lucide-react';
 import toast from 'react-hot-toast';
 import type { OnboardingData } from '../../../pages/DyadOnboarding';
 import { EnrollmentSaveNotice } from '../EnrollmentSaveNotice';
@@ -101,10 +101,11 @@ const AttestBox: React.FC<{
   onChange: (v: boolean) => void;
   children: React.ReactNode;
   error?: string;
-}> = ({ checked, onChange, children, error }) => (
+  disabled?: boolean;
+}> = ({ checked, onChange, children, error, disabled = false }) => (
   <>
-    <label className={`ob-bank-attest${checked ? ' ob-bank-attest-checked' : ''}`}>
-      <input type="checkbox" checked={checked} onChange={e => onChange(e.target.checked)} />
+    <label className={`ob-bank-attest${checked ? ' ob-bank-attest-checked' : ''}${disabled ? ' ob-bank-attest-disabled' : ''}`}>
+      <input type="checkbox" checked={checked} disabled={disabled} onChange={e => onChange(e.target.checked)} />
       <div className="ob-bank-attest-text">{children}</div>
     </label>
     {error && <div className="ob-bank-attest-error">{error}</div>}
@@ -119,7 +120,6 @@ export const StepBankingPaymentSetup: React.FC<StepBankingPaymentSetupProps> = (
     () => getInitialOpenSections(formData),
   );
   const [attestErrors, setAttestErrors] = useState<Partial<Record<BankingSectionId, string>>>({});
-  const [showAccNum, setShowAccNum] = useState(false);
   const [showComplete, setShowComplete] = useState(false);
 
   const signerFirst = formData.signerFirstName || formData.firstName;
@@ -192,10 +192,6 @@ export const StepBankingPaymentSetup: React.FC<StepBankingPaymentSetupProps> = (
     }
     if (id === 3 && !formData.w9Signed) return 'Please generate and sign the W-9 in this section to complete it.';
     if (id === 4) {
-      if (!formData.bankName || !formData.achBankPhone || !formData.achBankAddress
-        || formData.routingNumber.length !== 9 || !formData.accountNumber || !formData.accountType) {
-        return 'Please complete all operating account fields';
-      }
       if (!formData.achMandateActive) return 'Please authorize recurring ACH via Zoho Pay';
     }
     if (id === 5) {
@@ -204,8 +200,8 @@ export const StepBankingPaymentSetup: React.FC<StepBankingPaymentSetupProps> = (
           || formData.sweepOtherRouting.length !== 9 || !formData.sweepOtherAccount) {
           return 'Please complete alternate sweep destination account fields';
         }
-      } else if (formData.routingNumber.length !== 9 || !formData.accountNumber) {
-        return 'Complete Section 4 operating account first';
+      } else if (!formData.achMandateActive) {
+        return 'Complete Section 4 ACH authorization first';
       }
     }
     if (id === 6) {
@@ -241,40 +237,22 @@ export const StepBankingPaymentSetup: React.FC<StepBankingPaymentSetupProps> = (
     const attestKey = BANKING_SECTION_ATTEST_FIELD[id];
     const label = BANKING_SECTION_CONTINUE_LABEL[id];
     if (!attestKey || !label) return null;
+
+    const paymentRequired = id === 4 && !formData.achMandateActive;
+    const canContinue = Boolean(formData[attestKey]) && !paymentRequired;
+
     return (
       <div className="ob-agreement-sc2">
         <button
           type="button"
           className="ob-agreement-bc2"
-          disabled={!formData[attestKey]}
+          disabled={!canContinue}
           onClick={() => handleSectionContinue(id)}
         >
           {trimBtnArrow(label)} <ObArrowRight />
         </button>
       </div>
     );
-  };
-
-  const clearAchMandate = useCallback(() => {
-    set('achMandateActive', false);
-    set('zohoCustomerId', '');
-    set('zohoPaymentId', '');
-    set('zohoPaymentMethodId', '');
-    set('zohoMandateId', '');
-    set('step6Sec4Attested', false);
-    set('step6Sec4Complete', false);
-  }, [set]);
-
-  const syncAchToLegacy = (field: string, value: string) => {
-    if (formData.achMandateActive) {
-      clearAchMandate();
-      toast('Bank account changed — please set up ACH payment again', { icon: '⚠️' });
-    }
-    if (field === 'bankName') set('bankName', value);
-    if (field === 'routing') set('routingNumber', value.replace(/\D/g, '').slice(0, 9));
-    if (field === 'account') set('accountNumber', value.replace(/\D/g, ''));
-    if (field === 'type') set('accountType', value.replace(' Account', ''));
-    set('accountHolderName', formData.entityLegalName || formData.groupLegalName || formData.organizationName);
   };
 
   const sweepDisplay = useMemo(() => {
@@ -286,11 +264,12 @@ export const StepBankingPaymentSetup: React.FC<StepBankingPaymentSetupProps> = (
         account: formData.sweepOtherAccount ? '••••' + formData.sweepOtherAccount.slice(-4) : '-',
       };
     }
+    const linked = formData.achMandateActive;
     return {
-      bank: formData.bankName || 'Not yet entered in Section 4',
-      type: formData.accountType ? `${formData.accountType} Account` : 'Not yet selected in Section 4',
-      routing: formData.routingNumber || 'Not yet entered in Section 4',
-      account: formData.accountNumber ? '••••' + formData.accountNumber.slice(-4) : 'Not yet entered in Section 4',
+      bank: linked ? 'Linked via Zoho Pay ACH' : 'Complete Section 4 ACH authorization',
+      type: linked ? 'Authorized' : '-',
+      routing: linked ? 'On file' : '-',
+      account: linked ? 'On file' : '-',
     };
   }, [formData]);
 
@@ -501,54 +480,7 @@ export const StepBankingPaymentSetup: React.FC<StepBankingPaymentSetupProps> = (
         {renderHeader(4)}
         {openSections[4] && sectionStatus[4] !== 'locked' && (
           <div className="ob-step6-sec-body">
-            <div className="ob-callout ob-callout-warn">
-              <strong>Important Distinction.</strong> The bank account information below must be your practice&rsquo;s <strong>existing operating account</strong>, the account from which Dyad will debit monthly service fees. This is <em>not</em> the new Dyad lockbox account being established through Live Oak Bank. The lockbox account will be provisioned separately upon completion of enrollment.
-            </div>
             <AchDocumentBody />
-            <div className="ob-form-section-label">Provider&rsquo;s Existing Operating Account (Account to be Debited)</div>
-            <div className="ob-form-row">
-              <div className="ob-field">
-                <label className="ob-label">Bank Name <span className="ob-req">*</span></label>
-                <input className="ob-input" value={formData.bankName} onChange={e => syncAchToLegacy('bankName', e.target.value)} placeholder="Enter your current bank name" />
-              </div>
-              <div className="ob-field">
-                <label className="ob-label">Bank Phone <span className="ob-req">*</span></label>
-                <input className="ob-input" value={formData.achBankPhone} onChange={e => set('achBankPhone', e.target.value)} placeholder="(555) 000-0000" />
-              </div>
-            </div>
-            <div className="ob-field">
-              <label className="ob-label">Bank Address <span className="ob-req">*</span></label>
-              <input className="ob-input" value={formData.achBankAddress} onChange={e => set('achBankAddress', e.target.value)} placeholder="Full bank branch address" />
-            </div>
-            <div className="ob-form-row">
-              <div className="ob-field">
-                <label className="ob-label">Routing Number (ABA) <span className="ob-req">*</span></label>
-                <input className="ob-input" maxLength={9} value={formData.routingNumber} onChange={e => syncAchToLegacy('routing', e.target.value)} placeholder="9-digit routing number" />
-              </div>
-              <div className="ob-field">
-                <label className="ob-label">Account Number <span className="ob-req">*</span></label>
-                <div className="ob-input-icon-wrap">
-                  <input
-                    type={showAccNum ? 'text' : 'password'}
-                    className="ob-input ob-input-with-icon"
-                    value={formData.accountNumber}
-                    onChange={e => syncAchToLegacy('account', e.target.value)}
-                    placeholder="Account number"
-                  />
-                  <button type="button" className="ob-input-icon-btn" onClick={() => setShowAccNum(v => !v)} tabIndex={-1}>
-                    {showAccNum ? <EyeOff size={16} /> : <Eye size={16} />}
-                  </button>
-                </div>
-              </div>
-            </div>
-            <div className="ob-field">
-              <label className="ob-label">Account Type <span className="ob-req">*</span></label>
-              <select className="ob-input ob-select" value={formData.accountType ? `${formData.accountType} Account` : ''} onChange={e => syncAchToLegacy('type', e.target.value)}>
-                <option value="">Select</option>
-                <option>Checking Account</option>
-                <option>Savings Account</option>
-              </select>
-            </div>
             <ZohoAchSetupWidget
               customerName={signerName}
               customerEmail={signerEmail}
@@ -557,7 +489,6 @@ export const StepBankingPaymentSetup: React.FC<StepBankingPaymentSetupProps> = (
               mandateActive={formData.achMandateActive}
               paymentId={formData.zohoPaymentId}
               paymentMethodId={formData.zohoPaymentMethodId}
-              disabled={!formData.bankName || formData.routingNumber.length !== 9 || !formData.accountNumber}
               onMandateSaved={result => {
                 set('achMandateActive', true);
                 set('zohoCustomerId', result.customerId);
@@ -570,6 +501,7 @@ export const StepBankingPaymentSetup: React.FC<StepBankingPaymentSetupProps> = (
               checked={formData.step6Sec4Attested}
               onChange={c => handleAttest(4, c, 'step6Sec4Attested')}
               error={attestErrors[4]}
+              disabled={!formData.achMandateActive}
             >
               {ACH_ATTEST_TEXT}
             </AttestBox>
@@ -599,7 +531,7 @@ export const StepBankingPaymentSetup: React.FC<StepBankingPaymentSetupProps> = (
               <div className="ob-bank-sw-toggle">
                 <label className={`ob-bank-sw-radio${formData.sweepUseSection4 ? ' ob-bank-sw-radio-sel' : ''}`}>
                   <input type="radio" name="sw-acct" checked={formData.sweepUseSection4} onChange={() => set('sweepUseSection4', true)} />
-                  Use the account from Section 4 (recommended)
+                  Use the account from Section 4 ACH authorization (recommended)
                 </label>
                 <label className={`ob-bank-sw-radio${!formData.sweepUseSection4 ? ' ob-bank-sw-radio-sel' : ''}`}>
                   <input type="radio" name="sw-acct" checked={!formData.sweepUseSection4} onChange={() => set('sweepUseSection4', false)} />
@@ -611,23 +543,23 @@ export const StepBankingPaymentSetup: React.FC<StepBankingPaymentSetupProps> = (
                   <div className="ob-bank-sw-grid">
                     <div>
                       <div className="ob-bank-sw-dl">Bank Name</div>
-                      <div className={`ob-bank-sw-dv${!formData.bankName ? ' ob-bank-sw-dv-empty' : ''}`}>{sweepDisplay.bank}</div>
+                      <div className={`ob-bank-sw-dv${!formData.achMandateActive ? ' ob-bank-sw-dv-empty' : ''}`}>{sweepDisplay.bank}</div>
                     </div>
                     <div>
                       <div className="ob-bank-sw-dl">Account Type</div>
-                      <div className={`ob-bank-sw-dv${!formData.accountType ? ' ob-bank-sw-dv-empty' : ''}`}>{sweepDisplay.type}</div>
+                      <div className={`ob-bank-sw-dv${!formData.achMandateActive ? ' ob-bank-sw-dv-empty' : ''}`}>{sweepDisplay.type}</div>
                     </div>
                     <div>
                       <div className="ob-bank-sw-dl">Routing Number (ABA)</div>
-                      <div className={`ob-bank-sw-dv${formData.routingNumber.length !== 9 ? ' ob-bank-sw-dv-empty' : ''}`}>{sweepDisplay.routing}</div>
+                      <div className={`ob-bank-sw-dv${!formData.achMandateActive ? ' ob-bank-sw-dv-empty' : ''}`}>{sweepDisplay.routing}</div>
                     </div>
                     <div>
                       <div className="ob-bank-sw-dl">Account Number</div>
-                      <div className={`ob-bank-sw-dv${!formData.accountNumber ? ' ob-bank-sw-dv-empty' : ''}`}>{sweepDisplay.account}</div>
+                      <div className={`ob-bank-sw-dv${!formData.achMandateActive ? ' ob-bank-sw-dv-empty' : ''}`}>{sweepDisplay.account}</div>
                     </div>
                   </div>
                   <div className="ob-bank-sw-display-foot">
-                    This information is pulled from your bank account in Section 4 (used for fee debits). The same account will receive your weekly sweeps. To use a different account exclusively for sweeps, choose &ldquo;Specify a different account&rdquo; above.
+                    Bank details are collected securely through Zoho Pay in Section 4. The same authorized account will receive your weekly sweeps. To use a different account exclusively for sweeps, choose &ldquo;Specify a different account&rdquo; above.
                   </div>
                 </div>
               ) : (

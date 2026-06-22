@@ -6562,6 +6562,15 @@
   background: #eef6fb;
 }
 
+.ob-bank-attest-disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.ob-bank-attest-disabled:hover {
+  border-color: #d0d5dd;
+}
+
 .ob-bank-attest input {
   width: 18px;
   height: 18px;
@@ -8030,7 +8039,16 @@
 
 /* Zoho ACH setup widget (Step 6) */
 .zoho-ach-setup {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   margin: 20px 0 16px;
+  text-align: center;
+}
+
+.zoho-ach-setup-note {
+  width: 100%;
+  max-width: 520px;
 }
 
 .zoho-ach-setup-card {
@@ -8092,6 +8110,8 @@
   display: flex;
   align-items: center;
   gap: 12px;
+  width: 100%;
+  max-width: 480px;
   padding: 14px 16px;
   border: 1.5px solid #a5d6a7;
   border-radius: var(--ob-radius);
@@ -8124,6 +8144,8 @@
 }
 
 .zoho-ach-setup-error {
+  width: 100%;
+  max-width: 520px;
   margin: 10px 0 0;
   font-size: 0.75rem;
   color: #c62828;

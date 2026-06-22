@@ -4,14 +4,14 @@ import { ZOHO_PAY_MERCHANT_NAME } from '../../../constants/zohoPay';
 import {
   createPaymentSession,
   ensureCustomer,
+  finalizeZohoSubscription,
   getZohoPayInitConfig,
   getZohoPayPlan,
   getZohoPaySetupAmount,
   isZohoPayConfigured,
   isZohoPayMockMode,
-  saveMandate,
 } from '../../../services/zohoPayService';
-import type { ZohoPayWidgetSuccess } from '../../../types/zohoPay';
+import type { ZohoPayRequestPaymentMethodOptions, ZohoPayWidgetSuccess } from '../../../types/zohoPay';
 import { formatZohoPayError, isZohoWidgetClosedError } from '../../../utils/zohoPayErrors';
 import {
   closeZPaymentsInstanceSafely,
@@ -27,6 +27,11 @@ export interface ZohoAchMandateResult {
   paymentMethodId: string;
   mandateId: string;
   sessionId: string;
+  subscriptionStatus?: string;
+  subscriptionNextCharge?: string;
+  plan?: string;
+  amount?: string;
+  currency?: string;
 }
 
 interface ZohoAchSetupWidgetProps {
@@ -51,18 +56,6 @@ interface CheckoutContext {
 
 const WIDGET_TIMEOUT_MS = 120_000;
 
-const readWidgetIds = (result: ZohoPayWidgetSuccess) => {
-  const paymentId = typeof result.payment_id === 'string' ? result.payment_id : '';
-  const paymentMethodId = typeof result.payment_method_id === 'string'
-    ? result.payment_method_id
-    : (typeof result.mandate_id === 'string' ? result.mandate_id : '');
-  const mandateId = typeof result.mandate_id === 'string'
-    ? result.mandate_id
-    : paymentMethodId;
-
-  return { paymentId, paymentMethodId, mandateId };
-};
-
 export const ZohoAchSetupWidget: React.FC<ZohoAchSetupWidgetProps> = ({
   customerName = '',
   customerEmail = '',
@@ -77,6 +70,7 @@ export const ZohoAchSetupWidget: React.FC<ZohoAchSetupWidgetProps> = ({
   const [checkoutReady, setCheckoutReady] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [payLoading, setPayLoading] = useState(false);
+  const [payStatusMessage, setPayStatusMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
 
   const checkoutRef = useRef<CheckoutContext | null>(null);
@@ -166,6 +160,10 @@ export const ZohoAchSetupWidget: React.FC<ZohoAchSetupWidgetProps> = ({
         paymentId: `MOCK-PAY-${Math.random().toString(36).slice(2, 8).toUpperCase()}`,
         paymentMethodId: `MOCK-PM-${Math.random().toString(36).slice(2, 8).toUpperCase()}`,
         mandateId: `MOCK-MND-${Math.random().toString(36).slice(2, 8).toUpperCase()}`,
+        subscriptionStatus: 'active',
+        plan: getZohoPayPlan(),
+        amount: String(setupAmount),
+        currency: 'USD',
       };
       onMandateSaved(mockResult);
       toast.success('ACH mandate saved (demo mode)');
@@ -184,7 +182,32 @@ export const ZohoAchSetupWidget: React.FC<ZohoAchSetupWidgetProps> = ({
 
     const checkout = checkoutRef.current;
     setPayLoading(true);
+    setPayStatusMessage('Opening Zoho Pay…');
     setErrorMessage('');
+
+    const openSavePaymentMethodWidget = async (
+      widgetOptions: ZohoPayRequestPaymentMethodOptions,
+      apiKey?: string,
+    ): Promise<ZohoPayWidgetSuccess> => {
+      setPayStatusMessage('Saving bank account…');
+      await closeZPaymentsInstanceSafely();
+
+      const initConfig = getZohoPayInitConfig(apiKey ?? checkout.apiKey);
+      if (!initConfig) {
+        throw new Error('Zoho Pay widget configuration is missing');
+      }
+
+      const saveInstance = await getZPaymentsInstance(initConfig);
+      try {
+        return await withTimeout(
+          saveInstance.requestPaymentMethod(widgetOptions),
+          WIDGET_TIMEOUT_MS,
+          'Zoho Pay did not respond while saving your bank account.',
+        );
+      } finally {
+        await closeZPaymentsInstanceSafely();
+      }
+    };
 
     try {
       const initConfig = getZohoPayInitConfig(checkout.apiKey);
@@ -214,27 +237,36 @@ export const ZohoAchSetupWidget: React.FC<ZohoAchSetupWidgetProps> = ({
         'Zoho Pay did not respond. Close the overlay and try again.',
       );
 
-      const ids = readWidgetIds(result);
-      if (!ids.paymentMethodId && !ids.paymentId) {
-        throw new Error('Zoho Pay did not return payment or mandate references');
+      await closeZPaymentsInstanceSafely();
+
+      if (!onboardingId.trim()) {
+        throw new Error('Onboarding ID is required to save subscription');
       }
 
-      try {
-        await saveMandate({
-          customerId: checkout.customerId,
-          result,
-          onboardingId: onboardingId.trim() || undefined,
-        });
-      } catch (saveErr) {
-        console.warn('save-mandate failed; continuing with widget result:', saveErr);
-      }
+      setPayStatusMessage('Verifying payment…');
+      const finalized = await finalizeZohoSubscription({
+        checkoutWidgetResult: result,
+        customerId: checkout.customerId,
+        onboardingId: onboardingId.trim(),
+        sessionId: checkout.paymentsSessionId,
+        amount: checkout.amount,
+        currency: checkout.currencyCode,
+        plan: getZohoPayPlan(),
+        openSavePaymentMethodWidget,
+        onProgress: setPayStatusMessage,
+      });
 
       onMandateSaved({
-        customerId: checkout.customerId,
-        sessionId: checkout.paymentsSessionId,
-        paymentId: ids.paymentId || ids.paymentMethodId,
-        paymentMethodId: ids.paymentMethodId || ids.paymentId,
-        mandateId: ids.mandateId || ids.paymentMethodId || ids.paymentId,
+        customerId: finalized.customerId,
+        sessionId: finalized.sessionId,
+        paymentId: finalized.paymentId,
+        paymentMethodId: finalized.paymentMethodId,
+        mandateId: finalized.mandateId,
+        subscriptionStatus: finalized.subscriptionStatus,
+        subscriptionNextCharge: finalized.subscriptionNextCharge,
+        plan: finalized.plan,
+        amount: finalized.amount,
+        currency: finalized.currency,
       });
       toast.success('Recurring ACH authorized');
     } catch (err) {
@@ -245,6 +277,7 @@ export const ZohoAchSetupWidget: React.FC<ZohoAchSetupWidgetProps> = ({
       }
     } finally {
       setPayLoading(false);
+      setPayStatusMessage('');
       restorePageScroll();
       await closeZPaymentsInstanceSafely();
     }
@@ -304,7 +337,7 @@ export const ZohoAchSetupWidget: React.FC<ZohoAchSetupWidgetProps> = ({
           aria-busy={loading}
         >
           {payLoading
-            ? 'Opening Zoho Pay…'
+            ? (payStatusMessage || 'Opening Zoho Pay…')
             : checkoutLoading
               ? 'Preparing checkout…'
               : 'Authorize Recurring ACH'}
