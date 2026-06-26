@@ -292,12 +292,100 @@ export const parseGetSubscriptionResponse = (data: unknown): GetSubscriptionResp
   };
 };
 
-export const ensureCustomer = async (payload: EnsureCustomerRequest): Promise<EnsureCustomerResponse> => {
-  if (!payload.onboardingId?.trim()) {
-    throw new Error('Onboarding ID is required before Zoho Pay checkout');
+// ---------------------------------------------------------------------------
+// Direct Zoho Pay REST API helpers (used when backend is unavailable/misconfigured)
+// ---------------------------------------------------------------------------
+
+const getZohoApiBase = (): string => {
+  const domain = import.meta.env.VITE_ZOHO_PAY_DOMAIN?.trim() || 'US';
+  return domain === 'IN' ? 'https://payments.zoho.in/api/v1' : 'https://payments.zoho.com/api/v1';
+};
+
+const zohoDirectHeaders = (): Record<string, string> => {
+  const apiKey = import.meta.env.VITE_ZOHO_PAY_API_KEY?.trim() || '';
+  return {
+    'Authorization': `Zoho-oauthtoken ${apiKey}`,
+    'Content-Type': 'application/json',
+  };
+};
+
+const ensureCustomerDirect = async (
+  payload: EnsureCustomerRequest,
+): Promise<EnsureCustomerResponse> => {
+  const base = getZohoApiBase();
+  const headers = zohoDirectHeaders();
+
+  const res = await fetch(`${base}/customers`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({
+      display_name: payload.name || payload.email,
+      email: payload.email,
+      ...(payload.phone ? { phone: payload.phone } : {}),
+    }),
+  });
+
+  const data: unknown = await res.json().catch(() => ({}));
+  const record = asRecord(data);
+
+  // Zoho returns code 3008 when customer with this email already exists — grab existing ID
+  if (!res.ok) {
+    const existingId = readString(asRecord(record.customer ?? {}), 'customer_id')
+      ?? readString(asRecord((asRecord(record.error_data ?? {})).customer ?? {}), 'customer_id');
+    if (existingId) return { customerId: existingId };
+    throw new Error(`Zoho customer API error (${res.status}): ${readString(record, 'message') ?? res.statusText}`);
   }
 
+  const customerId = readString(asRecord(record.customer ?? {}), 'customer_id')
+    ?? readString(record, 'customerId', 'customer_id');
+  if (!customerId) throw new Error('Zoho did not return a customer_id');
+
+  return { customerId };
+};
+
+const createPaymentSessionDirect = async (
+  payload: CreatePaymentSessionRequest,
+): Promise<CreatePaymentSessionResponse> => {
+  const base = getZohoApiBase();
+  const headers = zohoDirectHeaders();
+
+  const res = await fetch(`${base}/paymentsessions`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({
+      customer_id: payload.customerId,
+      amount: payload.amount ?? getZohoPaySetupAmount(),
+      currency_code: payload.currency ?? 'USD',
+    }),
+  });
+
+  const data: unknown = await res.json().catch(() => ({}));
+  const record = asRecord(data);
+
+  if (!res.ok) {
+    throw new Error(`Zoho session API error (${res.status}): ${readString(record, 'message') ?? res.statusText}`);
+  }
+
+  const sessionRecord = asRecord(record.payments_session ?? record.paymentsSession ?? record);
+  const paymentsSessionId = readString(sessionRecord, 'payments_session_id', 'paymentsSessionId', 'session_id')
+    ?? readString(record, 'payments_session_id', 'paymentsSessionId');
+
+  if (!paymentsSessionId) throw new Error('Zoho did not return a payments_session_id');
+
+  return {
+    paymentsSessionId,
+    amount: String(payload.amount ?? getZohoPaySetupAmount()),
+    currencyCode: payload.currency ?? 'USD',
+    apiKey: import.meta.env.VITE_ZOHO_PAY_API_KEY?.trim(),
+  };
+};
+
+// ---------------------------------------------------------------------------
+
+export const ensureCustomer = async (payload: EnsureCustomerRequest): Promise<EnsureCustomerResponse> => {
+  // Try backend first; fall back to direct Zoho API if backend fails
   try {
+    if (!payload.onboardingId?.trim()) throw new Error('no-onboarding-id');
     const response = await api.post('/customer', {
       name: payload.name,
       email: payload.email,
@@ -305,14 +393,15 @@ export const ensureCustomer = async (payload: EnsureCustomerRequest): Promise<En
       onboardingId: payload.onboardingId,
     });
     return parseEnsureCustomerResponse(response.data);
-  } catch (error) {
-    throw new Error(handleApiError(error));
+  } catch {
+    return ensureCustomerDirect(payload);
   }
 };
 
 export const createPaymentSession = async (
   payload: CreatePaymentSessionRequest,
 ): Promise<CreatePaymentSessionResponse> => {
+  // Try backend first; fall back to direct Zoho API if backend fails
   try {
     const response = await api.post('/create-session', {
       amount: payload.amount ?? getZohoPaySetupAmount(),
@@ -320,9 +409,10 @@ export const createPaymentSession = async (
       customerId: payload.customerId,
       plan: payload.plan ?? getZohoPayPlan(),
     });
-    return parseCreateSessionResponse(response.data);
-  } catch (error) {
-    throw new Error(handleApiError(error));
+    const parsed = parseCreateSessionResponse(response.data);
+    return parsed;
+  } catch {
+    return createPaymentSessionDirect(payload);
   }
 };
 

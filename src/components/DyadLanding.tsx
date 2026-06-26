@@ -20,23 +20,6 @@ const DyadLanding: React.FC = () => {
   const [selectedServiceCard, setSelectedServiceCard] = useState<typeof servicesData[0] | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
-  
-  // Handle scroll from Contact Us page navigation
-  useEffect(() => {
-    if (location.state?.scrollTo) {
-      const scrollTo = location.state.scrollTo;
-      const sectionId = scrollTo.replace('#', '');
-      const element = document.getElementById(sectionId);
-      if (element) {
-        setTimeout(() => {
-          element.scrollIntoView({ behavior: 'smooth' });
-        }, 100);
-      }
-      // Clear the state to prevent re-scrolling
-      window.history.replaceState({}, document.title);
-    }
-  }, [location.state]);
-  
   const handleLogin = () => {
     // Scroll to top first, then navigate to login page
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -392,6 +375,59 @@ const DyadLanding: React.FC = () => {
     }
   ];
 
+  const scrollToLandingSection = useCallback((scrollTo: string, cardId?: number) => {
+    const sectionId = scrollTo.replace('#', '');
+    const isMobile = window.innerWidth <= 768;
+
+    if (isMobile) {
+      if (typeof cardId === 'number') {
+        if (sectionId === 'about') setExpandedMobileCard(cardId);
+        else if (sectionId === 'services') setExpandedserviceMobileCard(cardId);
+      }
+
+      setTimeout(() => {
+        const cardElId = typeof cardId === 'number'
+          ? `${sectionId === 'about' ? 'about' : 'service'}-card-${cardId}`
+          : sectionId;
+        const targetEl = document.getElementById(cardElId) ?? document.getElementById(sectionId);
+        if (!targetEl) return;
+
+        const headerEl = document.querySelector('.dyad-header') as HTMLElement;
+        const headerHeight = headerEl ? headerEl.offsetHeight : 80;
+        const top = targetEl.getBoundingClientRect().top + window.pageYOffset - headerHeight - 20;
+        window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+      }, 400);
+    } else {
+      if (typeof cardId === 'number') {
+        if (sectionId === 'about') {
+          const card = aboutContent.find(c => c.id === cardId);
+          if (card) setSelectedAboutCard(card);
+        } else if (sectionId === 'services') {
+          const card = servicesData.find(c => c.id === cardId);
+          if (card) setSelectedServiceCard(card);
+        }
+      }
+
+      setTimeout(() => {
+        const element = document.getElementById(sectionId);
+        if (!element) return;
+
+        const headerEl = document.querySelector('.dyad-header') as HTMLElement;
+        const headerHeight = headerEl ? headerEl.offsetHeight : 80;
+        const top = element.getBoundingClientRect().top + window.pageYOffset - headerHeight;
+        window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+      }, 380);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!location.state?.scrollTo) return;
+
+    const { scrollTo, cardId } = location.state;
+    window.history.replaceState({}, document.title);
+    scrollToLandingSection(scrollTo, cardId);
+  }, [location.state, scrollToLandingSection]);
+
   const aboutDropdownItems = [
     { name: 'Our Story & Inspiration', href: '#about', cardId: 0 },
     { name: 'Mission & Vision', href: '#about', cardId: 1 },
@@ -461,7 +497,7 @@ const DyadLanding: React.FC = () => {
   return (
     <div className="dyad-landing-container" id="top">
       {/* Header */}
-      <LandingHeader />
+      <LandingHeader onScrollToSection={scrollToLandingSection} />
     
 
       {/* Main Content - Video Banner */}
@@ -482,22 +518,33 @@ const DyadLanding: React.FC = () => {
           {/* Video Overlay */}
           <div className="video-overlay">
             <div className="video-content">
-              <div className="title-container">
-                <h1 className="video-title">
-                  <span className="title-lines-desktop">
-                    <span className="title-line">A Bold New Partnership Model</span>
-                    <span className="title-line">for Smarter Healthcare Finance Operations</span>
-                  </span>
-                  <span className="title-lines-mobile">
-                    <span className="title-line">A Bold New</span>
-                    <span className="title-line">Partnership Model for</span>
-                    <span className="title-line">Smarter Healthcare</span>
-                    <span className="title-line">Finance Operations</span>
-                  </span>
-                </h1>
-                <p className="video-subtitle">
-          We’re rewriting the rules. By uniting industry expertise, innovative technologies, and operational risk controls, we’re introducing a scalable integrated model that supports physician practices, anesthesia groups, and ambulatory surgery centers across the outpatient procedural ecosystem, designed to measurably improve practice economics.
-          </p> </div>
+              <div className="video-hero-inner">
+                <div className="title-container">
+                  <h1 className="video-title">
+                    <span className="title-lines-desktop">
+                      <span className="title-line">The Financial Platform Built for</span>
+                      <span className="title-line">Anesthesia, Surgical Specialties, and ASCs.</span>
+                    </span>
+                    <span className="title-lines-mobile">
+                      <span className="title-line">The Financial Platform Built for</span>
+                      <span className="title-line">Anesthesia, Surgical</span>
+                      <span className="title-line title-line-nowrap">Specialties, and ASCs.</span>
+                    </span>
+                  </h1>
+                  <p className="video-subtitle">
+                    Powered by deep healthcare-finance expertise and proven technology, DYAD accelerates payment for your services, gives you real-time visibility into exactly where your revenue stands, and helps you capture more of what you've earned.
+                  </p>
+                  <div className="video-banner-actions">
+                    <button
+                      type="button"
+                      className="btn btn-primary video-banner-cta"
+                      onClick={() => navigate('/early-access')}
+                    >
+                      Request Early Access
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -654,7 +701,7 @@ const DyadLanding: React.FC = () => {
         <div className="">
           <div className="mobile-cards-container">
             {aboutContent.map((card) => (
-              <div key={card.id} className={`mobile-card ${expandedMobileCard === card.id ? 'expanded' : ''}`} onClick={() => handleAboutMobileCardClick(card.id)}>
+              <div key={card.id} id={`about-card-${card.id}`} className={`mobile-card ${expandedMobileCard === card.id ? 'expanded' : ''}`} onClick={() => handleAboutMobileCardClick(card.id)}>
                 <div className="mobile-card-image">
                   <img src={card.image} alt={card.title} />
                 </div>
@@ -743,7 +790,7 @@ const DyadLanding: React.FC = () => {
         <div className="">
           <div className="mobile-cards-container services">
             {servicesData.map((card) => (
-              <div key={card.id} className={`mobile-card ${expandedserviceMobileCard === card.id ? 'expanded' : ''}`} onClick={() => toggleMobileCardService(card.id)}>
+              <div key={card.id} id={`service-card-${card.id}`} className={`mobile-card ${expandedserviceMobileCard === card.id ? 'expanded' : ''}`} onClick={() => toggleMobileCardService(card.id)}>
                 <div className="mobile-card-image">
                   <img src={card.image} alt={card.title} />
                 </div>

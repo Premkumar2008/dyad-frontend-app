@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 interface LandingHeaderProps {
   activePage?: string;
   hideEarlyAccess?: boolean;
+  onScrollToSection?: (scrollTo: string, cardId?: number) => void;
 }
 
 const whatWeDoDropdownItems = [
@@ -37,7 +38,11 @@ const whoWeServeDropdownItems = [
   { name: 'Outpatient & Specialty Facilities' },
 ];
 
-const LandingHeader: React.FC<LandingHeaderProps> = ({ activePage = 'Home', hideEarlyAccess = false }) => {
+const LandingHeader: React.FC<LandingHeaderProps> = ({
+  activePage = 'Home',
+  hideEarlyAccess = false,
+  onScrollToSection,
+}) => {
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeMenu, setActiveMenu] = useState(activePage);
@@ -46,10 +51,28 @@ const LandingHeader: React.FC<LandingHeaderProps> = ({ activePage = 'Home', hide
   const [isWhoWeServeDropdownOpen, setIsWhoWeServeDropdownOpen] = useState(false);
   const [isWhatWeDoDropdownOpen, setIsWhatWeDoDropdownOpen] = useState(false);
 
+  const scrollOrNavigate = (href: string, cardId?: number) => {
+    setIsMobileMenuOpen(false);
+    setIsAboutDropdownOpen(false);
+    setIsWhoWeServeDropdownOpen(false);
+    setIsWhatWeDoDropdownOpen(false);
+
+    if (href.startsWith('/') && !href.startsWith('/#')) {
+      navigate(href);
+      return;
+    }
+
+    if (window.location.pathname === '/' && onScrollToSection) {
+      onScrollToSection(href, cardId);
+      return;
+    }
+
+    navigate('/', { state: { scrollTo: href, cardId } });
+  };
+
   const handleNavClick = (item: { name: string; href: string }) => {
     setActiveMenu(item.name);
-    navigate('/', { state: { scrollTo: item.href } });
-    setIsMobileMenuOpen(false);
+    scrollOrNavigate(item.href);
   };
 
   const handleLogoClick = () => navigate('/');
@@ -58,19 +81,19 @@ const LandingHeader: React.FC<LandingHeaderProps> = ({ activePage = 'Home', hide
   const handleContactRequest = () => navigate('/contact');
 
   const handleAboutDropdownItemClick = (dropdownItem: { name: string; href: string; cardId: number }) => {
+    setActiveMenu('About Us');
     if (dropdownItem.name === 'Team & Expertise') {
+      setIsAboutDropdownOpen(false);
+      setIsMobileMenuOpen(false);
       navigate('/team-expertise');
-    } else {
-      navigate('/', { state: { scrollTo: dropdownItem.href, cardId: dropdownItem.cardId } });
+      return;
     }
-    setIsAboutDropdownOpen(false);
-    setIsMobileMenuOpen(false);
+    scrollOrNavigate(dropdownItem.href, dropdownItem.cardId);
   };
 
   const handleWhatWeDoDropdownItemClick = (dropdownItem: { href: string; cardId: number }) => {
-    navigate('/', { state: { scrollTo: dropdownItem.href, cardId: dropdownItem.cardId } });
-    setIsWhatWeDoDropdownOpen(false);
-    setIsMobileMenuOpen(false);
+    setActiveMenu('What We Do');
+    scrollOrNavigate(dropdownItem.href, dropdownItem.cardId);
   };
 
   const dropdownItemStyle: React.CSSProperties = {

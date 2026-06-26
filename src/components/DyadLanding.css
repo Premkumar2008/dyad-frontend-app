@@ -976,31 +976,67 @@ header.dyad-header .dyad-nav-actions .dyad-nav .nav-list .dyad-nav .nav-link.act
 }
 
 .video-content {
-  text-align: center;
-  justify-content: center;
+  text-align: left;
   z-index: 3;
-  padding: 1rem 2rem;
+  padding: 1.5rem 1.25rem;
   width: 100%;
   max-width: 1520px;
   margin: 0 auto;
+  height: 100%;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.video-hero-inner {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: stretch;
+  width: 100%;
+  max-width: 90%;
+  height: auto;
+  gap: 0;
+  margin: 0 auto;
 }
 
 .title-container {
   position: relative;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;
   justify-content: center;
   border-radius: 1rem;
-  max-width: 1520px;
-  width: 90%;
+  max-width: 100%;
+  width: 100%;
+  margin: 0 auto;
+  padding-top: 0;
+}
+
+.video-banner-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.75rem;
+  width: 100%;
+  max-width: 100%;
+  margin: 1rem 0 0;
+  padding-bottom: 0;
+}
+
+.video-banner-cta {
+  width: 100%;
+  max-width: 100%;
+  padding: 0.9rem 1.25rem !important;
+  border-radius: 0.5rem !important;
+  font-size: 1rem !important;
+  justify-content: center;
 }
 
 .video-title {
-  font-size: clamp(1.875rem, 2.5vw + 1.25rem, 3.875rem);
+  font-size: clamp(1.625rem, 2.25vw + 1.125rem, 3.5rem);
   transition: transform 0.3s ease;
   font-weight: 600;
   color: white;
@@ -1009,6 +1045,7 @@ header.dyad-header .dyad-nav-actions .dyad-nav .nav-list .dyad-nav .nav-link.act
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
   line-height: 1.2;
   text-align: center;
+  width: 100%;
   position: relative;
   text-wrap: balance;
 }
@@ -1033,6 +1070,10 @@ header.dyad-header .dyad-nav-actions .dyad-nav .nav-list .dyad-nav .nav-link.act
   position: relative;
 }
 
+.title-lines-desktop .title-line-nowrap {
+  white-space: nowrap;
+}
+
 
 @keyframes fadeInUp {
   from {
@@ -1047,15 +1088,15 @@ header.dyad-header .dyad-nav-actions .dyad-nav .nav-list .dyad-nav .nav-link.act
 
 .video-subtitle {
   color: white;
-  font-size: clamp(1.0625rem, 1.2vw + 0.75rem, 1.5rem);
+  font-size: clamp(1.125rem, 1.35vw + 0.75rem, 1.625rem);
   background-clip: text;
   text-align: justify;
   font-family: 'Prompt', sans-serif;
   font-weight: 400;
   line-height: 1.6;
-  max-width: 100%;
   width: 100%;
-  margin: clamp(1rem, 3vw, 2rem) auto 0;
+  max-width: 100%;
+  margin: 1rem 0 0;
   transition: transform 0.3s ease;
   cursor: default;
   letter-spacing: normal;
@@ -1065,16 +1106,16 @@ header.dyad-header .dyad-nav-actions .dyad-nav .nav-list .dyad-nav .nav-link.act
 
 @media (min-width: 1024px) {
   .video-subtitle {
-    max-width: 90%;
+    max-width: 100%;
   }
 }
 
 .video-subtitle:hover {
-  transform: scale(1.1);
+  transform: scale(1.02);
   cursor: default;
 }
 .video-title:hover {
-  transform: scale(1.1);
+  transform: scale(1.02);
   cursor: default;
 }
 
@@ -1115,63 +1156,104 @@ header.dyad-header .dyad-nav-actions .dyad-nav .nav-list .dyad-nav .nav-link.act
   }
 
   .video-content {
+    padding: 2.5rem 2rem 2rem;
     margin: 1.2rem auto;
+    justify-content: flex-end;
+  }
+
+  .video-hero-inner {
+    max-width: 90%;
+    gap: 1.5rem;
+  }
+
+  .title-container {
+    padding-top: 0;
+    align-items: stretch;
+  }
+
+  .video-banner-actions {
+    display: none;
+  }
+
+  .video-banner-cta {
+    width: 100%;
   }
 
   .video-title {
-    font-size: 62px;
+    font-size: 56px;
     line-height: 1.2;
     text-wrap: balance;
+    text-align: center;
+    width: 100%;
   }
 
   .video-subtitle {
-    font-size: 24px;
+    font-size: 26px;
     line-height: 1.6;
-    max-width: fit-content;
+    max-width: 100%;
     width: 100%;
-    margin: 2rem auto 0;
+    margin: 2rem 0 0;
     letter-spacing: 0.01em;
     text-wrap: unset;
+    text-align: justify;
   }
 }
 
 @media (min-width: 768px) and (max-width: 1024px) {
   .video-title {
-    font-size: 38px !important;
+    font-size: 34px !important;
   }
 
   .video-subtitle {
-    font-size: 21px !important;
+    font-size: 23px !important;
   }
 }
 
 @media (min-width: 1024px) and (max-width: 1520px) {
   .video-title {
-    font-size: 50px !important;
+    font-size: 46px !important;
   }
 
   .video-subtitle {
-    font-size: 24px !important;
+    font-size: 26px !important;
   }
 }
 
 @media (min-width: 1024px) {
   .video-subtitle {
-    max-width: 90%;
+    max-width: 100%;
   }
 }
 
 /* Video hero — mobile layout (phones only; 768px+ uses desktop title) */
 @media (max-width: 767px) {
+  .video-overlay {
+    align-items: center;
+    justify-content: center;
+  }
+
   .video-content {
-    padding: 1rem;
+    padding: 1.25rem 1rem;
+    width: 100%;
+    margin: 0;
+    height: 100%;
+    justify-content: center;
+  }
+
+  .video-hero-inner {
+    max-width: 100%;
     width: 100%;
   }
 
   .title-container {
     width: 100%;
-    padding: 0 1rem;
+    padding: 0;
     box-sizing: border-box;
+  }
+
+  .video-banner-actions {
+    width: 100%;
+    padding-bottom: 0;
   }
 
   .title-lines-desktop {
@@ -1183,21 +1265,34 @@ header.dyad-header .dyad-nav-actions .dyad-nav .nav-list .dyad-nav .nav-link.act
   }
 
   .title-lines-mobile .title-line {
+    white-space: normal;
+  }
+
+  .title-lines-mobile .title-line-nowrap {
     white-space: nowrap;
   }
 
+  .title-lines-mobile .title-line {
+ 
+    font-size: 1.12em;
+  }
+
   .video-title {
-    font-size: clamp(1.625rem, 7vw, 2.25rem) !important;
+    font-size: clamp(1.5rem, 6.5vw, 2rem) !important;
     line-height: 1.3;
-    text-wrap: unset;
+    text-wrap: balance;
+    text-align: left;
+    width: 100%;
   }
 
   .video-subtitle {
-    font-size: clamp(0.9375rem, 2.5vw + 0.5rem, 1.0625rem) !important;
-    margin-top: 1.5rem;
+    font-size: 1.2rem !important;
+    margin-top: 0.875rem;
     width: 100%;
-    padding: 0 0.25rem;
+    max-width: 100%;
+    padding: 0;
     box-sizing: border-box;
+    text-align: justify;
   }
 }
 
@@ -1574,45 +1669,12 @@ header.dyad-header .dyad-nav-actions .dyad-nav .nav-list .dyad-nav .nav-link.act
   }
 
   .video-banner {
-   
     width: 100%;
     margin: 0;
   }
 }
 
-  .video-background {
-    width: 100vw;
-  }
-
-  .video-overlay {
-    width: 100vw;
-  }
-
-  .video-content {
-    padding: 1rem;
-   
-    width: 100%;
-  }
-
-  .button-group {
-    justify-content: center;
-  }
-
-  .request-demo-button {
-    width: auto;
-    max-width: 350px;
-    padding: 1rem 2rem;
-    font-size: 1rem;
-  }
-
-  .subtitle-desktop {
-    display: none;
-  }
-
-  .subtitle-mobile {
-    display: block;
-  }
-   @media (max-width: 1170px) {
+@media (max-width: 1170px) {
     .dyad-actions .btn-secondary {
    
    font-size: 14px !important;
@@ -1722,51 +1784,6 @@ margin-top: 1.5rem;
   }
 }
 
-  .dyad-main {
-   
-   
-    margin: 0;
-    padding-left: 0;
-    padding-right: 0;
-  }
-
-  .video-banner {
-    
-    width: 100vw;
-    margin-left: calc(-50vw + 50%);
-    margin-right: calc(-50vw + 50%);
-  }
-
-  .video-background {
-    width: 100vw;
-  }
-
-  .video-overlay {
-    width: 100vw;
-  }
-
-  
-
-
-  .button-group {
-    justify-content: center;
-  }
-
-  .request-demo-button {
-    width: auto;
-    max-width: 350px;
-    padding: 1rem 2rem;
-    font-size: 1rem;
-  }
-
-  .subtitle-desktop {
-    display: none;
-  }
-
-  .subtitle-mobile {
-    display: block;
-  }
-
 .dyad-landing-content {
   text-align: center;
   background: rgba(255, 255, 255, 0.95);
@@ -1807,18 +1824,15 @@ margin-top: 1.5rem;
 
 /* Video Banner */
 .dyad-main {
- 
   position: relative;
   width: 100%;
- 
   overflow: hidden;
-  
 }
 
 .video-banner {
   position: relative;
   width: 100%;
- 
+  height: 700px !important;
   overflow: hidden;
 }
 

@@ -175,15 +175,51 @@ export const ZohoAchSetupWidget: React.FC<ZohoAchSetupWidgetProps> = ({
       return;
     }
 
-    if (!checkoutRef.current) {
-      toast.error('Checkout is still loading — please wait');
+    if (!onboardingId.trim()) {
+      setErrorMessage('Save onboarding progress first — onboarding ID is required for Zoho Pay.');
       return;
     }
 
-    const checkout = checkoutRef.current;
     setPayLoading(true);
-    setPayStatusMessage('Opening Zoho Pay…');
+    setPayStatusMessage('Preparing session…');
     setErrorMessage('');
+
+    let checkout: CheckoutContext;
+    try {
+      await loadZohoPayScript();
+
+      const { customerId } = await ensureCustomer({
+        name: customerName.trim() || customerEmail.trim(),
+        email: customerEmail.trim(),
+        phone: customerPhone.trim() || undefined,
+        onboardingId: onboardingId.trim(),
+      });
+
+      const session = await createPaymentSession({
+        amount: setupAmount,
+        currency: 'USD',
+        customerId,
+        plan: getZohoPayPlan(),
+      });
+
+      checkout = {
+        customerId,
+        paymentsSessionId: session.paymentsSessionId,
+        amount: session.amount,
+        currencyCode: session.currencyCode,
+        apiKey: session.apiKey,
+      };
+      checkoutRef.current = checkout;
+    } catch (err) {
+      const message = formatZohoPayError(err);
+      setErrorMessage(message);
+      toast.error(message);
+      setPayLoading(false);
+      setPayStatusMessage('');
+      return;
+    }
+
+    setPayStatusMessage('Opening Zoho Pay…');
 
     const openSavePaymentMethodWidget = async (
       widgetOptions: ZohoPayRequestPaymentMethodOptions,
@@ -292,9 +328,10 @@ export const ZohoAchSetupWidget: React.FC<ZohoAchSetupWidgetProps> = ({
     onboardingId,
     onMandateSaved,
     payLoading,
+    setupAmount,
   ]);
 
-  const loading = checkoutLoading || payLoading;
+  const loading = payLoading;
   const missingOnboardingId = !mockMode && configured && !onboardingId.trim();
 
   return (
@@ -333,14 +370,10 @@ export const ZohoAchSetupWidget: React.FC<ZohoAchSetupWidgetProps> = ({
           id="pay-btn"
           className={`zoho-ach-setup-btn${loading ? ' zoho-ach-setup-btn--loading' : ''}`}
           onClick={handleAuthorizeAch}
-          disabled={disabled || loading || missingOnboardingId || (!mockMode && configured && !checkoutReady)}
+          disabled={disabled || loading || missingOnboardingId}
           aria-busy={loading}
         >
-          {payLoading
-            ? (payStatusMessage || 'Opening Zoho Pay…')
-            : checkoutLoading
-              ? 'Preparing checkout…'
-              : 'Authorize Recurring ACH'}
+          {payLoading ? (payStatusMessage || 'Opening Zoho Pay…') : 'Authorize Recurring ACH'}
         </button>
       )}
 
