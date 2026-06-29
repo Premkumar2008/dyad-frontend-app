@@ -1,5 +1,7 @@
 import api, { handleApiError } from './api';
 import type { ZohoPayDomain, ZohoPayInitConfig, ZohoPayRequestPaymentMethodOptions, ZohoPayWidgetSuccess } from '../types/zohoPay';
+import type { ZohoPayFailureLogRequest } from '../types/zohoPayMandate';
+import { deriveZohoSubscriptionStatus, isAcceptableZohoPaymentStatus } from '../utils/zohoPayMandate';
 
 export interface ZohoPayWidgetConfig {
   accountId: string;
@@ -33,16 +35,25 @@ export interface CreatePaymentSessionResponse {
 
 export interface VerifyPaymentRequest {
   payment_id: string;
+  onboardingId: string;
+  session_id: string;
+  amount: number | string;
+  plan?: string;
+  currency?: string;
 }
 
 export interface VerifyPaymentResponse {
   success: boolean;
   paymentId: string;
+  payment_id?: string;
   status: string;
   customerId: string;
+  customer_id?: string;
   paymentMethodId?: string;
+  payment_method_id?: string;
   amount: string;
   currency: string;
+  message?: string;
 }
 
 export interface CreatePaymentMethodSessionRequest {
@@ -72,6 +83,9 @@ export interface SaveSubscriptionRequest {
   plan?: string;
   amount: number | string;
   currency?: string;
+  payment_status?: string;
+  session_id?: string;
+  mandate_id?: string;
 }
 
 export interface SubscriptionRecord {
@@ -80,6 +94,9 @@ export interface SubscriptionRecord {
   zohoCustomerId?: string;
   zohoPaymentId?: string;
   zohoPaymentMethodId?: string;
+  zohoMandateId?: string;
+  zohoSessionId?: string;
+  paymentStatus?: string;
   plan?: string;
   amount?: string;
   currency?: string;
@@ -142,13 +159,20 @@ export const getZohoPayInitConfig = (apiKey?: string): ZohoPayInitConfig | null 
   if (!widgetConfig) return null;
 
   const key = apiKey?.trim() || import.meta.env.VITE_ZOHO_PAY_API_KEY?.trim();
+  const isTestMode = import.meta.env.VITE_ZOHO_PAY_TEST_MODE === 'true';
+  const otherOptions: ZohoPayInitConfig['otherOptions'] = {};
+
+  if (key) otherOptions.api_key = key;
+  if (isTestMode) otherOptions.is_test_mode = true;
 
   return {
     account_id: widgetConfig.accountId,
     domain: widgetConfig.domain,
-    otherOptions: key ? { api_key: key } : {},
+    otherOptions,
   };
 };
+
+export const isZohoPayTestMode = (): boolean => import.meta.env.VITE_ZOHO_PAY_TEST_MODE === 'true';
 
 export const isZohoPayConfigured = (): boolean => Boolean(getZohoPayWidgetConfig());
 
@@ -194,27 +218,36 @@ export const parseCreateSessionResponse = (data: unknown): CreatePaymentSessionR
 };
 
 export const parseVerifyPaymentResponse = (data: unknown): VerifyPaymentResponse => {
+  const root = asRecord(data);
   const nested = parsePayload(data);
 
-  const paymentId = readString(nested, 'paymentId', 'payment_id');
-  const status = readString(nested, 'status') ?? 'unknown';
-  const customerId = readString(nested, 'customerId', 'customer_id') ?? '';
-  const paymentMethodId = readString(nested, 'paymentMethodId', 'payment_method_id');
-  const amount = readString(nested, 'amount') ?? String(getZohoPaySetupAmount());
-  const currency = readString(nested, 'currency', 'currency_code') ?? 'USD';
-
-  if (!paymentId) {
-    throw new Error('Verify payment did not return payment_id');
-  }
+  const paymentId = readString(nested, 'paymentId', 'payment_id')
+    ?? readString(root, 'paymentId', 'payment_id');
+  const status = readString(nested, 'status') ?? readString(root, 'status') ?? 'unknown';
+  const customerId = readString(nested, 'customerId', 'customer_id')
+    ?? readString(root, 'customerId', 'customer_id')
+    ?? '';
+  const paymentMethodId = readString(nested, 'paymentMethodId', 'payment_method_id')
+    ?? readString(root, 'paymentMethodId', 'payment_method_id');
+  const amount = readString(nested, 'amount') ?? readString(root, 'amount') ?? String(getZohoPaySetupAmount());
+  const currency = readString(nested, 'currency', 'currency_code')
+    ?? readString(root, 'currency', 'currency_code')
+    ?? 'USD';
+  const message = readString(nested, 'message') ?? readString(root, 'message');
+  const success = root.success !== false && nested.success !== false;
 
   return {
-    success: nested.success !== false,
-    paymentId,
+    success,
+    paymentId: paymentId ?? '',
+    payment_id: paymentId,
     status,
     customerId,
+    customer_id: customerId,
     paymentMethodId,
+    payment_method_id: paymentMethodId,
     amount,
     currency,
+    message,
   };
 };
 
@@ -264,6 +297,9 @@ export const parseSaveSubscriptionResponse = (data: unknown): SaveSubscriptionRe
       zohoCustomerId: readString(record, 'zohoCustomerId', 'zoho_customer_id'),
       zohoPaymentId: readString(record, 'zohoPaymentId', 'zoho_payment_id'),
       zohoPaymentMethodId: readString(record, 'zohoPaymentMethodId', 'zoho_payment_method_id'),
+      zohoMandateId: readString(record, 'zohoMandateId', 'zoho_mandate_id'),
+      zohoSessionId: readString(record, 'zohoSessionId', 'zoho_session_id'),
+      paymentStatus: readString(record, 'paymentStatus', 'payment_status'),
       plan: readString(record, 'plan'),
       amount: readString(record, 'amount'),
       currency: readString(record, 'currency'),
@@ -416,11 +452,16 @@ export const createPaymentSession = async (
   }
 };
 
-/** Step 3 — verify payment after checkout widget success. */
+/** Step 1 — verify payment immediately after Zoho widget returns payment_id. */
 export const verifyPayment = async (payload: VerifyPaymentRequest): Promise<VerifyPaymentResponse> => {
   try {
     const response = await api.post('/verify-payment', {
+      onboardingId: payload.onboardingId,
       payment_id: payload.payment_id,
+      session_id: payload.session_id,
+      amount: payload.amount,
+      plan: payload.plan ?? getZohoPayPlan(),
+      currency: payload.currency ?? 'USD',
     });
     return parseVerifyPaymentResponse(response.data);
   } catch (error) {
@@ -442,7 +483,7 @@ export const createPaymentMethodSession = async (
   }
 };
 
-/** Step 5 — persist subscription after payment + payment method are confirmed. */
+/** Step 2 — persist subscription only after verify-payment succeeds. */
 export const saveSubscription = async (
   payload: SaveSubscriptionRequest,
 ): Promise<SaveSubscriptionResponse> => {
@@ -455,6 +496,9 @@ export const saveSubscription = async (
       plan: payload.plan ?? getZohoPayPlan(),
       amount: payload.amount,
       currency: payload.currency ?? 'USD',
+      payment_status: payload.payment_status,
+      session_id: payload.session_id,
+      mandate_id: payload.mandate_id,
     });
     return parseSaveSubscriptionResponse(response.data);
   } catch (error) {
@@ -486,8 +530,14 @@ const readWidgetPaymentMethodId = (result: ZohoPayWidgetSuccess): string => {
   return '';
 };
 
+export const ZOHO_VERIFY_FAILED_MESSAGE = 'Payment could not be verified';
+export const ZOHO_SUBSCRIPTION_SAVE_FAILED_MESSAGE =
+  'Payment may have succeeded in Zoho but your subscription could not be saved. Please contact support or try again.';
+
 /**
- * Steps 3–5 after checkout widget: verify → (optional save-bank widget) → save subscription.
+ * After Zoho widget success:
+ *   1. POST /verify-payment (immediate)
+ *   2. POST /save-subscription (only if verify.success)
  */
 export const finalizeZohoSubscription = async (options: {
   checkoutWidgetResult: ZohoPayWidgetSuccess;
@@ -508,14 +558,34 @@ export const finalizeZohoSubscription = async (options: {
     throw new Error('Checkout widget did not return payment_id');
   }
 
-  options.onProgress?.('Verifying payment…');
-  const verified = await verifyPayment({ payment_id: paymentId });
+  const plan = options.plan ?? getZohoPayPlan();
+  const amount = options.amount ?? getZohoPaySetupAmount();
+  const currency = options.currency ?? 'USD';
 
-  if (verified.status !== 'succeeded' && verified.status !== 'success') {
-    throw new Error(`Payment verification failed (status: ${verified.status})`);
+  // Step 1 — verify-payment immediately after widget callback
+  options.onProgress?.('Verifying payment…');
+  const verify = await verifyPayment({
+    payment_id: paymentId,
+    onboardingId: options.onboardingId,
+    session_id: options.sessionId,
+    amount,
+    plan,
+    currency,
+  });
+
+  if (!verify.success) {
+    throw new Error(verify.message?.trim() || ZOHO_VERIFY_FAILED_MESSAGE);
   }
 
-  let paymentMethodId = verified.paymentMethodId ?? readWidgetPaymentMethodId(options.checkoutWidgetResult);
+  if (!verify.paymentId) {
+    throw new Error('Verify payment did not return payment_id');
+  }
+
+  if (!isAcceptableZohoPaymentStatus(verify.status)) {
+    throw new Error(`Payment verification failed (status: ${verify.status})`);
+  }
+
+  let paymentMethodId = verify.paymentMethodId ?? readWidgetPaymentMethodId(options.checkoutWidgetResult);
   let mandateId = readWidgetPaymentMethodId(options.checkoutWidgetResult) || paymentMethodId;
 
   if (!paymentMethodId) {
@@ -538,36 +608,48 @@ export const finalizeZohoSubscription = async (options: {
     mandateId = paymentMethodId;
   }
 
-  const plan = options.plan ?? getZohoPayPlan();
-  const amount = options.amount ?? verified.amount;
-  const currency = options.currency ?? verified.currency ?? 'USD';
-
+  // Step 2 — save-subscription only after verify succeeds
   options.onProgress?.('Saving subscription…');
   const subscription = await saveSubscription({
-    payment_id: verified.paymentId,
+    payment_id: verify.paymentId,
     payment_method_id: paymentMethodId,
-    customerId: verified.customerId || options.customerId,
+    customerId: verify.customerId || options.customerId,
     onboardingId: options.onboardingId,
     plan,
-    amount,
-    currency,
+    amount: verify.amount || amount,
+    currency: verify.currency || currency,
+    payment_status: verify.status,
+    session_id: options.sessionId,
+    mandate_id: mandateId || paymentMethodId,
   });
 
   if (!subscription.success) {
-    throw new Error('Failed to save subscription');
+    throw new Error(ZOHO_SUBSCRIPTION_SAVE_FAILED_MESSAGE);
   }
 
+  const subscriptionStatus = subscription.data?.status
+    ?? deriveZohoSubscriptionStatus(verify.status);
+
   return {
-    customerId: verified.customerId || options.customerId,
-    paymentId: verified.paymentId,
+    customerId: verify.customerId || options.customerId,
+    paymentId: verify.paymentId,
     paymentMethodId,
     mandateId: mandateId || paymentMethodId,
     sessionId: options.sessionId,
-    paymentStatus: verified.status,
+    paymentStatus: verify.status,
     plan: subscription.data?.plan ?? plan,
-    amount: subscription.data?.amount ?? String(amount),
-    currency: subscription.data?.currency ?? currency,
-    subscriptionStatus: subscription.data?.status,
+    amount: subscription.data?.amount ?? String(verify.amount || amount),
+    currency: subscription.data?.currency ?? (verify.currency || currency),
+    subscriptionStatus,
     subscriptionNextCharge: subscription.data?.nextCharge,
   };
+};
+
+/** Best-effort failure log for reconciliation and support. */
+export const logZohoPayFailure = async (payload: ZohoPayFailureLogRequest): Promise<void> => {
+  try {
+    await api.post('/zoho/payment-failure', payload);
+  } catch {
+    // Non-blocking — local onboarding flow should continue to show the error to the user.
+  }
 };

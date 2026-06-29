@@ -471,7 +471,6 @@ const DyadLanding: React.FC = () => {
 
   const [paused, setPaused] = useState(false);
 
-
   const divRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -502,7 +501,8 @@ const DyadLanding: React.FC = () => {
 
       {/* Main Content - Video Banner */}
       <main className="dyad-main">
-        <div className="video-banner">
+        {/* experimental mobile stack: remove video-banner--mobile-stack to revert */}
+        <div className="video-banner video-banner--mobile-stack">
           <video
             className="video-background"
             autoPlay
@@ -518,6 +518,9 @@ const DyadLanding: React.FC = () => {
           {/* Video Overlay */}
           <div className="video-overlay">
             <div className="video-content">
+              <div className="video-content-animated-bg" aria-hidden="true">
+                <span className="video-content-animated-bg__glow" />
+              </div>
               <div className="video-hero-inner">
                 <div className="title-container">
                   <h1 className="video-title">

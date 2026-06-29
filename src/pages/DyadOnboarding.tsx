@@ -59,6 +59,8 @@ import { StepSignAgreements } from '../components/onboarding/step3/StepSignAgree
 import { StepDueDiligence } from '../components/onboarding/step4/StepDueDiligence';
 import { StepCommercialAlignment } from '../components/onboarding/step5/StepCommercialAlignment';
 import { StepBankingPaymentSetup } from '../components/onboarding/step6/StepBankingPaymentSetup';
+import type { ZohoAchMandateResult } from '../types/zohoPayMandate';
+import { buildZohoMandateFormPatch } from '../utils/zohoPayMandate';
 import { emptyKycDocuments, type KycDocMeta } from '../components/onboarding/step6/bankingConstants';
 import type { CommercialDecision } from '../components/onboarding/step5/commercialConstants';
 import type { DueDiligenceDocMeta } from '../components/onboarding/step4/dueDiligenceConstants';
@@ -239,6 +241,11 @@ export interface OnboardingData {
   zohoPaymentId: string;
   zohoPaymentMethodId: string;
   zohoMandateId: string;
+  zohoSessionId: string;
+  zohoPaymentStatus: string;
+  zohoSubscriptionStatus: string;
+  zohoSubscriptionNextCharge: string;
+  achMandateAuthorizedAt: string;
   step6Sec4Attested: boolean;
   step6Sec4Complete: boolean;
   sweepUseSection4: boolean;
@@ -424,6 +431,11 @@ const INITIAL_DATA: OnboardingData = {
   zohoPaymentId: '',
   zohoPaymentMethodId: '',
   zohoMandateId: '',
+  zohoSessionId: '',
+  zohoPaymentStatus: '',
+  zohoSubscriptionStatus: '',
+  zohoSubscriptionNextCharge: '',
+  achMandateAuthorizedAt: '',
   step6Sec4Attested: false,
   step6Sec4Complete: false,
   sweepUseSection4: true,
@@ -1240,6 +1252,20 @@ const DyadOnboarding: React.FC = () => {
     }
   };
 
+  const handleZohoMandatePersist = useCallback(async (result: ZohoAchMandateResult) => {
+    const patch = buildZohoMandateFormPatch(result);
+    const merged: OnboardingData = { ...formData, ...patch };
+    setFormData(merged);
+    persistOnboardingFormState(merged, {
+      currentStep: 6,
+      highestStepReached: effectiveHighestStep,
+    });
+    await submitStep(6, {
+      currentStep: 6,
+      highestStepReached: effectiveHighestStep,
+    }, merged);
+  }, [effectiveHighestStep, formData, submitStep]);
+
   const handleBeginEnrollment = async () => {
     if (!canBeginEnrollment) {
       toast.error('Please complete both sections to begin enrollment');
@@ -1517,6 +1543,7 @@ const DyadOnboarding: React.FC = () => {
               onNext={handleNextFromStep}
               onBack={() => goToStep(5)}
               isSubmitting={isSubmitting}
+              onZohoMandatePersist={handleZohoMandatePersist}
             />
           )}
         </div>

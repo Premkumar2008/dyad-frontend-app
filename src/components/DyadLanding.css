@@ -1029,7 +1029,7 @@ header.dyad-header .dyad-nav-actions .dyad-nav .nav-list .dyad-nav .nav-link.act
 .video-banner-cta {
   width: 100%;
   max-width: 100%;
-  padding: 0.9rem 1.25rem !important;
+  padding: 0.65rem 1.25rem !important;
   border-radius: 0.5rem !important;
   font-size: 1rem !important;
   justify-content: center;
@@ -1181,6 +1181,7 @@ header.dyad-header .dyad-nav-actions .dyad-nav .nav-list .dyad-nav .nav-link.act
 
   .video-title {
     font-size: 56px;
+    font-weight: 600;
     line-height: 1.2;
     text-wrap: balance;
     text-align: center;
@@ -1262,31 +1263,32 @@ header.dyad-header .dyad-nav-actions .dyad-nav .nav-list .dyad-nav .nav-link.act
 
   .title-lines-mobile {
     display: block;
+    font-weight: 600;
+    line-height: 1.45;
   }
 
   .title-lines-mobile .title-line {
     white-space: normal;
+    font-size: 1.12em;
+    font-weight: 600;
+    line-height: 1.45;
   }
 
   .title-lines-mobile .title-line-nowrap {
     white-space: nowrap;
   }
 
-  .title-lines-mobile .title-line {
- 
-    font-size: 1.12em;
-  }
-
   .video-title {
     font-size: clamp(1.5rem, 6.5vw, 2rem) !important;
-    line-height: 1.3;
+    font-weight: 600 !important;
+    line-height: 1.45;
     text-wrap: balance;
     text-align: left;
     width: 100%;
   }
 
   .video-subtitle {
-    font-size: 1.2rem !important;
+    font-size: 1rem !important;
     margin-top: 0.875rem;
     width: 100%;
     max-width: 100%;
@@ -1294,8 +1296,209 @@ header.dyad-header .dyad-nav-actions .dyad-nav .nav-list .dyad-nav .nav-link.act
     box-sizing: border-box;
     text-align: justify;
   }
+
+  .video-banner-cta {
+    font-size: 1.0625rem !important;
+    padding: 0.65rem 1.25rem !important;
+  }
 }
 
+.video-content-animated-bg {
+  display: none;
+}
+
+/* Hero content animated background keyframes (mobile stack — professional ambient) */
+@keyframes heroAccentSweep {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes heroGlowDrift {
+  0% {
+    transform: translate(-8%, -6%) scale(1);
+    opacity: 0.75;
+  }
+
+  100% {
+    transform: translate(8%, 6%) scale(1.08);
+    opacity: 1;
+  }
+}
+
+@keyframes heroWashDrift {
+  0% {
+    transform: translate(-6%, 4%);
+    opacity: 0.6;
+  }
+
+  100% {
+    transform: translate(6%, -4%);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .video-banner.video-banner--mobile-stack .video-content {
+    background: #f8fafc;
+  }
+
+  .video-banner.video-banner--mobile-stack .video-content-animated-bg::after {
+    animation: none;
+    opacity: 0.85;
+    transform: none;
+  }
+
+  .video-banner.video-banner--mobile-stack .video-content-animated-bg::before {
+    animation: none;
+  }
+
+  .video-banner.video-banner--mobile-stack .video-content-animated-bg__glow {
+    animation: none;
+    opacity: 0.85;
+    transform: none;
+  }
+}
+
+/* ============================================================
+   MOBILE STACK LAYOUT (experimental — phones only)
+   Video full width + natural height; hero content below video.
+   REVERT: remove class `video-banner--mobile-stack` from DyadLanding.tsx,
+           remove `video-content-animated-bg` markup, and delete this block.
+   ============================================================ */
+@media (max-width: 767px) {
+  .video-banner.video-banner--mobile-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: visible;
+  }
+
+  .video-banner.video-banner--mobile-stack .video-background {
+    position: relative;
+    top: auto;
+    left: auto;
+    width: 100%;
+    height: auto;
+    max-height: none;
+    object-fit: contain;
+    object-position: center top;
+    display: block;
+    flex-shrink: 0;
+    z-index: 1;
+  }
+
+  .video-banner.video-banner--mobile-stack .video-overlay {
+    position: relative;
+    top: auto;
+    left: auto;
+    width: 100%;
+    height: auto;
+    min-height: 0;
+    flex: 0 0 auto;
+    background-color: transparent;
+    align-items: stretch;
+    justify-content: flex-start;
+    z-index: 2;
+  }
+
+  .video-banner.video-banner--mobile-stack .video-content {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+    height: auto;
+    min-height: 0;
+    padding: 1.5rem 1.25rem 2rem;
+    justify-content: flex-start;
+    background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+  }
+
+  .video-banner.video-banner--mobile-stack .video-content-animated-bg {
+    display: block;
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .video-banner.video-banner--mobile-stack .video-content-animated-bg::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #173e7a 0%, #00a7d8 45%, #b0da23 55%, #00a7d8 70%, #173e7a 100%);
+    background-size: 220% 100%;
+    animation: heroAccentSweep 10s ease-in-out infinite;
+  }
+
+  .video-banner.video-banner--mobile-stack .video-content-animated-bg::after {
+    content: '';
+    position: absolute;
+    inset: -25%;
+    background:
+      radial-gradient(ellipse 50% 42% at 18% 22%, rgba(23, 62, 122, 0.11) 0%, transparent 62%),
+      radial-gradient(ellipse 48% 40% at 82% 78%, rgba(0, 167, 216, 0.09) 0%, transparent 62%);
+    animation: heroWashDrift 18s ease-in-out infinite alternate;
+    will-change: transform, opacity;
+  }
+
+  .video-banner.video-banner--mobile-stack .video-content-animated-bg__glow {
+    position: absolute;
+    inset: -35%;
+    background:
+      radial-gradient(circle at 28% 38%, rgba(23, 62, 122, 0.13) 0%, transparent 42%),
+      radial-gradient(circle at 72% 62%, rgba(0, 167, 216, 0.11) 0%, transparent 42%),
+      radial-gradient(circle at 50% 50%, rgba(176, 218, 35, 0.06) 0%, transparent 38%);
+    animation: heroGlowDrift 14s ease-in-out infinite alternate-reverse;
+    will-change: transform, opacity;
+  }
+
+  .video-banner.video-banner--mobile-stack .video-hero-inner {
+    position: relative;
+    z-index: 1;
+    max-width: 100%;
+    gap: 0;
+  }
+
+  .video-banner.video-banner--mobile-stack .video-title {
+    color: #222222;
+    text-shadow: none;
+  }
+
+  .video-banner.video-banner--mobile-stack .title-lines-mobile .title-line:nth-child(n + 2) {
+    color: #173e7a;
+    font-weight: 600;
+  }
+
+  .video-banner.video-banner--mobile-stack .video-subtitle {
+    color: #444444;
+    text-shadow: none;
+    margin-top: 1rem;
+  }
+
+  .video-banner.video-banner--mobile-stack .video-banner-actions {
+    margin-top: 1.25rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .video-banner.video-banner--mobile-stack {
+    min-height: 0 !important;
+    max-height: none !important;
+  }
+}
 
 
 /* Enhanced Mobile Responsive Design for About Us */
@@ -1661,8 +1864,6 @@ header.dyad-header .dyad-nav-actions .dyad-nav .nav-list .dyad-nav .nav-link.act
   }
 
   .dyad-main {
-   min-height: 650px !important;
-   max-height: 650px !important;
     margin: 0;
     padding-left: 0;
     padding-right: 0;

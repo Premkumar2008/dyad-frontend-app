@@ -87,6 +87,8 @@ export const ONBOARDING_STEP_FIELD_MAP: Record<StepBucketKey, (keyof OnboardingD
     'w9EsignConsent', 'w9IrsCert', 'w9AuthDist', 'w9Signature', 'w9Signed', 'w9SignedAt', 'w9SignedHash',
     'w9Item2Flagged', 'achBankPhone', 'achBankAddress', 'achMandateActive',
     'zohoCustomerId', 'zohoPaymentId', 'zohoPaymentMethodId', 'zohoMandateId',
+    'zohoSessionId', 'zohoPaymentStatus', 'zohoSubscriptionStatus', 'zohoSubscriptionNextCharge',
+    'achMandateAuthorizedAt',
     'step6Sec4Attested', 'step6Sec4Complete', 'sweepUseSection4', 'sweepOtherBankName',
     'sweepOtherAcctType', 'sweepOtherRouting', 'sweepOtherAccount', 'step6Sec5Attested', 'step6Sec5Complete',
     'kycDocuments', 'step6Sec6Attested', 'step6Sec6Complete', 'step6EnrollmentComplete', 'step6ConfirmationId',

@@ -22,12 +22,17 @@ export const buildZPaymentsConfig = (apiKey?: string): ZohoPayInitConfig | null 
   const accountId = import.meta.env.VITE_ZOHO_PAY_ACCOUNT_ID?.trim();
   const domain = import.meta.env.VITE_ZOHO_PAY_DOMAIN?.trim() || 'US';
   const key = apiKey?.trim() || import.meta.env.VITE_ZOHO_PAY_API_KEY?.trim();
+  const isTestMode = import.meta.env.VITE_ZOHO_PAY_TEST_MODE === 'true';
+  const otherOptions: ZohoPayInitConfig['otherOptions'] = {};
+
+  if (key) otherOptions.api_key = key;
+  if (isTestMode) otherOptions.is_test_mode = true;
 
   if (!accountId) return null;
 
   return {
     account_id: accountId,
     domain,
-    otherOptions: key ? { api_key: key } : {},
+    otherOptions,
   };
 };

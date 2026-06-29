@@ -6,18 +6,73 @@
  * Env:
  *   VITE_ZOHO_PAY_ACCOUNT_ID (or ZOHO_PAY_ACCOUNT_ID)
  *   ZOHO_OAUTH_TOKEN (or VITE_ZOHO_PAY_API_KEY as fallback)
+ *
+ * Endpoints:
+ *   POST /api/customer
+ *   POST /api/create-session
+ *   POST /api/verify-payment
+ *   POST /api/create-payment-method-session
+ *   POST /api/save-subscription
+ *   POST /api/zoho/payment-failure
+ *   POST /api/zoho/webhook
+ *   GET  /api/subscription/:onboardingId
  */
 
 require('dotenv').config();
 
+const fs = require('fs');
 const http = require('http');
 const https = require('https');
+const path = require('path');
 
 const PORT = process.env.PORT || 5000;
 const ACCOUNT_ID = process.env.VITE_ZOHO_PAY_ACCOUNT_ID || process.env.ZOHO_PAY_ACCOUNT_ID || '';
 const API_KEY = process.env.VITE_ZOHO_PAY_API_KEY || '';
 const OAUTH_TOKEN = process.env.ZOHO_OAUTH_TOKEN || '';
 const ZOHO_API_BASE = 'payments.zoho.com';
+const DATA_FILE = path.join(__dirname, '.zoho-pay-store.json');
+
+const ACCEPTABLE_PAYMENT_STATUSES = new Set([
+  'succeeded', 'success', 'pending', 'processing', 'authorized',
+]);
+
+function loadStore() {
+  try {
+    if (fs.existsSync(DATA_FILE)) {
+      const raw = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+      return {
+        subscriptions: raw.subscriptions ?? {},
+        paymentsById: raw.paymentsById ?? {},
+        failureLogs: Array.isArray(raw.failureLogs) ? raw.failureLogs : [],
+      };
+    }
+  } catch {
+    // fall through
+  }
+  return { subscriptions: {}, paymentsById: {}, failureLogs: [] };
+}
+
+function saveStore(store) {
+  fs.writeFileSync(DATA_FILE, JSON.stringify(store, null, 2), 'utf8');
+}
+
+let store = loadStore();
+
+function getSubscriptionByOnboardingId(onboardingId) {
+  return store.subscriptions[onboardingId] ?? null;
+}
+
+function getSubscriptionByPaymentId(paymentId) {
+  const onboardingId = store.paymentsById[paymentId];
+  return onboardingId ? store.subscriptions[onboardingId] : null;
+}
+
+function deriveSubscriptionStatus(paymentStatus) {
+  const normalized = String(paymentStatus ?? '').toLowerCase();
+  if (normalized === 'succeeded' || normalized === 'success') return 'active';
+  if (normalized === 'failed' || normalized === 'cancelled') return 'failed';
+  return 'pending';
+}
 
 function getAuthToken() {
   if (OAUTH_TOKEN) return OAUTH_TOKEN;
@@ -153,19 +208,160 @@ async function handleCreateSession(body) {
   };
 }
 
-/** In-memory subscription store for local dev (keyed by onboardingId). */
-const subscriptionStore = new Map();
+/** Persistent subscription store (keyed by onboardingId). */
+function handleSaveSubscription(body) {
+  const paymentId = body.payment_id ?? body.paymentId;
+  const paymentMethodId = body.payment_method_id ?? body.paymentMethodId;
+  const customerId = body.customerId ?? body.customer_id;
+  const onboardingId = body.onboardingId ?? body.userId ?? body.owner_id;
+  const plan = body.plan ?? 'monthly';
+  const amount = String(body.amount ?? '1');
+  const currency = body.currency ?? 'USD';
+  const paymentStatus = body.payment_status ?? body.paymentStatus ?? 'succeeded';
+  const sessionId = body.session_id ?? body.sessionId ?? '';
+  const mandateId = body.mandate_id ?? body.mandateId ?? paymentMethodId;
+
+  if (!paymentId) throw new Error('payment_id is required');
+  if (!paymentMethodId) throw new Error('payment_method_id is required');
+  if (!customerId) throw new Error('customerId is required');
+  if (!onboardingId) throw new Error('onboardingId is required');
+
+  const existingByPayment = getSubscriptionByPaymentId(paymentId);
+  if (existingByPayment) {
+    return {
+      success: true,
+      isNew: false,
+      data: existingByPayment,
+    };
+  }
+
+  const existing = getSubscriptionByOnboardingId(onboardingId);
+  const nextCharge = new Date();
+  nextCharge.setMonth(nextCharge.getMonth() + (plan === 'yearly' ? 12 : 1));
+
+  const record = {
+    id: existing?.id ?? Object.keys(store.subscriptions).length + 1,
+    owner_id: onboardingId,
+    zoho_customer_id: customerId,
+    zoho_payment_id: paymentId,
+    zoho_payment_method_id: paymentMethodId,
+    zoho_mandate_id: mandateId,
+    zoho_session_id: sessionId,
+    payment_status: paymentStatus,
+    plan,
+    amount,
+    currency,
+    status: deriveSubscriptionStatus(paymentStatus),
+    next_charge: nextCharge.toISOString(),
+    authorized_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+
+  store.subscriptions[onboardingId] = record;
+  store.paymentsById[paymentId] = onboardingId;
+  saveStore(store);
+
+  return {
+    success: true,
+    isNew: !existing,
+    data: record,
+  };
+}
+
+function handleGetSubscription(onboardingId) {
+  const record = getSubscriptionByOnboardingId(onboardingId);
+  if (!record) {
+    return { success: false, message: 'Subscription not found' };
+  }
+  return { success: true, data: record };
+}
+
+function handlePaymentFailure(body) {
+  const entry = {
+    id: store.failureLogs.length + 1,
+    onboarding_id: body.onboardingId ?? body.onboarding_id ?? '',
+    stage: body.stage ?? 'unknown',
+    error: body.error ?? 'unknown',
+    customer_id: body.customerId ?? body.customer_id ?? '',
+    session_id: body.sessionId ?? body.session_id ?? '',
+    payment_id: body.paymentId ?? body.payment_id ?? '',
+    created_at: new Date().toISOString(),
+  };
+  store.failureLogs.push(entry);
+  saveStore(store);
+  return { success: true, data: entry };
+}
+
+function handleZohoWebhook(body) {
+  const payment = body.payment ?? body.data?.payment ?? body;
+  const paymentId = payment?.payment_id ?? body.payment_id;
+  const paymentStatus = payment?.status ?? body.status ?? body.event_type;
+  const eventType = body.event_type ?? body.type ?? 'payment.updated';
+
+  if (!paymentId) {
+    return { success: false, message: 'payment_id missing in webhook payload' };
+  }
+
+  const record = getSubscriptionByPaymentId(paymentId);
+  if (!record) {
+    return { success: true, ignored: true, message: 'No local subscription for payment_id' };
+  }
+
+  const normalizedStatus = String(paymentStatus ?? '').toLowerCase();
+  if (normalizedStatus.includes('fail') || normalizedStatus === 'payment.failed') {
+    record.status = 'failed';
+    record.payment_status = 'failed';
+  } else if (ACCEPTABLE_PAYMENT_STATUSES.has(normalizedStatus) || normalizedStatus.includes('success')) {
+    record.payment_status = normalizedStatus.includes('pending') || normalizedStatus.includes('processing')
+      ? normalizedStatus
+      : 'succeeded';
+    record.status = deriveSubscriptionStatus(record.payment_status);
+  }
+
+  record.last_webhook_event = eventType;
+  record.updated_at = new Date().toISOString();
+  store.subscriptions[record.owner_id] = record;
+  saveStore(store);
+
+  return { success: true, data: record };
+}
+
+async function handleVerifyPayment(body) {
+  const paymentId = body.payment_id ?? body.paymentId;
+  if (!paymentId) throw new Error('payment_id is required');
+
+  const result = await verifyZohoPayment(paymentId);
+  const normalized = String(result.status ?? '').toLowerCase();
+  const acceptable = ACCEPTABLE_PAYMENT_STATUSES.has(normalized)
+    || normalized === 'succeeded'
+    || normalized === 'success';
+
+  return {
+    ...result,
+    success: acceptable,
+    message: acceptable ? undefined : `Payment could not be verified (status: ${result.status})`,
+    onboarding_id: body.onboardingId ?? body.onboarding_id ?? '',
+    session_id: body.session_id ?? body.sessionId ?? '',
+    plan: body.plan ?? 'monthly',
+    amount: String(body.amount ?? result.amount ?? '1'),
+    currency: body.currency ?? result.currency ?? 'USD',
+  };
+}
 
 async function verifyZohoPayment(paymentId) {
   const data = await zohoRequest('GET', `/payments/${encodeURIComponent(paymentId)}`);
   const payment = data?.payment ?? data;
   const paymentMethodId = payment?.payment_method_id ?? payment?.payment_method?.payment_method_id;
+  const status = payment?.status ?? 'succeeded';
 
   return {
     success: true,
+    paymentId: payment?.payment_id ?? paymentId,
     payment_id: payment?.payment_id ?? paymentId,
-    status: payment?.status ?? 'succeeded',
+    status,
+    customerId: payment?.customer_id,
     customer_id: payment?.customer_id,
+    paymentMethodId,
     payment_method_id: paymentMethodId,
     amount: String(payment?.amount ?? '1'),
     currency: payment?.currency ?? 'USD',
@@ -197,54 +393,6 @@ async function createPaymentMethodSession(customerId) {
       payment_method_session_id: paymentMethodSessionId,
     },
   };
-}
-
-function handleSaveSubscription(body) {
-  const paymentId = body.payment_id ?? body.paymentId;
-  const paymentMethodId = body.payment_method_id ?? body.paymentMethodId;
-  const customerId = body.customerId ?? body.customer_id;
-  const onboardingId = body.onboardingId ?? body.userId ?? body.owner_id;
-  const plan = body.plan ?? 'monthly';
-  const amount = String(body.amount ?? '1');
-  const currency = body.currency ?? 'USD';
-
-  if (!paymentId) throw new Error('payment_id is required');
-  if (!paymentMethodId) throw new Error('payment_method_id is required');
-  if (!customerId) throw new Error('customerId is required');
-  if (!onboardingId) throw new Error('onboardingId is required');
-
-  const existing = subscriptionStore.get(onboardingId);
-  const nextCharge = new Date();
-  nextCharge.setMonth(nextCharge.getMonth() + (plan === 'yearly' ? 12 : 1));
-
-  const record = {
-    id: existing?.id ?? subscriptionStore.size + 1,
-    owner_id: onboardingId,
-    zoho_customer_id: customerId,
-    zoho_payment_id: paymentId,
-    zoho_payment_method_id: paymentMethodId,
-    plan,
-    amount,
-    currency,
-    status: 'active',
-    next_charge: nextCharge.toISOString(),
-  };
-
-  subscriptionStore.set(onboardingId, record);
-
-  return {
-    success: true,
-    isNew: !existing,
-    data: record,
-  };
-}
-
-function handleGetSubscription(onboardingId) {
-  const record = subscriptionStore.get(onboardingId);
-  if (!record) {
-    return { success: false, message: 'Subscription not found' };
-  }
-  return { success: true, data: record };
 }
 
 async function handleSaveMandate(body) {
@@ -312,9 +460,8 @@ async function routeRequest(req, res) {
   if (req.method === 'POST' && url === '/api/verify-payment') {
     try {
       const body = await readBody(req);
-      const paymentId = body.payment_id ?? body.paymentId;
-      if (!paymentId) throw new Error('payment_id is required');
-      return sendJson(res, 200, await verifyZohoPayment(paymentId));
+      const verified = await handleVerifyPayment(body);
+      return sendJson(res, verified.success ? 200 : 200, verified);
     } catch (err) {
       return sendJson(res, 500, { success: false, message: err.message });
     }
@@ -334,7 +481,26 @@ async function routeRequest(req, res) {
   if (req.method === 'POST' && url === '/api/save-subscription') {
     try {
       const body = await readBody(req);
-      return sendJson(res, 200, handleSaveSubscription(body));
+      const result = handleSaveSubscription(body);
+      return sendJson(res, result.isNew ? 201 : 200, result);
+    } catch (err) {
+      return sendJson(res, 500, { success: false, message: err.message });
+    }
+  }
+
+  if (req.method === 'POST' && url === '/api/zoho/payment-failure') {
+    try {
+      const body = await readBody(req);
+      return sendJson(res, 200, handlePaymentFailure(body));
+    } catch (err) {
+      return sendJson(res, 500, { success: false, message: err.message });
+    }
+  }
+
+  if (req.method === 'POST' && url === '/api/zoho/webhook') {
+    try {
+      const body = await readBody(req);
+      return sendJson(res, 200, handleZohoWebhook(body));
     } catch (err) {
       return sendJson(res, 500, { success: false, message: err.message });
     }
@@ -362,6 +528,8 @@ if (require.main === module) {
     console.log('  POST /api/verify-payment');
     console.log('  POST /api/create-payment-method-session');
     console.log('  POST /api/save-subscription');
+    console.log('  POST /api/zoho/payment-failure');
+    console.log('  POST /api/zoho/webhook');
     console.log('  GET  /api/subscription/:onboardingId');
     console.log('  POST /api/save-mandate');
   });

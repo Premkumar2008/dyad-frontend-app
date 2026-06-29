@@ -2,12 +2,14 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ChevronDown, ChevronUp, ShieldCheck } from 'lucide-react';
 import toast from 'react-hot-toast';
 import type { OnboardingData } from '../../../pages/DyadOnboarding';
+import { getSubscriptionStatus } from '../../../services/zohoPayService';
 import { EnrollmentSaveNotice } from '../EnrollmentSaveNotice';
 import { ObArrowRight, ObBackButtonLabel, ObForwardButtonLabel, trimBtnArrow } from '../ObBtnArrow';
 import { formatAgreementAcceptance } from '../step3/agreementHelpers';
 import { FormW9Section } from './FormW9Section';
 import { KycUploadBar } from './KycUploadBar';
 import { ZohoAchSetupWidget } from './ZohoAchSetupWidget';
+import type { ZohoAchMandateResult } from '../../../types/zohoPayMandate';
 import { EnrollmentSectionsBarRow } from '../EnrollmentSectionsBarRow';
 import {
   ACH_ATTEST_TEXT,
@@ -36,6 +38,7 @@ export interface StepBankingPaymentSetupProps {
   onNext: () => void;
   onBack: () => void;
   isSubmitting: boolean;
+  onZohoMandatePersist: (result: ZohoAchMandateResult) => Promise<void>;
 }
 
 const LPOA_ATTEST = 'I, the Authorized Signatory, grant Dyad Practice Solutions, LLC a Limited Power of Attorney as described above to open, establish, and administer a dedicated lockbox deposit account at Live Oak Bank, N.A. through the Anatomy Financial platform on behalf of my practice, and to perform all banking operations incidental to the revenue cycle services rendered under the Master Services Agreement. I certify that I have the legal authority to execute this Limited Power of Attorney on behalf of the Provider.';
@@ -113,7 +116,7 @@ const AttestBox: React.FC<{
 );
 
 export const StepBankingPaymentSetup: React.FC<StepBankingPaymentSetupProps> = ({
-  formData, set, onNext, onBack, isSubmitting,
+  formData, set, onNext, onBack, isSubmitting, onZohoMandatePersist,
 }) => {
   const [sectionStatus, setSectionStatus] = useState(() => initSectionStatus(formData));
   const [openSections, setOpenSections] = useState<Record<BankingSectionId, boolean>>(
@@ -143,6 +146,30 @@ export const StepBankingPaymentSetup: React.FC<StepBankingPaymentSetupProps> = (
   }, [formData, set]);
 
   useEffect(() => { prefillW9(); }, [prefillW9]);
+
+  useEffect(() => {
+    if (!formData.onboardingId || !formData.achMandateActive) return;
+    if (formData.zohoSubscriptionStatus && formData.zohoSubscriptionStatus !== 'pending') return;
+
+    let cancelled = false;
+    getSubscriptionStatus(formData.onboardingId)
+      .then((res) => {
+        if (cancelled || !res.success || !res.data) return;
+        if (res.data.status) set('zohoSubscriptionStatus', res.data.status);
+        if (res.data.nextCharge) set('zohoSubscriptionNextCharge', res.data.nextCharge);
+        if (res.data.paymentStatus) set('zohoPaymentStatus', res.data.paymentStatus);
+      })
+      .catch(() => undefined);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    formData.achMandateActive,
+    formData.onboardingId,
+    formData.zohoSubscriptionStatus,
+    set,
+  ]);
 
   useEffect(() => {
     setSectionStatus(initSectionStatus(formData));
@@ -489,13 +516,10 @@ export const StepBankingPaymentSetup: React.FC<StepBankingPaymentSetupProps> = (
               mandateActive={formData.achMandateActive}
               paymentId={formData.zohoPaymentId}
               paymentMethodId={formData.zohoPaymentMethodId}
-              onMandateSaved={result => {
-                set('achMandateActive', true);
-                set('zohoCustomerId', result.customerId);
-                set('zohoPaymentId', result.paymentId);
-                set('zohoPaymentMethodId', result.paymentMethodId);
-                set('zohoMandateId', result.mandateId);
-              }}
+              paymentStatus={formData.zohoPaymentStatus}
+              subscriptionStatus={formData.zohoSubscriptionStatus}
+              subscriptionNextCharge={formData.zohoSubscriptionNextCharge}
+              onMandateSaved={onZohoMandatePersist}
             />
             <AttestBox
               checked={formData.step6Sec4Attested}
