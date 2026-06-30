@@ -3,6 +3,7 @@ import api, {
   verifyOTP,
   handleApiError,
 } from './api';
+import SecureSessionStorage from '../utils/sessionStorage';
 
 export const ONBOARDING_CLIENT_SESSION_KEY = 'dyad_onboarding_client_session';
 const SESSION_TTL_MS = 24 * 60 * 60 * 1000;
@@ -13,6 +14,8 @@ export interface OnboardingClientSession {
   verifiedAt: string;
   expiresAt: number;
   onboardingId?: string;
+  accessToken?: string;
+  refreshToken?: string;
 }
 
 export interface OnboardingEmailCheckResult {
@@ -52,24 +55,42 @@ const parseCheckResult = (data: unknown): OnboardingEmailCheckResult => {
   };
 };
 
+const readToken = (record: Record<string, unknown>, ...keys: string[]): string | undefined => {
+  for (const key of keys) {
+    const value = record[key];
+    if (typeof value === 'string' && value.trim()) return value.trim();
+  }
+  return undefined;
+};
+
 const parseVerifyResult = (data: unknown): OnboardingVerifyLoginResult => {
   const root = (data && typeof data === 'object' ? data : {}) as Record<string, unknown>;
   const nested = (root.data && typeof root.data === 'object' ? root.data : root) as Record<string, unknown>;
-  const onboardingId = typeof nested.onboardingId === 'string'
-    ? nested.onboardingId
-    : typeof nested.onboarding_id === 'string'
-      ? nested.onboarding_id
-      : undefined;
+  const onboardingId = readToken(nested, 'onboardingId', 'onboarding_id')
+    ?? readToken(root, 'onboardingId', 'onboarding_id');
+  const accessToken = readToken(nested, 'accessToken', 'access_token', 'token')
+    ?? readToken(root, 'accessToken', 'access_token', 'token');
+  const refreshToken = readToken(nested, 'refreshToken', 'refresh_token')
+    ?? readToken(root, 'refreshToken', 'refresh_token');
+
   return {
-    success: Boolean(nested.success),
+    success: nested.success !== false && root.success !== false,
     message: typeof nested.message === 'string' ? nested.message : undefined,
     contactName: typeof nested.contactName === 'string' ? nested.contactName : undefined,
     firstName: typeof nested.firstName === 'string' ? nested.firstName : undefined,
     lastName: typeof nested.lastName === 'string' ? nested.lastName : undefined,
-    accessToken: typeof nested.accessToken === 'string' ? nested.accessToken : undefined,
-    refreshToken: typeof nested.refreshToken === 'string' ? nested.refreshToken : undefined,
+    accessToken,
+    refreshToken,
     onboardingId,
   };
+};
+
+export const persistOnboardingAuthTokens = (
+  accessToken?: string,
+  refreshToken?: string,
+): void => {
+  if (!accessToken?.trim()) return;
+  SecureSessionStorage.setTokens(accessToken.trim(), (refreshToken ?? accessToken).trim());
 };
 
 export const buildDisplayName = (result: {
@@ -119,7 +140,9 @@ export const verifyOnboardingClientOTP = async (
   }
 };
 
-export const setOnboardingClientSession = (session: Omit<OnboardingClientSession, 'expiresAt' | 'verifiedAt'> & Partial<Pick<OnboardingClientSession, 'verifiedAt'>>): void => {
+export const setOnboardingClientSession = (
+  session: Omit<OnboardingClientSession, 'expiresAt' | 'verifiedAt'> & Partial<Pick<OnboardingClientSession, 'verifiedAt'>>,
+): void => {
   const existing = getOnboardingClientSession();
   const keepExistingId = existing?.email === session.email ? existing.onboardingId : undefined;
   const payload: OnboardingClientSession = {
@@ -128,6 +151,8 @@ export const setOnboardingClientSession = (session: Omit<OnboardingClientSession
     verifiedAt: session.verifiedAt ?? new Date().toISOString(),
     expiresAt: Date.now() + SESSION_TTL_MS,
     onboardingId: session.onboardingId ?? keepExistingId,
+    accessToken: session.accessToken ?? (existing?.email === session.email ? existing.accessToken : undefined),
+    refreshToken: session.refreshToken ?? (existing?.email === session.email ? existing.refreshToken : undefined),
   };
   localStorage.setItem(ONBOARDING_CLIENT_SESSION_KEY, JSON.stringify(payload));
 };

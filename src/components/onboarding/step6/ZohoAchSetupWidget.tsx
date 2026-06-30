@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 import { ZOHO_PAY_MERCHANT_NAME } from '../../../constants/zohoPay';
 import {
@@ -11,6 +11,7 @@ import {
   isZohoPayConfigured,
   isZohoPayMockMode,
   logZohoPayFailure,
+  requestCheckoutWithRecovery,
 } from '../../../services/zohoPayService';
 import { getZohoMandateSuccessMessage } from '../../../utils/zohoPayMandate';
 import type { ZohoPayRequestPaymentMethodOptions, ZohoPayWidgetSuccess } from '../../../types/zohoPay';
@@ -20,7 +21,6 @@ import {
   getZPaymentsInstance,
   loadZohoPayScript,
   restorePageScroll,
-  withTimeout,
 } from '../../../utils/zohoPayLoader';
 
 import type { ZohoAchMandateResult } from '../../../types/zohoPayMandate';
@@ -66,86 +66,19 @@ export const ZohoAchSetupWidget: React.FC<ZohoAchSetupWidgetProps> = ({
   disabled = false,
   onMandateSaved,
 }) => {
-  const [checkoutReady, setCheckoutReady] = useState(false);
-  const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [payLoading, setPayLoading] = useState(false);
   const [payStatusMessage, setPayStatusMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
 
   const checkoutRef = useRef<CheckoutContext | null>(null);
-  const startCheckoutRef = useRef<(() => Promise<void>) | null>(null);
+  const authorizeInFlightRef = useRef(false);
 
   const configured = isZohoPayConfigured();
   const mockMode = isZohoPayMockMode();
   const setupAmount = getZohoPaySetupAmount();
 
-  const startCheckout = useCallback(async () => {
-    if (mandateActive || mockMode) return;
-
-    if (!customerEmail.trim()) return;
-    if (!onboardingId.trim()) {
-      setErrorMessage('Save onboarding progress first — onboarding ID is required for Zoho Pay.');
-      return;
-    }
-
-    if (!configured) return;
-
-    setCheckoutLoading(true);
-    setErrorMessage('');
-    setCheckoutReady(false);
-    checkoutRef.current = null;
-
-    try {
-      await loadZohoPayScript();
-
-      const { customerId } = await ensureCustomer({
-        name: customerName.trim() || customerEmail.trim(),
-        email: customerEmail.trim(),
-        phone: customerPhone.trim() || undefined,
-        onboardingId: onboardingId.trim(),
-      });
-
-      const session = await createPaymentSession({
-        amount: setupAmount,
-        currency: 'USD',
-        customerId,
-        plan: getZohoPayPlan(),
-      });
-
-      checkoutRef.current = {
-        customerId,
-        paymentsSessionId: session.paymentsSessionId,
-        amount: session.amount,
-        currencyCode: session.currencyCode,
-        apiKey: session.apiKey,
-      };
-      setCheckoutReady(true);
-    } catch (err) {
-      setErrorMessage(formatZohoPayError(err));
-    } finally {
-      setCheckoutLoading(false);
-    }
-  }, [
-    configured,
-    customerEmail,
-    customerName,
-    customerPhone,
-    mandateActive,
-    mockMode,
-    onboardingId,
-    setupAmount,
-  ]);
-
-  startCheckoutRef.current = startCheckout;
-
-  useEffect(() => {
-    if (!mandateActive && !mockMode && configured && customerEmail.trim() && onboardingId.trim()) {
-      startCheckoutRef.current?.();
-    }
-  }, [mandateActive, mockMode, configured, customerEmail, customerName, onboardingId]);
-
   const handleAuthorizeAch = useCallback(async () => {
-    if (disabled || mandateActive || payLoading) return;
+    if (disabled || mandateActive || payLoading || authorizeInFlightRef.current) return;
 
     if (!customerEmail.trim()) {
       toast.error('Contact email is required before authorizing ACH');
@@ -180,6 +113,7 @@ export const ZohoAchSetupWidget: React.FC<ZohoAchSetupWidgetProps> = ({
       return;
     }
 
+    authorizeInFlightRef.current = true;
     setPayLoading(true);
     setPayStatusMessage('Preparing session…');
     setErrorMessage('');
@@ -214,6 +148,7 @@ export const ZohoAchSetupWidget: React.FC<ZohoAchSetupWidgetProps> = ({
       const message = formatZohoPayError(err);
       setErrorMessage(message);
       toast.error(message);
+      authorizeInFlightRef.current = false;
       setPayLoading(false);
       setPayStatusMessage('');
       return;
@@ -229,17 +164,11 @@ export const ZohoAchSetupWidget: React.FC<ZohoAchSetupWidgetProps> = ({
       await closeZPaymentsInstanceSafely();
 
       const initConfig = getZohoPayInitConfig(apiKey ?? checkout.apiKey);
-      if (!initConfig) {
-        throw new Error('Zoho Pay widget configuration is missing');
-      }
+      if (!initConfig) throw new Error('');
 
       const saveInstance = await getZPaymentsInstance(initConfig);
       try {
-        return await withTimeout(
-          saveInstance.requestPaymentMethod(widgetOptions),
-          WIDGET_TIMEOUT_MS,
-          'Zoho Pay did not respond while saving your bank account.',
-        );
+        return await saveInstance.requestPaymentMethod(widgetOptions);
       } finally {
         await closeZPaymentsInstanceSafely();
       }
@@ -249,14 +178,14 @@ export const ZohoAchSetupWidget: React.FC<ZohoAchSetupWidgetProps> = ({
 
     try {
       const initConfig = getZohoPayInitConfig(checkout.apiKey);
-      if (!initConfig) {
-        throw new Error('Zoho Pay widget configuration is missing');
-      }
+      if (!initConfig) throw new Error('');
 
       const instance = await getZPaymentsInstance(initConfig);
 
-      const result = await withTimeout(
-        instance.requestPaymentMethod({
+      setPayStatusMessage('Complete payment in Zoho Pay…');
+      const result = await requestCheckoutWithRecovery(
+        instance,
+        {
           transaction_type: 'payment',
           payments_session_id: checkout.paymentsSessionId,
           amount: checkout.amount,
@@ -270,16 +199,12 @@ export const ZohoAchSetupWidget: React.FC<ZohoAchSetupWidgetProps> = ({
             email: customerEmail.trim() || undefined,
             phone: customerPhone.trim() || undefined,
           },
-        }),
+        },
+        checkout.paymentsSessionId,
         WIDGET_TIMEOUT_MS,
-        'Zoho Pay did not respond. Close the overlay and try again.',
       );
 
       await closeZPaymentsInstanceSafely();
-
-      if (!onboardingId.trim()) {
-        throw new Error('Onboarding ID is required to save subscription');
-      }
 
       const widgetPaymentIdFromResult = typeof result.payment_id === 'string' ? result.payment_id.trim() : '';
       widgetPaymentId = widgetPaymentIdFromResult;
@@ -331,6 +256,7 @@ export const ZohoAchSetupWidget: React.FC<ZohoAchSetupWidgetProps> = ({
         });
       }
     } finally {
+      authorizeInFlightRef.current = false;
       setPayLoading(false);
       setPayStatusMessage('');
       restorePageScroll();

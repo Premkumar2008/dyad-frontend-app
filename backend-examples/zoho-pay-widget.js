@@ -11,11 +11,13 @@
  *   POST /api/customer
  *   POST /api/create-session
  *   POST /api/verify-payment
+ *   POST /api/verify-session
  *   POST /api/create-payment-method-session
  *   POST /api/save-subscription
  *   POST /api/zoho/payment-failure
  *   POST /api/zoho/webhook
  *   GET  /api/subscription/:onboardingId
+ *   GET  /api/payment-session/:sessionId
  */
 
 require('dotenv').config();
@@ -335,17 +337,82 @@ async function handleVerifyPayment(body) {
   const acceptable = ACCEPTABLE_PAYMENT_STATUSES.has(normalized)
     || normalized === 'succeeded'
     || normalized === 'success';
+  const pending = normalized.includes('pending') || normalized.includes('processing');
 
   return {
     ...result,
     success: acceptable,
+    pending,
     message: acceptable ? undefined : `Payment could not be verified (status: ${result.status})`,
     onboarding_id: body.onboardingId ?? body.onboarding_id ?? '',
-    session_id: body.session_id ?? body.sessionId ?? '',
+    payments_session_id: body.payments_session_id ?? body.session_id ?? body.sessionId ?? '',
     plan: body.plan ?? 'monthly',
     amount: String(body.amount ?? result.amount ?? '1'),
     currency: body.currency ?? result.currency ?? 'USD',
   };
+}
+
+async function handleVerifySession(body) {
+  const sessionId = body.payments_session_id ?? body.session_id ?? body.sessionId;
+  if (!sessionId) throw new Error('payments_session_id is required');
+
+  const session = await retrievePaymentSession(sessionId);
+  const payments = Array.isArray(session.payments) ? session.payments : [];
+  const payment = payments.find((entry) => {
+    const status = String(entry?.status ?? '').toLowerCase();
+    return ACCEPTABLE_PAYMENT_STATUSES.has(status) || status.includes('success');
+  }) ?? payments[payments.length - 1];
+
+  const paymentId = payment?.payment_id;
+  const sessionStatus = String(session.status ?? '').toLowerCase();
+  const paymentStatus = String(payment?.status ?? sessionStatus ?? 'pending').toLowerCase();
+  const acceptable = ACCEPTABLE_PAYMENT_STATUSES.has(paymentStatus)
+    || paymentStatus.includes('success')
+    || paymentStatus.includes('pending')
+    || paymentStatus.includes('processing');
+  const pending = paymentStatus.includes('pending') || paymentStatus.includes('processing');
+
+  if (paymentId) {
+    const result = await verifyZohoPayment(paymentId);
+    const normalized = String(result.status ?? paymentStatus).toLowerCase();
+    const ok = ACCEPTABLE_PAYMENT_STATUSES.has(normalized)
+      || normalized.includes('success')
+      || normalized.includes('pending')
+      || normalized.includes('processing');
+
+    return {
+      ...result,
+      success: ok,
+      pending: pending || normalized.includes('pending') || normalized.includes('processing'),
+      message: ok ? undefined : `Payment could not be verified (status: ${result.status})`,
+      onboarding_id: body.onboardingId ?? body.onboarding_id ?? '',
+      payments_session_id: sessionId,
+      plan: body.plan ?? 'monthly',
+      amount: String(body.amount ?? result.amount ?? session.amount ?? '1'),
+      currency: body.currency ?? result.currency ?? session.currency ?? 'USD',
+    };
+  }
+
+  return {
+    success: acceptable,
+    pending: true,
+    paymentId: '',
+    payment_id: '',
+    status: paymentStatus || 'pending',
+    customerId: session.customer_id ?? '',
+    customer_id: session.customer_id ?? '',
+    amount: String(body.amount ?? session.amount ?? '1'),
+    currency: body.currency ?? session.currency ?? 'USD',
+    message: acceptable ? undefined : `Payment could not be verified (status: ${paymentStatus})`,
+    onboarding_id: body.onboardingId ?? body.onboarding_id ?? '',
+    payments_session_id: sessionId,
+    plan: body.plan ?? 'monthly',
+  };
+}
+
+async function retrievePaymentSession(sessionId) {
+  const data = await zohoRequest('GET', `/paymentsessions/${encodeURIComponent(sessionId)}`);
+  return data?.payments_session ?? data;
 }
 
 async function verifyZohoPayment(paymentId) {
@@ -467,6 +534,16 @@ async function routeRequest(req, res) {
     }
   }
 
+  if (req.method === 'POST' && url === '/api/verify-session') {
+    try {
+      const body = await readBody(req);
+      const verified = await handleVerifySession(body);
+      return sendJson(res, verified.success ? 200 : 200, verified);
+    } catch (err) {
+      return sendJson(res, 500, { success: false, message: err.message });
+    }
+  }
+
   if (req.method === 'POST' && url === '/api/create-payment-method-session') {
     try {
       const body = await readBody(req);
@@ -513,6 +590,17 @@ async function routeRequest(req, res) {
     return sendJson(res, result.success ? 200 : 404, result);
   }
 
+  const paymentSessionMatch = url?.match(/^\/api\/payment-session\/([^/]+)$/);
+  if (req.method === 'GET' && paymentSessionMatch) {
+    try {
+      const sessionId = decodeURIComponent(paymentSessionMatch[1]);
+      const session = await retrievePaymentSession(sessionId);
+      return sendJson(res, 200, { success: true, data: { payments_session: session } });
+    } catch (err) {
+      return sendJson(res, 500, { success: false, message: err.message });
+    }
+  }
+
   if (req.method === 'GET' && url === '/api/health') {
     return sendJson(res, 200, { status: 'ok', zohoAccountId: ACCOUNT_ID });
   }
@@ -526,11 +614,13 @@ if (require.main === module) {
     console.log('  POST /api/customer');
     console.log('  POST /api/create-session');
     console.log('  POST /api/verify-payment');
+    console.log('  POST /api/verify-session');
     console.log('  POST /api/create-payment-method-session');
     console.log('  POST /api/save-subscription');
     console.log('  POST /api/zoho/payment-failure');
     console.log('  POST /api/zoho/webhook');
     console.log('  GET  /api/subscription/:onboardingId');
+    console.log('  GET  /api/payment-session/:sessionId');
     console.log('  POST /api/save-mandate');
   });
 }

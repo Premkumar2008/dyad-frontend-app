@@ -12,8 +12,10 @@ import toast from 'react-hot-toast';
 import api from '../services/api';
 import {
   getOnboardingClientSession,
+  persistOnboardingAuthTokens,
   type OnboardingClientSession,
 } from '../services/onboardingClientAuthService';
+import { restoreOnboardingApiAccessToken } from '../utils/apiAuth';
 import {
   fetchAvailableDates,
   fetchAvailableTimeSlots,
@@ -993,6 +995,14 @@ const DyadOnboarding: React.FC = () => {
   const [clientSession, setClientSession] = useState<OnboardingClientSession | null>(() =>
     isClientOnboardingRoute ? getOnboardingClientSession() : null,
   );
+
+  useEffect(() => {
+    restoreOnboardingApiAccessToken();
+    const session = getOnboardingClientSession();
+    if (session?.accessToken) {
+      persistOnboardingAuthTokens(session.accessToken, session.refreshToken);
+    }
+  }, []);
 
   useEffect(() => {
     if (isClientOnboardingRoute) {

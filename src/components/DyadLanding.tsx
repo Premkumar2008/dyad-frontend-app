@@ -535,7 +535,7 @@ const DyadLanding: React.FC = () => {
                     </span>
                   </h1>
                   <p className="video-subtitle">
-                    Powered by deep healthcare-finance expertise and proven technology, DYAD accelerates payment for your services, gives you real-time visibility into exactly where your revenue stands, and helps you capture more of what you've earned.
+                    Powered by deep healthcare-finance expertise and proven technology, Dyad accelerates payment for your services, gives you real-time visibility into exactly where your revenue stands, and helps you capture more of what you've earned.
                   </p>
                   <div className="video-banner-actions">
                     <button

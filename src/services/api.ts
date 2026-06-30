@@ -1,4 +1,5 @@
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
+import { getApiAccessToken, restoreOnboardingApiAccessToken } from '../utils/apiAuth';
 import SecureSessionStorage from '../utils/sessionStorage';
 
 // API base configuration
@@ -17,13 +18,23 @@ const api: AxiosInstance = axios.create({
   withCredentials: false,
 });
 
-// Request interceptor to add auth token
+// Request interceptor to add auth token and fix multipart uploads
 api.interceptors.request.use(
   (config) => {
-    const token = SecureSessionStorage.getAccessToken();
+    const token = getApiAccessToken() ?? restoreOnboardingApiAccessToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+
+    if (typeof FormData !== 'undefined' && config.data instanceof FormData) {
+      // Default JSON content-type breaks multipart file uploads — let axios set the boundary.
+      if (typeof config.headers.delete === 'function') {
+        config.headers.delete('Content-Type');
+      } else {
+        delete config.headers['Content-Type'];
+      }
+    }
+
     return config;
   },
   (error) => {

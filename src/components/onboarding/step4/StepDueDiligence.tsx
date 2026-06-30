@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   BarChart3,
   CheckCircle2,
@@ -17,6 +17,11 @@ import { EnrollmentSaveNotice } from '../EnrollmentSaveNotice';
 import { ObArrowRight, ObBackButtonLabel, ObForwardButtonLabel } from '../ObBtnArrow';
 import { DocumentUploadRow } from './DocumentUploadRow';
 import { EnrollmentSectionsBarRow } from '../EnrollmentSectionsBarRow';
+import {
+  cacheDueDiligenceDocumentFile,
+  mergeUploadedDueDiligenceDocuments,
+  uploadDueDiligenceDocuments,
+} from '../../../services/onboardingDocumentService';
 import {
   DUE_DILIGENCE_DOCS,
   FACILITY_OWNERSHIP_OPTIONS,
@@ -39,7 +44,7 @@ const STEP4_SECTION_NUM: Record<Step4SectionId, string> = {
 export interface StepDueDiligenceProps {
   formData: OnboardingData;
   set: <K extends keyof OnboardingData>(k: K, v: OnboardingData[K]) => void;
-  onNext: () => void;
+  onNext: (overrides?: Partial<OnboardingData>) => Promise<void>;
   onBack: () => void;
   isSubmitting: boolean;
   practiceTypeTitle: string;
@@ -106,6 +111,10 @@ export const StepDueDiligence: React.FC<StepDueDiligenceProps> = ({
   });
   const [provAttestError, setProvAttestError] = useState('');
   const [finAttestError, setFinAttestError] = useState('');
+  const [isUploadingDocuments, setIsUploadingDocuments] = useState(false);
+
+  const documentFilesRef = useRef<Partial<Record<DueDiligenceDocId, File>>>({});
+  const [documentFiles, setDocumentFiles] = useState<Partial<Record<DueDiligenceDocId, File>>>({});
 
   const documents = useMemo(
     () => ({ ...emptyDueDiligenceDocuments(), ...formData.ddDocuments }),
@@ -158,7 +167,30 @@ export const StepDueDiligence: React.FC<StepDueDiligenceProps> = ({
     });
   }, [formData.step4ProviderConfirmed, formData.step4FinancialConfirmed, formData.step4DocsConfirmed]);
 
-  const setDoc = (docId: DueDiligenceDocId, meta: DueDiligenceDocMeta | null) => {
+  const setDoc = (docId: DueDiligenceDocId, meta: DueDiligenceDocMeta | null, file?: File) => {
+    if (meta && file instanceof File) {
+      const localMeta: DueDiligenceDocMeta = {
+        fileName: meta.fileName,
+        fileSize: meta.fileSize,
+        uploadedAt: meta.uploadedAt,
+        mimeType: meta.mimeType,
+      };
+      documentFilesRef.current[docId] = file;
+      setDocumentFiles((prev) => ({ ...prev, [docId]: file }));
+      if (formData.onboardingId.trim()) {
+        cacheDueDiligenceDocumentFile(formData.onboardingId, docId, file);
+      }
+      cacheDueDiligenceDocumentFile('', docId, file);
+      set('ddDocuments', { ...documents, [docId]: localMeta });
+      return;
+    }
+
+    delete documentFilesRef.current[docId];
+    setDocumentFiles((prev) => {
+      const next = { ...prev };
+      delete next[docId];
+      return next;
+    });
     set('ddDocuments', { ...documents, [docId]: meta });
   };
 
@@ -240,13 +272,70 @@ export const StepDueDiligence: React.FC<StepDueDiligenceProps> = ({
     && formData.step4FinancialConfirmed
     && formData.step4DocsConfirmed;
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!canSubmit) {
       toast.error('Please confirm all three sections before submitting');
       return;
     }
-    onNext();
+
+    if (!formData.onboardingId.trim()) {
+      toast.error('Save onboarding progress first — onboarding ID is required');
+      return;
+    }
+
+    const files = { ...documentFilesRef.current, ...documentFiles };
+    const hasNewFiles = DUE_DILIGENCE_DOCS.some((doc) => {
+      const file = files[doc.id];
+      return file instanceof File && file.size > 0;
+    });
+    const missingPersistedDocs = DUE_DILIGENCE_DOCS.filter((doc) => {
+      const file = files[doc.id];
+      const hasLocalFile = file instanceof File && file.size > 0;
+      return documents[doc.id] && !documents[doc.id]?.documentId && !hasLocalFile;
+    });
+
+    if (missingPersistedDocs.length > 0 && !gapsException) {
+      toast.error('Please re-upload your documents before submitting');
+      return;
+    }
+
+    if (!hasNewFiles && !gapsException && !allDocsUploaded) {
+      toast.error('Upload all required reports or add notes describing availability gaps (10+ characters)');
+      return;
+    }
+
+    setIsUploadingDocuments(true);
+    try {
+      if (hasNewFiles) {
+        const uploadResult = await uploadDueDiligenceDocuments({
+          onboardingId: formData.onboardingId.trim(),
+          contactEmail: formData.contactEmail,
+          reportAvailabilityNotes: formData.reportAvailabilityNotes,
+          files,
+        });
+
+        const mergedDocuments = mergeUploadedDueDiligenceDocuments(
+          documents,
+          uploadResult.documents,
+          files,
+        );
+
+        documentFilesRef.current = {};
+        setDocumentFiles({});
+        await onNext({ ddDocuments: mergedDocuments });
+        return;
+      }
+
+      await onNext();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      toast.error(message);
+    } finally {
+      setIsUploadingDocuments(false);
+    }
   };
+
+  const isBusy = isSubmitting || isUploadingDocuments;
 
   const toggleSection = (id: Step4SectionId) => {
     if (step4SectionStatus(id) === 'locked') return;
@@ -668,29 +757,20 @@ export const StepDueDiligence: React.FC<StepDueDiligenceProps> = ({
               proposal, Dyad requires no less than the most recent 12 consecutive months of the following reports.
             </div>
 
-            <div className="ob-dd-doc-table-wrap">
-            <table className="ob-dd-doc-table">
-              <thead>
-                <tr>
-                  <th>Report</th>
-                  <th>Minimum Period</th>
-                  <th>Status / Upload</th>
-                </tr>
-              </thead>
-              <tbody>
-                {DUE_DILIGENCE_DOCS.map(doc => (
-                  <DocumentUploadRow
-                    key={doc.id}
-                    docId={doc.id}
-                    label={doc.label}
-                    period={doc.period}
-                    meta={documents[doc.id]}
-                    onUpload={setDoc}
-                    onRemove={id => setDoc(id, null)}
-                  />
-                ))}
-              </tbody>
-            </table>
+            <div className="ob-dd-doc-list">
+              {DUE_DILIGENCE_DOCS.map(doc => (
+                <DocumentUploadRow
+                  key={doc.id}
+                  docId={doc.id}
+                  label={doc.label}
+                  period={doc.period}
+                  meta={documents[doc.id]}
+                  onboardingId={formData.onboardingId}
+                  file={documentFiles[doc.id] ?? documentFilesRef.current[doc.id]}
+                  onUpload={(id, meta, file) => setDoc(id, meta, file)}
+                  onRemove={id => setDoc(id, null)}
+                />
+              ))}
             </div>
 
             <div className="ob-field ob-dd-gaps-field">
@@ -738,16 +818,20 @@ export const StepDueDiligence: React.FC<StepDueDiligenceProps> = ({
       <div className="ob-step-bottom-zone">
         <EnrollmentSaveNotice />
         <div className="ob-step-footer ob-step-nav ob-step4-nav">
-          <button type="button" className="ob-btn-secondary" onClick={onBack} disabled={isSubmitting}>
+          <button type="button" className="ob-btn-secondary" onClick={onBack} disabled={isBusy}>
             <ObBackButtonLabel />
           </button>
           <button
             type="button"
             className={`ob-btn-primary${!canSubmit ? ' ob-btn-disabled' : ''}`}
             onClick={handleSubmit}
-            disabled={!canSubmit || isSubmitting}
+            disabled={!canSubmit || isBusy}
           >
-            <ObForwardButtonLabel label="Submit for Review" loading={isSubmitting} loadingLabel="Submitting…" />
+            <ObForwardButtonLabel
+              label="Submit for Review"
+              loading={isBusy}
+              loadingLabel={isUploadingDocuments ? 'Uploading documents…' : 'Submitting…'}
+            />
           </button>
         </div>
       </div>

@@ -6,10 +6,10 @@ import {
   checkOnboardingClientEmail,
   formatOnboardingAuthError,
   sendOnboardingClientOTP,
+  persistOnboardingAuthTokens,
   setOnboardingClientSession,
   verifyOnboardingClientOTP,
 } from '../../services/onboardingClientAuthService';
-import SecureSessionStorage from '../../utils/sessionStorage';
 
 interface LoginWithCodeFormProps {
   onBack: () => void;
@@ -83,14 +83,14 @@ export const LoginWithCodeForm: React.FC<LoginWithCodeFormProps> = ({ onBack, on
         return;
       }
       const name = buildDisplayName({ ...result, email: email.trim() }) || displayName;
+      persistOnboardingAuthTokens(result.accessToken, result.refreshToken);
       setOnboardingClientSession({
         email: email.trim(),
         displayName: name,
         onboardingId: result.onboardingId,
+        accessToken: result.accessToken,
+        refreshToken: result.refreshToken,
       });
-      if (result.accessToken && result.refreshToken) {
-        SecureSessionStorage.setTokens(result.accessToken, result.refreshToken);
-      }
       toast.success('Welcome back!');
       onSuccess();
     } catch (err) {

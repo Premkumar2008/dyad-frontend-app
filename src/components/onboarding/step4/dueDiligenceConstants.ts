@@ -9,6 +9,10 @@ export interface DueDiligenceDocMeta {
   fileName: string;
   fileSize: number;
   uploadedAt: string;
+  mimeType?: string;
+  /** Set after POST /onboarding/step/4/documents succeeds */
+  documentId?: string;
+  storagePath?: string;
 }
 
 export const DUE_DILIGENCE_DOCS: {
