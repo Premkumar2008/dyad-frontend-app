@@ -1,8 +1,6 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-
 .teac-container {
   min-height: 100vh;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Prompt', sans-serif;
   background-color: #f8f9fa;
   display: flex;
   flex-direction: column;

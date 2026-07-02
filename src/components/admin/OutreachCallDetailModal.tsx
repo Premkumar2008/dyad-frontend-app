@@ -1,13 +1,25 @@
 import React, { useEffect, useState } from 'react';
-import { CalendarClock, CalendarX2, Mail, X } from 'lucide-react';
+import { CalendarClock, CalendarX2, X } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { ScheduleCalendarPicker } from '../onboarding/ScheduleCalendarPicker';
 import {
   CALL_TYPE_LABELS,
   formatLongDate,
   type CalendarEvent,
   type OutreachCall,
 } from './outreachScheduleData';
+import {
+  buildDefaultRescheduleMessage,
+  buildDefaultRescheduleSubject,
+  rescheduleOutreachCall,
+} from '../../services/outreachCallRescheduleService';
+import {
+  getTimeZoneShortLabel,
+  type ScheduleTimeSlot,
+} from '../../services/onboardingCalendarService';
+import { formatDateForDisplay, formatTimeForDisplay } from '../../utils/dateTimeUtils';
 import { normalizeMeetLink } from '../../utils/calendarMeetLink';
+import '../../pages/DyadOnboarding.css';
 
 export interface CallDetailModalState {
   event: CalendarEvent;
@@ -17,14 +29,14 @@ export interface CallDetailModalState {
 interface OutreachCallDetailModalProps {
   detail: CallDetailModalState | null;
   onClose: () => void;
-  onReschedule?: (event: CalendarEvent, next: { date: string; time: string }) => void;
+  onRescheduled?: () => void;
   onCancelMeeting?: (event: CalendarEvent, notifyAttendees: boolean) => void;
 }
 
 export const OutreachCallDetailModal: React.FC<OutreachCallDetailModalProps> = ({
   detail,
   onClose,
-  onReschedule,
+  onRescheduled,
   onCancelMeeting,
 }) => {
   const [showReschedule, setShowReschedule] = useState(false);
@@ -32,7 +44,10 @@ export const OutreachCallDetailModal: React.FC<OutreachCallDetailModalProps> = (
   const [notifyOnCancel, setNotifyOnCancel] = useState(true);
   const [rescheduleDate, setRescheduleDate] = useState('');
   const [rescheduleTime, setRescheduleTime] = useState('');
-  const [sendingReminder, setSendingReminder] = useState(false);
+  const [rescheduleTimeZone, setRescheduleTimeZone] = useState('America/Los_Angeles');
+  const [rescheduleSubject, setRescheduleSubject] = useState('');
+  const [rescheduleMessage, setRescheduleMessage] = useState('');
+  const [submittingReschedule, setSubmittingReschedule] = useState(false);
   const [cancelling, setCancelling] = useState(false);
 
   useEffect(() => {
@@ -41,8 +56,11 @@ export const OutreachCallDetailModal: React.FC<OutreachCallDetailModalProps> = (
       setShowCancelConfirm(false);
       return;
     }
-    setRescheduleDate(detail.event.date);
-    setRescheduleTime(detail.event.time);
+    setRescheduleDate('');
+    setRescheduleTime('');
+    setRescheduleTimeZone('America/Los_Angeles');
+    setRescheduleSubject('');
+    setRescheduleMessage('');
     setShowReschedule(false);
     setShowCancelConfirm(false);
     setNotifyOnCancel(true);
@@ -51,11 +69,11 @@ export const OutreachCallDetailModal: React.FC<OutreachCallDetailModalProps> = (
   useEffect(() => {
     if (!detail) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape' && !submittingReschedule) onClose();
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [detail, onClose]);
+  }, [detail, onClose, submittingReschedule]);
 
   if (!detail) return null;
 
@@ -63,6 +81,10 @@ export const OutreachCallDetailModal: React.FC<OutreachCallDetailModalProps> = (
   const client = fullCall?.client ?? event.label;
   const typeLabel = fullCall?.typeLabel ?? CALL_TYPE_LABELS[event.type];
   const meetingUrl = fullCall?.meetingUrl ? (normalizeMeetLink(fullCall.meetingUrl) || fullCall.meetingUrl) : '';
+  const source = fullCall?.source ?? event.source ?? 'onboarding';
+  const previousTimeLabel = fullCall
+    ? `${fullCall.startTime} – ${fullCall.endTime} ${fullCall.timezone}`
+    : event.time;
 
   const metaRows: { label: string; value: string; href?: string }[] = [
     { label: 'Practice / Client', value: client },
@@ -70,9 +92,7 @@ export const OutreachCallDetailModal: React.FC<OutreachCallDetailModalProps> = (
     { label: 'Date', value: formatLongDate(fullCall?.date ?? event.date) },
     {
       label: 'Time',
-      value: fullCall
-        ? `${fullCall.startTime} – ${fullCall.endTime} ${fullCall.timezone}`
-        : event.time,
+      value: previousTimeLabel,
     },
     { label: 'Host', value: fullCall?.host ? `${fullCall.host} (${fullCall.hostRole})` : 'Unassigned' },
     { label: 'Platform', value: fullCall?.platform ?? 'TBD' },
@@ -85,33 +105,112 @@ export const OutreachCallDetailModal: React.FC<OutreachCallDetailModalProps> = (
     },
     { label: 'Attendees', value: fullCall ? String(fullCall.attendeeCount) : '-' },
     { label: 'Status', value: fullCall ? (event.status === 'pending' ? 'Pending' : 'Confirmed') : 'Scheduled' },
-    { label: 'Source', value: 'Onboarding step 2 schedule' },
+    {
+      label: 'Source',
+      value: source === 'admin'
+        ? 'Admin outreach schedule'
+        : 'Onboarding step 2 schedule',
+    },
   ];
 
-  const handleSendReminder = async () => {
-    const email = fullCall?.contactEmail;
-    if (!email) {
+  const buildRescheduleDefaults = (date: string, timeSlot: string, timeZone: string) => {
+    if (!fullCall || !date || !timeSlot) return { subject: '', message: '' };
+
+    const eventTitle = fullCall.eventTitle?.trim() || fullCall.client;
+    const startTime = formatTimeForDisplay(timeSlot, timeZone || undefined);
+    const tz = getTimeZoneShortLabel(timeZone);
+    const endDate = timeSlot.includes('T')
+      ? new Date(new Date(timeSlot).getTime() + 30 * 60_000).toISOString()
+      : timeSlot;
+    const endTime = formatTimeForDisplay(endDate, timeZone || undefined);
+
+    const subject = buildDefaultRescheduleSubject(eventTitle);
+    const message = buildDefaultRescheduleMessage({
+      contactName: fullCall.contact,
+      eventTitle,
+      previousDateDisplay: formatLongDate(fullCall.date),
+      previousTimeDisplay: `${fullCall.startTime} – ${fullCall.endTime} ${fullCall.timezone}`,
+      newDateDisplay: formatDateForDisplay(date),
+      newTimeDisplay: `${startTime} – ${endTime}`,
+      timezone: tz,
+      meetingUrl: meetingUrl || undefined,
+    });
+
+    return { subject, message };
+  };
+
+  const openReschedulePanel = () => {
+    if (!fullCall?.contactEmail?.trim()) {
       toast.error('No contact email on file for this call.');
       return;
     }
-    setSendingReminder(true);
-    try {
-      await new Promise((r) => setTimeout(r, 600));
-      toast.success(`Reminder email sent to ${email}`);
-    } finally {
-      setSendingReminder(false);
-    }
+    setShowCancelConfirm(false);
+    setRescheduleDate('');
+    setRescheduleTime('');
+    setRescheduleSubject('');
+    setRescheduleMessage('');
+    setShowReschedule(true);
   };
 
-  const handleConfirmReschedule = () => {
-    if (!rescheduleDate || !rescheduleTime) {
-      toast.error('Please select a new date and time.');
+  const handleDateSelect = (date: string) => {
+    setRescheduleDate(date);
+    setRescheduleTime('');
+    setRescheduleSubject('');
+    setRescheduleMessage('');
+  };
+
+  const handleTimeSelect = (slot: ScheduleTimeSlot, timeZone: string) => {
+    const activeDate = rescheduleDate || (slot.id.includes('T') ? slot.id.split('T')[0] : '');
+    setRescheduleTime(slot.id);
+    setRescheduleTimeZone(timeZone);
+    const defaults = buildRescheduleDefaults(activeDate, slot.id, timeZone);
+    setRescheduleSubject(defaults.subject);
+    setRescheduleMessage(defaults.message);
+  };
+
+  const handleConfirmReschedule = async () => {
+    if (!fullCall) {
+      toast.error('Call details are unavailable for reschedule.');
       return;
     }
-    onReschedule?.(event, { date: rescheduleDate, time: rescheduleTime });
-    toast.success('Call rescheduled successfully.');
-    setShowReschedule(false);
-    onClose();
+    if (!rescheduleDate || !rescheduleTime) {
+      toast.error('Please select a new date and time slot.');
+      return;
+    }
+    if (!rescheduleSubject.trim() || !rescheduleMessage.trim()) {
+      toast.error('Please enter the reschedule email subject and message.');
+      return;
+    }
+
+    const token = localStorage.getItem('adminAccessToken');
+    if (!token) {
+      toast.error('Admin session expired. Please sign in again.');
+      return;
+    }
+
+    setSubmittingReschedule(true);
+    try {
+      await rescheduleOutreachCall(token, {
+        call: fullCall,
+        source,
+        newDate: rescheduleDate,
+        newTimeSlot: rescheduleTime,
+        newTimeZone: rescheduleTimeZone,
+        previousDateKey: fullCall.date,
+        previousTimeLabel,
+        subject: rescheduleSubject.trim(),
+        messageBody: rescheduleMessage.trim(),
+      });
+
+      toast.success(`Call rescheduled. Confirmation email sent to ${fullCall.contactEmail}.`);
+      setShowReschedule(false);
+      onRescheduled?.();
+      onClose();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to reschedule call.');
+    } finally {
+      setSubmittingReschedule(false);
+    }
   };
 
   const handleConfirmCancel = async () => {
@@ -133,15 +232,18 @@ export const OutreachCallDetailModal: React.FC<OutreachCallDetailModalProps> = (
   return (
     <div className="ors-call-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="ors-call-modal-title">
       <button type="button" className="ors-call-modal-backdrop" aria-label="Close" onClick={onClose} />
-      <div className="ors-call-modal">
+      <div className={`ors-call-modal${showReschedule ? ' ors-call-modal--wide' : ''}`}>
         <div className="ors-call-modal-header">
           <div>
             <span className={`ors-type-pill ors-type-pill--${event.type}`}>{typeLabel}</span>
+            {event.source === 'admin' && (
+              <span className="ors-admin-tag ors-admin-tag--modal">Admin</span>
+            )}
             <h2 id="ors-call-modal-title" className="ors-call-modal-title">{client}</h2>
             <p className="ors-call-modal-subtitle">
               {formatLongDate(fullCall?.date ?? event.date)}
               {' · '}
-              {fullCall ? `${fullCall.startTime} – ${fullCall.endTime} ${fullCall.timezone}` : event.time}
+              {previousTimeLabel}
             </p>
           </div>
           <button type="button" className="ors-call-modal-close" onClick={onClose} aria-label="Close">
@@ -150,48 +252,52 @@ export const OutreachCallDetailModal: React.FC<OutreachCallDetailModalProps> = (
         </div>
 
         <div className="ors-call-modal-body">
-          <div className="ors-call-meta-grid">
-            {metaRows.map((row) => (
-              <div key={row.label} className="ors-call-meta-row">
-                <span className="ors-call-meta-label">{row.label}</span>
-                <span className="ors-call-meta-value">
-                  {row.href ? (
-                    <a href={row.href} target="_blank" rel="noopener noreferrer" className="ors-call-meet-link">
-                      {row.value}
-                    </a>
-                  ) : row.value}
-                </span>
-              </div>
-            ))}
-          </div>
-
-          {fullCall?.prepNotes && (
-            <div className="ors-call-modal-section">
-              <h3 className="ors-call-modal-section-title">Prep Notes</h3>
-              <p className="ors-prep-notes">{fullCall.prepNotes}</p>
-            </div>
-          )}
-
-          {fullCall && fullCall.attendees.length > 0 && (
-            <div className="ors-call-modal-section">
-              <h3 className="ors-call-modal-section-title">Attendees</h3>
-              <div className="ors-attendees">
-                {fullCall.attendees.map((a) => (
-                  <div key={a.initials} className="ors-attendee-row">
-                    <span className={`ors-attendee-avatar${a.external ? ' ors-attendee-avatar--external' : ''}`}>
-                      {a.initials}
-                    </span>
-                    <div>
-                      <div className="ors-attendee-name">{a.name}</div>
-                      <div className="ors-attendee-role">{a.role}</div>
-                    </div>
-                    <span className={`ors-attendee-tag${a.tag === 'External' ? ' ors-attendee-tag--external' : ''}`}>
-                      {a.tag}
+          {!showReschedule && (
+            <>
+              <div className="ors-call-meta-grid">
+                {metaRows.map((row) => (
+                  <div key={row.label} className="ors-call-meta-row">
+                    <span className="ors-call-meta-label">{row.label}</span>
+                    <span className="ors-call-meta-value">
+                      {row.href ? (
+                        <a href={row.href} target="_blank" rel="noopener noreferrer" className="ors-call-meet-link">
+                          {row.value}
+                        </a>
+                      ) : row.value}
                     </span>
                   </div>
                 ))}
               </div>
-            </div>
+
+              {fullCall?.prepNotes && (
+                <div className="ors-call-modal-section">
+                  <h3 className="ors-call-modal-section-title">Prep Notes</h3>
+                  <p className="ors-prep-notes">{fullCall.prepNotes}</p>
+                </div>
+              )}
+
+              {fullCall && fullCall.attendees.filter((a) => a.tag !== 'Host').length > 0 && (
+                <div className="ors-call-modal-section">
+                  <h3 className="ors-call-modal-section-title">Attendees</h3>
+                  <div className="ors-attendees">
+                    {fullCall.attendees.filter((a) => a.tag !== 'Host').map((a) => (
+                      <div key={a.initials} className="ors-attendee-row">
+                        <span className={`ors-attendee-avatar${a.external ? ' ors-attendee-avatar--external' : ''}`}>
+                          {a.initials}
+                        </span>
+                        <div>
+                          <div className="ors-attendee-name">{a.name}</div>
+                          <div className="ors-attendee-role">{a.role}</div>
+                        </div>
+                        <span className={`ors-attendee-tag${a.tag === 'External' ? ' ors-attendee-tag--external' : ''}`}>
+                          {a.tag}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
           )}
 
           {showCancelConfirm && (
@@ -231,82 +337,101 @@ export const OutreachCallDetailModal: React.FC<OutreachCallDetailModalProps> = (
           {showReschedule && (
             <div className="ors-call-reschedule-panel">
               <h3 className="ors-call-modal-section-title">Reschedule Call</h3>
-              <div className="ors-call-reschedule-fields">
-                <label className="ors-call-field">
-                  <span>New date</span>
-                  <input
-                    type="date"
-                    value={rescheduleDate}
-                    onChange={(e) => setRescheduleDate(e.target.value)}
-                  />
-                </label>
-                <label className="ors-call-field">
-                  <span>New time</span>
-                  <input
-                    type="text"
-                    placeholder="e.g. 10:00a"
-                    value={rescheduleTime}
-                    onChange={(e) => setRescheduleTime(e.target.value)}
-                  />
-                </label>
+              <p className="ors-call-reminder-text">
+                Select a new date and time. A confirmation email will be sent to{' '}
+                <strong>{fullCall?.contactEmail}</strong>.
+              </p>
+
+              <div className="ors-schedule-picker-wrap">
+                <ScheduleCalendarPicker
+                  selectedDate={rescheduleDate}
+                  selectedTime={rescheduleTime}
+                  onDateSelect={handleDateSelect}
+                  onTimeSelect={handleTimeSelect}
+                  disabled={submittingReschedule}
+                />
               </div>
+
+              {rescheduleDate && rescheduleTime && (
+                <>
+                  <label className="ors-call-field" htmlFor="ors-reschedule-subject">
+                    <span>Email Subject</span>
+                    <input
+                      id="ors-reschedule-subject"
+                      type="text"
+                      value={rescheduleSubject}
+                      onChange={(e) => setRescheduleSubject(e.target.value)}
+                      disabled={submittingReschedule}
+                    />
+                  </label>
+
+                  <label className="ors-call-field" htmlFor="ors-reschedule-message">
+                    <span>Email Message</span>
+                    <textarea
+                      id="ors-reschedule-message"
+                      rows={8}
+                      value={rescheduleMessage}
+                      onChange={(e) => setRescheduleMessage(e.target.value)}
+                      disabled={submittingReschedule}
+                    />
+                  </label>
+                </>
+              )}
+
               <div className="ors-call-reschedule-actions">
-                <button type="button" className="ors-btn ors-btn-text" onClick={() => setShowReschedule(false)}>
-                  Cancel
+                <button
+                  type="button"
+                  className="ors-btn ors-btn-text"
+                  onClick={() => setShowReschedule(false)}
+                  disabled={submittingReschedule}
+                >
+                  Back
                 </button>
-                <button type="button" className="ors-btn ors-btn-primary" onClick={handleConfirmReschedule}>
-                  Confirm Reschedule
+                <button
+                  type="button"
+                  className="ors-btn ors-btn-primary"
+                  onClick={() => void handleConfirmReschedule()}
+                  disabled={submittingReschedule || !rescheduleDate || !rescheduleTime}
+                >
+                  {submittingReschedule ? 'Sending…' : 'Send Reschedule'}
                 </button>
               </div>
             </div>
           )}
         </div>
 
-        <div className="ors-call-modal-footer">
-          {meetingUrl && (
+        {!showReschedule && (
+          <div className="ors-call-modal-footer">
+            {meetingUrl && (
+              <button
+                type="button"
+                className="ors-btn ors-btn-primary"
+                onClick={() => window.open(meetingUrl, '_blank', 'noopener,noreferrer')}
+              >
+                Join
+              </button>
+            )}
             <button
               type="button"
-              className="ors-btn ors-btn-primary"
-              onClick={() => window.open(meetingUrl, '_blank', 'noopener,noreferrer')}
+              className="ors-btn ors-btn-secondary"
+              onClick={openReschedulePanel}
             >
-              Join Google Meet
+              <CalendarClock size={15} />
+              Reschedule
             </button>
-          )}
-          <button
-            type="button"
-            className="ors-btn ors-btn-secondary"
-            onClick={handleSendReminder}
-            disabled={sendingReminder}
-          >
-            <Mail size={15} />
-            {sendingReminder ? 'Sending…' : 'Send Reminder Email'}
-          </button>
-          <button
-            type="button"
-            className="ors-btn ors-btn-secondary"
-            onClick={() => {
-              setShowCancelConfirm(false);
-              setShowReschedule((v) => !v);
-            }}
-          >
-            <CalendarClock size={15} />
-            Reschedule
-          </button>
-          <button
-            type="button"
-            className="ors-btn ors-btn-danger-outline"
-            onClick={() => {
-              setShowReschedule(false);
-              setShowCancelConfirm((v) => !v);
-            }}
-          >
-            <CalendarX2 size={15} />
-            Cancel Meeting
-          </button>
-          <button type="button" className="ors-btn ors-btn-primary" onClick={onClose}>
-            Close
-          </button>
-        </div>
+            <button
+              type="button"
+              className="ors-btn ors-btn-danger-outline"
+              onClick={() => {
+                setShowReschedule(false);
+                setShowCancelConfirm((v) => !v);
+              }}
+            >
+              <CalendarX2 size={15} />
+              Cancel
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

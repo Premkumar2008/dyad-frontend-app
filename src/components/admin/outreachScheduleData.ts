@@ -1,6 +1,7 @@
 export type CallType = 'discovery' | 'demo' | 'followup' | 'onboarding';
 export type CallStatus = 'confirmed' | 'pending' | 'rescheduled';
 export type AssigneeId = 'sarah' | 'marcus' | 'priya';
+export type OutreachEventSource = 'onboarding' | 'admin';
 
 export interface CalendarEvent {
   date: string;
@@ -10,6 +11,7 @@ export interface CalendarEvent {
   callId?: string;
   hostId?: AssigneeId;
   status?: CallStatus;
+  source?: OutreachEventSource;
 }
 
 export interface OutreachFilters {
@@ -93,6 +95,15 @@ export interface OutreachCall {
   prepNotes: string;
   agenda: AgendaItem[];
   attendees: Attendee[];
+  source?: OutreachEventSource;
+  reminderCount?: number;
+  /** Numeric id from GET /calls-scheduled-admin (admin-scheduled calls only). */
+  adminScheduledCallId?: number;
+  /** Onboarding enrollment id (onboarding-sourced calls). */
+  onboardingId?: string;
+  callEventId?: string | null;
+  dateTimeIso?: string;
+  eventTitle?: string;
 }
 
 export const CALL_TYPE_LABELS: Record<CallType, string> = {

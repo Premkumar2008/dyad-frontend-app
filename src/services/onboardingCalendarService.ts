@@ -46,6 +46,8 @@ export interface ScheduleBookingPayload {
   customEventTitle?: string;
   customEventDescription?: string;
   eventSource?: string;
+  /** Outreach schedule origin for admin reschedule/update flows. */
+  source?: 'admin' | 'onboarding';
   callType?: string;
 }
 
@@ -273,6 +275,8 @@ export const buildOnboardingRescheduleEventBody = (
     practiceType: createFields.practiceType,
     guestEmail: createFields.guestEmail,
     attendees: createFields.attendees,
+    source: payload.source ?? (payload.eventSource === 'admin-outreach' ? 'admin' : 'onboarding'),
+    action: 'reschedule',
   };
 };
 

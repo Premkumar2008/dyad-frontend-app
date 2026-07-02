@@ -1,8 +1,48 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import './LandingFooter.css';
 
-const LandingFooter: React.FC = () => {
+interface LandingFooterProps {
+  onScrollToSection?: (scrollTo: string, cardId?: number) => void;
+}
+
+const serviceMenuItems = [
+  { text: 'Practice Foundations', href: '#services', cardId: 0 },
+  { text: 'Technology Driven Capabilities', href: '#services', cardId: 1 },
+  { text: 'Pre & Post Encounter', href: '#services', cardId: 2 },
+  { text: 'Claims Management', href: '#services', cardId: 3 },
+  { text: 'Specialty Billing', href: '#services', cardId: 4 },
+  { text: 'Real Time Insights', href: '#services', cardId: 5 },
+];
+
+const specialtyMenuItems = [
+  { text: 'Surgical & Procedural Specialties', href: '#surgical-specialties' },
+  { text: 'Interventional & Diagnostic Care', href: '#interventional-care' },
+  { text: 'Perioperative & Supportive Services', href: '#perioperative-services' },
+  { text: 'Outpatient & Specialty Facilities', href: '#outpatient-facilities' },
+];
+
+const LandingFooter: React.FC<LandingFooterProps> = ({ onScrollToSection }) => {
+  const navigate = useNavigate();
+
+  const scrollOrNavigate = (href: string, cardId?: number) => {
+    if (window.location.pathname === '/' && onScrollToSection) {
+      onScrollToSection(href, cardId);
+      return;
+    }
+
+    navigate('/', { state: { scrollTo: href, cardId } });
+  };
+
+  const handleFooterLinkClick = (
+    e: React.MouseEvent<HTMLAnchorElement>,
+    href: string,
+    cardId?: number,
+  ) => {
+    e.preventDefault();
+    scrollOrNavigate(href, cardId);
+  };
+
   return (
     <footer className="footer-section" id="contact">
       <div className="footer-container">
@@ -19,22 +59,32 @@ const LandingFooter: React.FC = () => {
           <div className="footer-column">
             <h3 className="footer-column-title">Services</h3>
             <ul className="footer-menu">
-              <li><a href="#services">Practice Foundations</a></li>
-              <li><a href="#services">Technology Driven Capabilities</a></li>
-              <li><a href="#services">Pre &amp; Post Encounter</a></li>
-              <li><a href="#services">Claims Management</a></li>
-              <li><a href="#services">Specialty Billing</a></li>
-              <li><a href="#services">Real Time Insights</a></li>
+              {serviceMenuItems.map((item) => (
+                <li key={item.text}>
+                  <a
+                    href={item.href}
+                    onClick={(e) => handleFooterLinkClick(e, item.href, item.cardId)}
+                  >
+                    {item.text}
+                  </a>
+                </li>
+              ))}
             </ul>
           </div>
 
           <div className="footer-column">
             <h3 className="footer-column-title">Specialties</h3>
             <ul className="footer-menu">
-              <li><a href="#surgical-specialties">Surgical &amp; Procedural Specialties</a></li>
-              <li><a href="#interventional-care">Interventional &amp; Diagnostic Care</a></li>
-              <li><a href="#perioperative-services">Perioperative &amp; Supportive Services</a></li>
-              <li><a href="#outpatient-facilities">Outpatient &amp; Specialty Facilities</a></li>
+              {specialtyMenuItems.map((item) => (
+                <li key={item.text}>
+                  <a
+                    href={item.href}
+                    onClick={(e) => handleFooterLinkClick(e, item.href)}
+                  >
+                    {item.text}
+                  </a>
+                </li>
+              ))}
             </ul>
           </div>
 

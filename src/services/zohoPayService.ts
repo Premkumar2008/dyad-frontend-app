@@ -3,7 +3,7 @@ import type { ZohoPayDomain, ZohoPayInitConfig, ZohoPayRequestPaymentMethodOptio
 import type { ZohoPayFailureLogRequest } from '../types/zohoPayMandate';
 import { extractZohoErrorMessage, isZohoWidgetClosedError, rethrowZohoServiceError, shouldUseDirectZohoFallback } from '../utils/zohoPayErrors';
 import { withTimeout } from '../utils/zohoPayLoader';
-import { deriveZohoSubscriptionStatus, isAcceptableZohoPaymentStatus, normalizeZohoPaymentStatus } from '../utils/zohoPayMandate';
+import { deriveZohoSubscriptionStatus, isAcceptableZohoPaymentStatus, isFailedZohoPaymentStatus, normalizeZohoPaymentStatus } from '../utils/zohoPayMandate';
 
 export interface ZohoPayWidgetConfig {
   accountId: string;
@@ -204,7 +204,7 @@ export const isZohoPayConfigured = (): boolean => Boolean(getZohoPayWidgetConfig
 export const isZohoPayMockMode = (): boolean => import.meta.env.VITE_ZOHO_PAY_USE_MOCK === 'true';
 
 export const getZohoPaySetupAmount = (): number => {
-  const raw = import.meta.env.VITE_ZOHO_PAY_SETUP_AMOUNT?.trim() || '0.5';
+  const raw = import.meta.env.VITE_ZOHO_PAY_SETUP_AMOUNT?.trim() || '1';
   const parsed = Number.parseFloat(raw);
   return Number.isNaN(parsed) ? 1 : parsed;
 };
@@ -633,7 +633,207 @@ export interface PaymentSessionDetails {
 }
 
 const PAYMENT_SESSION_POLL_INTERVAL_MS = 3000;
-const PAYMENT_SESSION_RECOVERY_GRACE_MS = 15_000;
+
+const sleep = (ms: number): Promise<void> => new Promise((resolve) => {
+  setTimeout(resolve, ms);
+});
+
+export type PaymentSessionSettledResult =
+  | {
+    settled: true;
+    success: true;
+    failed: false;
+    paymentId?: string;
+    paymentMethodId?: string;
+  }
+  | {
+    settled: true;
+    success: false;
+    failed: true;
+    message?: string;
+  };
+
+const settledSuccess = (
+  paymentId?: string,
+  paymentMethodId?: string,
+): PaymentSessionSettledResult => ({
+  settled: true,
+  success: true,
+  failed: false,
+  paymentId,
+  paymentMethodId,
+});
+
+const settledFailure = (message?: string): PaymentSessionSettledResult => ({
+  settled: true,
+  success: false,
+  failed: true,
+  message,
+});
+
+const parsePaymentSessionPollResponse = (data: unknown): PaymentSessionSettledResult | null => {
+  const root = asRecord(data);
+
+  if (root.failed === true) {
+    return settledFailure(readString(root, 'message'));
+  }
+
+  const nested = parsePayload(data);
+  const nestedRecord = asRecord(nested);
+
+  if (nestedRecord.failed === true) {
+    return settledFailure(readString(nestedRecord, 'message') ?? readString(root, 'message'));
+  }
+
+  const session = parsePaymentSessionResponse(data);
+  const recoverablePayment = findRecoverableSessionPayment(session);
+  const failedPayment = session.payments.find((payment) => isFailedZohoPaymentStatus(payment.status));
+
+  if (failedPayment) {
+    return settledFailure(`Payment ${failedPayment.status}`);
+  }
+
+  const paymentId = readString(nestedRecord, 'payment_id', 'paymentId')
+    ?? readString(root, 'payment_id', 'paymentId')
+    ?? recoverablePayment?.paymentId;
+  const paymentMethodId = readString(nestedRecord, 'payment_method_id', 'paymentMethodId')
+    ?? recoverablePayment?.paymentMethodId;
+
+  const rootSuccess = root.success === true;
+  const nestedSuccess = nestedRecord.success === true;
+
+  if (rootSuccess || nestedSuccess) {
+    if (paymentId || recoverablePayment) {
+      return settledSuccess(paymentId ?? recoverablePayment?.paymentId, paymentMethodId);
+    }
+  }
+
+  if (recoverablePayment) {
+    return settledSuccess(recoverablePayment.paymentId, recoverablePayment.paymentMethodId);
+  }
+
+  return null;
+};
+
+const toWidgetSuccessFromSettled = (
+  settled: Extract<PaymentSessionSettledResult, { success: true }>,
+): ZohoPayWidgetSuccess => ({
+  ...(settled.paymentId ? { payment_id: settled.paymentId } : {}),
+  ...(settled.paymentMethodId ? { payment_method_id: settled.paymentMethodId } : {}),
+});
+
+/** Poll GET /api/payment-session/:sid until success: true or failed: true. */
+export const pollPaymentSessionUntilSettled = async (
+  sessionId: string,
+  maxWaitMs: number,
+  onProgress?: (message: string) => void,
+): Promise<PaymentSessionSettledResult> => {
+  const deadline = Date.now() + maxWaitMs;
+  let lastError: unknown;
+
+  while (Date.now() < deadline) {
+    onProgress?.('Confirming payment — please do not refresh or leave this page…');
+
+    try {
+      const response = await api.get(`/payment-session/${encodeURIComponent(sessionId)}`);
+      const parsed = parsePaymentSessionPollResponse(response.data);
+      if (parsed) {
+        return parsed;
+      }
+    } catch (error) {
+      if (!shouldUseDirectZohoFallback(error)) {
+        lastError = error;
+      } else {
+        try {
+          const session = await retrievePaymentSessionDirect(sessionId);
+          const failedPayment = session.payments.find((payment) => isFailedZohoPaymentStatus(payment.status));
+          if (failedPayment) {
+            return settledFailure(`Payment ${failedPayment.status}`);
+          }
+          const payment = findRecoverableSessionPayment(session);
+          if (payment) {
+            return settledSuccess(payment.paymentId, payment.paymentMethodId);
+          }
+        } catch (directError) {
+          lastError = directError;
+        }
+      }
+    }
+
+    if (Date.now() + PAYMENT_SESSION_POLL_INTERVAL_MS > deadline) break;
+    await sleep(PAYMENT_SESSION_POLL_INTERVAL_MS);
+  }
+
+  if (lastError) rethrowZohoServiceError(lastError);
+  throw new Error('Payment confirmation timed out. Please try again.');
+};
+
+/** @deprecated Use pollPaymentSessionUntilSettled */
+export const pollPaymentSessionForWidgetResult = async (
+  sessionId: string,
+  maxWaitMs: number,
+  onProgress?: (message: string) => void,
+): Promise<ZohoPayWidgetSuccess> => {
+  const settled = await pollPaymentSessionUntilSettled(sessionId, maxWaitMs, onProgress);
+  if (settled.failed) {
+    throw new Error(settled.message || 'Payment failed');
+  }
+  return toWidgetSuccessFromSettled(settled);
+};
+
+/**
+ * Open Zoho checkout widget. On widget_closed (normal for ACH bank sign-in),
+ * poll GET /api/payment-session/:sid — do not treat panel close as failure.
+ * Caller must keep loader visible until this resolves and only then call instance.close().
+ */
+export const openCheckoutWithSessionPolling = async (
+  instance: ZPaymentsInstance,
+  widgetOptions: ZohoPayRequestPaymentMethodOptions,
+  sessionId: string,
+  timeoutMs: number,
+  onProgress?: (message: string) => void,
+): Promise<ZohoPayWidgetSuccess> => {
+  const pollUntilSettled = async (): Promise<ZohoPayWidgetSuccess> => {
+    const settled = await pollPaymentSessionUntilSettled(sessionId, timeoutMs, onProgress);
+    if (settled.failed) {
+      throw new Error(settled.message || 'Payment failed');
+    }
+    return toWidgetSuccessFromSettled(settled);
+  };
+
+  try {
+    const widgetResult = await withTimeout(
+      instance.requestPaymentMethod(widgetOptions),
+      timeoutMs,
+      '__WIDGET_TIMEOUT__',
+    );
+
+    const paymentId = readWidgetPaymentId(widgetResult);
+    if (paymentId) {
+      onProgress?.('Payment received — confirming with server…');
+      return widgetResult;
+    }
+
+    onProgress?.('Confirming payment with server…');
+    return pollUntilSettled();
+  } catch (err) {
+    if (isZohoWidgetClosedError(err)) {
+      onProgress?.('Complete bank sign-in — confirming payment…');
+      return pollUntilSettled();
+    }
+
+    const message = err instanceof Error ? err.message : '';
+    if (message === '__WIDGET_TIMEOUT__') {
+      onProgress?.('Still confirming payment — please do not refresh this page…');
+      return pollUntilSettled();
+    }
+
+    throw err;
+  }
+};
+
+/** @deprecated Use openCheckoutWithSessionPolling */
+export const requestCheckoutWithRecovery = openCheckoutWithSessionPolling;
 
 export const parsePaymentSessionResponse = (data: unknown): PaymentSessionDetails => {
   const nested = parsePayload(data);
@@ -717,70 +917,6 @@ export const retrievePaymentSession = async (
   }
 };
 
-const sleep = (ms: number): Promise<void> => new Promise((resolve) => {
-  setTimeout(resolve, ms);
-});
-
-/** Poll Zoho until the session has a payment in an acceptable status (e.g. pending ACH). */
-export const pollPaymentSessionForWidgetResult = async (
-  sessionId: string,
-  maxWaitMs: number,
-): Promise<ZohoPayWidgetSuccess> => {
-  const deadline = Date.now() + maxWaitMs;
-  let lastError: unknown;
-
-  while (Date.now() < deadline) {
-    try {
-      const session = await retrievePaymentSession(sessionId);
-      const payment = findRecoverableSessionPayment(session);
-      if (payment) {
-        return toWidgetSuccessFromSessionPayment(payment);
-      }
-    } catch (err) {
-      lastError = err;
-    }
-
-    if (Date.now() + PAYMENT_SESSION_POLL_INTERVAL_MS > deadline) break;
-    await sleep(PAYMENT_SESSION_POLL_INTERVAL_MS);
-  }
-
-  if (lastError) rethrowZohoServiceError(lastError);
-  throw lastError ?? new Error('');
-};
-
-/**
- * Open the checkout widget, but also poll the payment session in parallel.
- * ACH payments can succeed in Zoho while the widget promise never resolves.
- */
-export const requestCheckoutWithRecovery = async (
-  instance: ZPaymentsInstance,
-  widgetOptions: ZohoPayRequestPaymentMethodOptions,
-  sessionId: string,
-  timeoutMs: number,
-): Promise<ZohoPayWidgetSuccess> => {
-  const widgetPromise = instance.requestPaymentMethod(widgetOptions).catch((err: unknown) => {
-    if (isZohoWidgetClosedError(err)) throw err;
-    return new Promise<ZohoPayWidgetSuccess>(() => {});
-  });
-
-  try {
-    return await withTimeout(
-      Promise.race([
-        widgetPromise,
-        pollPaymentSessionForWidgetResult(sessionId, timeoutMs),
-      ]),
-      timeoutMs,
-      '__CHECKOUT_TIMEOUT__',
-    );
-  } catch (err) {
-    const message = err instanceof Error ? err.message : '';
-    if (message === '__CHECKOUT_TIMEOUT__') {
-      return pollPaymentSessionForWidgetResult(sessionId, PAYMENT_SESSION_RECOVERY_GRACE_MS);
-    }
-    throw err;
-  }
-};
-
 /**
  * After Zoho widget completes:
  *   1. POST /verify-payment (payment_id) or POST /verify-session (ACH, no payment_id)
@@ -818,7 +954,7 @@ export const finalizeZohoSubscription = async (options: {
     throw new Error(verify.message?.trim() || JSON.stringify(verify));
   }
 
-  if (!verify.paymentId) {
+  if (!verify.paymentId && !verify.pending) {
     throw new Error(verify.message?.trim() || JSON.stringify(verify));
   }
 

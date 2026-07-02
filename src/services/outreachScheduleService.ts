@@ -300,6 +300,33 @@ const resolveCallStatus = (
   return 'pending';
 };
 
+const readReminderCount = (
+  record: OnboardingListRecord,
+  step2: Record<string, unknown>,
+): number => {
+  const root = record as Record<string, unknown>;
+  const payload = record.payload ?? {};
+  const candidates: unknown[] = [
+    root.reminderCount,
+    root.reminder_count,
+    step2.reminderCount,
+    step2.reminder_count,
+    payload.reminderCount,
+    payload.reminder_count,
+  ];
+
+  for (const value of candidates) {
+    if (typeof value === 'number' && Number.isFinite(value)) {
+      return Math.max(0, Math.floor(value));
+    }
+    if (typeof value === 'string' && value.trim() && !Number.isNaN(Number(value))) {
+      return Math.max(0, Math.floor(Number(value)));
+    }
+  }
+
+  return 0;
+};
+
 export interface OutreachScheduleData {
   events: CalendarEvent[];
   calls: OutreachCall[];
@@ -328,6 +355,10 @@ export const mapOnboardingRecordToOutreachSchedule = (
   );
   const compactTime = formatCalendarCompactTime(slot.callTime, slot.callTimeZone || undefined);
   const callType = 'onboarding' as const;
+  const dateTimeIso = slot.callTime.includes('T')
+    ? slot.callTime
+    : `${slot.dateKey}T${slot.callTime.length === 5 ? `${slot.callTime}:00` : slot.callTime}`;
+  const reminderCount = readReminderCount(record, step2);
 
   const event: CalendarEvent = {
     date: slot.dateKey,
@@ -336,6 +367,7 @@ export const mapOnboardingRecordToOutreachSchedule = (
     type: callType,
     callId: onboardingId,
     status,
+    source: 'onboarding',
   };
 
   const call: OutreachCall = {
@@ -353,7 +385,7 @@ export const mapOnboardingRecordToOutreachSchedule = (
     hostRole: 'Onboarding',
     platform: slot.meetingLink ? 'Google Meet' : 'Video call',
     meetingUrl: slot.meetingLink,
-    attendeeCount: contactEmail ? 2 : 1,
+    attendeeCount: 1,
     prepNotes: contactEmail
       ? `Introduction call scheduled during onboarding enrollment. Contact: ${contactName} (${contactEmail}).`
       : `Introduction call scheduled during onboarding enrollment. Contact: ${contactName}.`,
@@ -375,7 +407,6 @@ export const mapOnboardingRecordToOutreachSchedule = (
       },
     ],
     attendees: [
-      { initials: 'PA', name: 'Priya Anand', role: 'Onboarding Lead · Dyad', tag: 'Host' },
       {
         initials: initialsFromText(contactName),
         name: contactName,
@@ -384,6 +415,12 @@ export const mapOnboardingRecordToOutreachSchedule = (
         external: true,
       },
     ],
+    source: 'onboarding',
+    reminderCount,
+    onboardingId,
+    callEventId: record.call_event_id,
+    dateTimeIso,
+    eventTitle: practiceLabel,
   };
 
   return { events: [event], calls: [call] };

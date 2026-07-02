@@ -12,6 +12,9 @@ export interface OutreachScheduleEmailDetails {
   timeDisplay: string;
   timezone?: string;
   meetingLink?: string;
+  /** `admin` or `onboarding` — included on reschedule/schedule API payloads. */
+  source?: 'admin' | 'onboarding';
+  action?: 'schedule' | 'reschedule';
 }
 
 const escapeHtml = (value: string): string =>
@@ -160,7 +163,8 @@ export const sendOutreachScheduleEmail = async (
         calendarEmail: ONBOARDING_CALENDAR_EMAIL,
         eventTitle: details.eventTitle,
         messageBody: details.messageBody,
-        source: 'admin-outreach-schedule',
+        source: details.source ?? 'admin-outreach-schedule',
+        action: details.action,
       },
     );
 

@@ -7,8 +7,8 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        'poppins': ['Poppins', 'sans-serif'],
-        'sans': ['Poppins', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+        'prompt': ['Prompt', 'sans-serif'],
+        'sans': ['Prompt', 'sans-serif'],
       },
       colors: {
         primary: {

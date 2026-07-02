@@ -18,6 +18,14 @@ export const isAcceptableZohoPaymentStatus = (status: string | undefined): boole
   return ['succeeded', 'success', 'pending', 'processing', 'authorized'].includes(normalized);
 };
 
+export const isFailedZohoPaymentStatus = (status: string | undefined): boolean => {
+  const normalized = normalizeZohoPaymentStatus(status);
+  return normalized === 'failed'
+    || normalized === 'cancelled'
+    || normalized === 'canceled'
+    || normalized.includes('fail');
+};
+
 export const isZohoPaymentSettled = (status: string | undefined): boolean => {
   const normalized = normalizeZohoPaymentStatus(status);
   return normalized === 'succeeded' || normalized === 'success';

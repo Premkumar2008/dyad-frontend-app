@@ -16,7 +16,12 @@ import {
 import { OutreachCallDetailModal, type CallDetailModalState } from './OutreachCallDetailModal';
 import { AdminScheduleCallModal } from './AdminScheduleCallModal';
 import { fetchOutreachScheduleFromOnboarding } from '../../services/outreachScheduleService';
+import {
+  fetchAdminScheduledCalls,
+  mergeOutreachScheduleData,
+} from '../../services/adminScheduledCallsService';
 import { normalizeMeetLink } from '../../utils/calendarMeetLink';
+import { downloadOutreachScheduleIcs } from '../../utils/outreachIcsExport';
 import './OutreachSchedulePanel.css';
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as const;
@@ -211,9 +216,48 @@ export const OutreachSchedulePanel: React.FC = () => {
     setLoading(true);
     setLoadError('');
     try {
-      const { events, calls } = await fetchOutreachScheduleFromOnboarding(token);
-      setCalendarEvents(events);
-      setOutreachCalls(calls);
+      const [onboardingResult, adminResult] = await Promise.allSettled([
+        fetchOutreachScheduleFromOnboarding(token),
+        fetchAdminScheduledCalls(token),
+      ]);
+
+      const sources = [];
+      const errors: string[] = [];
+
+      if (onboardingResult.status === 'fulfilled') {
+        sources.push(onboardingResult.value);
+      } else {
+        errors.push('onboarding enrollments');
+      }
+
+      if (adminResult.status === 'fulfilled') {
+        sources.push(adminResult.value);
+      } else {
+        const adminMessage = adminResult.reason instanceof Error
+          ? adminResult.reason.message
+          : 'admin scheduled calls';
+        errors.push(adminMessage);
+      }
+
+      if (sources.length === 0) {
+        const message = adminResult.status === 'rejected' && adminResult.reason instanceof Error
+          ? adminResult.reason.message
+          : onboardingResult.status === 'rejected' && onboardingResult.reason instanceof Error
+            ? onboardingResult.reason.message
+            : undefined;
+        setLoadError(message || 'Could not load scheduled calls.');
+        setCalendarEvents([]);
+        setOutreachCalls([]);
+        return;
+      }
+
+      const merged = mergeOutreachScheduleData(...sources);
+      setCalendarEvents(merged.events);
+      setOutreachCalls(merged.calls);
+
+      if (errors.length > 0) {
+        toast.error(`Some schedule data could not be loaded (${errors.join('; ')}).`);
+      }
     } catch (err: unknown) {
       const message = err && typeof err === 'object' && 'response' in err
         ? (err as { response?: { data?: { message?: string } } }).response?.data?.message
@@ -314,25 +358,6 @@ export const OutreachSchedulePanel: React.FC = () => {
   const isSameCalendarEvent = (a: CalendarEvent, b: CalendarEvent) =>
     a.date === b.date && a.time === b.time && a.label === b.label;
 
-  const handleRescheduleCall = useCallback((
-    event: CalendarEvent,
-    next: { date: string; time: string },
-  ) => {
-    setCalendarEvents((prev) => prev.map((ev) => (
-      isSameCalendarEvent(ev, event)
-        ? { ...ev, date: next.date, time: next.time, status: 'rescheduled' as const }
-        : ev
-    )));
-    if (event.callId) {
-      setOutreachCalls((prev) => prev.map((call) => (
-        call.id === event.callId
-          ? { ...call, date: next.date }
-          : call
-      )));
-    }
-    setSelectedDate(next.date);
-  }, []);
-
   const handleCancelMeeting = useCallback((event: CalendarEvent) => {
     setCalendarEvents((prev) => prev.filter((ev) => !isSameCalendarEvent(ev, event)));
     if (event.callId) {
@@ -412,6 +437,24 @@ export const OutreachSchedulePanel: React.FC = () => {
     setSelectedDate(realTodayKey);
   };
 
+  const handleExportIcs = useCallback(() => {
+    if (loading) return;
+
+    if (filteredEvents.length === 0) {
+      toast.error(hasActiveFilters
+        ? 'No calls match the current filters to export.'
+        : 'No scheduled calls to export.');
+      return;
+    }
+
+    const exportedCount = downloadOutreachScheduleIcs(
+      filteredEvents,
+      outreachCalls,
+      `dyad-outreach-${viewYear}-${String(viewMonth + 1).padStart(2, '0')}`,
+    );
+    toast.success(`Exported ${exportedCount} call${exportedCount === 1 ? '' : 's'} to .ics`);
+  }, [filteredEvents, hasActiveFilters, loading, outreachCalls, viewMonth, viewYear]);
+
   const layoutClass = [
     'ors-calendar-layout',
     agendaOpen ? 'ors-calendar-layout--agenda-open' : '',
@@ -477,7 +520,7 @@ export const OutreachSchedulePanel: React.FC = () => {
         </ul>
         <div className="ors-section-title">Attendees</div>
         <div className="ors-attendees">
-          {call.attendees.map((a) => (
+          {call.attendees.filter((a) => a.tag !== 'Host').map((a) => (
             <div key={`${call.id}-${a.initials}`} className="ors-attendee-row">
               <span className={`ors-attendee-avatar${a.external ? ' ors-attendee-avatar--external' : ''}`}>
                 {a.initials}
@@ -608,7 +651,14 @@ export const OutreachSchedulePanel: React.FC = () => {
           )}
         </div>
         <div className="ors-actions">
-          <button type="button" className="ors-btn ors-btn-text">Export .ics</button>
+          <button
+            type="button"
+            className="ors-btn ors-btn-text"
+            onClick={handleExportIcs}
+            disabled={loading || filteredEvents.length === 0}
+          >
+            Export .ics
+          </button>
           <button
             type="button"
             className="ors-btn ors-btn-secondary"
@@ -633,6 +683,7 @@ export const OutreachSchedulePanel: React.FC = () => {
         <div className="ors-legend-item"><span className="ors-legend-swatch ors-legend-swatch--demo" />Product Demo</div>
         <div className="ors-legend-item"><span className="ors-legend-swatch ors-legend-swatch--followup" />Follow-up</div>
         <div className="ors-legend-item"><span className="ors-legend-swatch ors-legend-swatch--onboarding" />Onboarding Kickoff</div>
+        <div className="ors-legend-item"><span className="ors-legend-tag ors-legend-tag--admin">Admin</span>Admin scheduled</div>
       </div>
 
       <div className={layoutClass}>
@@ -674,7 +725,12 @@ export const OutreachSchedulePanel: React.FC = () => {
                   <span className={`ors-upcoming-dot ors-upcoming-dot--${call.type}`} />
                   {call.timeLabel}
                 </div>
-                <div className="ors-upcoming-client">{call.client}</div>
+                <div className="ors-upcoming-client">
+                  {call.client}
+                  {call.event.source === 'admin' && (
+                    <span className="ors-admin-tag">Admin</span>
+                  )}
+                </div>
                 {call.contact && (
                   <div className="ors-upcoming-contact">
                     {call.contact}
@@ -796,15 +852,18 @@ export const OutreachSchedulePanel: React.FC = () => {
                     <div className="ors-day-number">{cell.day}</div>
                     {visible.map((ev) => (
                       <button
-                        key={`${ev.date}-${ev.time}-${ev.label}`}
+                        key={`${ev.source ?? 'onboarding'}-${ev.callId ?? ''}-${ev.date}-${ev.time}-${ev.label}`}
                         type="button"
-                        className={`ors-event-pill ors-event-pill--${ev.type}`}
+                        className={`ors-event-pill ors-event-pill--${ev.type}${ev.source === 'admin' ? ' ors-event-pill--admin' : ''}`}
                         onClick={(e) => {
                           e.stopPropagation();
                           selectDate(cell.dateKey);
                           openCallDetail(ev);
                         }}
                       >
+                        {ev.source === 'admin' && (
+                          <span className="ors-event-admin-tag">Admin</span>
+                        )}
                         <span className="ors-event-time">{ev.time}</span>
                         {ev.label}
                       </button>
@@ -834,7 +893,7 @@ export const OutreachSchedulePanel: React.FC = () => {
       <OutreachCallDetailModal
         detail={callDetailModal}
         onClose={() => setCallDetailModal(null)}
-        onReschedule={handleRescheduleCall}
+        onRescheduled={() => void loadSchedule()}
         onCancelMeeting={handleCancelMeeting}
       />
 
@@ -846,11 +905,10 @@ export const OutreachSchedulePanel: React.FC = () => {
 
       <div className="ors-system-info">
         <strong>Calendar sync logic:</strong>
-        {' '}Scheduled introduction calls are loaded from each record&apos;s{' '}
-        <code>step_2_payload</code> via <code>GET /api/onboarding</code>. Schedule fields include{' '}
-        <code>callDate</code>, <code>callTime</code>, booked calendar values, and optional{' '}
-        <code>date</code>/<code>time</code> aliases. Confirmed bookings include{' '}
-        <code>call_event_id</code> and the Google Meet link saved during enrollment.
+        {' '}Events are merged from{' '}
+        <code>GET /api/onboarding</code> (enrollment step 2 schedule fields) and{' '}
+        <code>GET /api/calls-scheduled-admin</code> (admin-scheduled outreach calls).
+        Admin-scheduled events are tagged <strong>Admin</strong> on the calendar.
       </div>
     </div>
   );

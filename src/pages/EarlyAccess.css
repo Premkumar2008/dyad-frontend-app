@@ -1,9 +1,7 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-
 /* ── Container ─────────────────────────────────────────── */
 .early-access-container {
   min-height: 100vh;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Prompt', sans-serif;
   background-color: #F8F9FA;
   display: flex;
   flex-direction: column;

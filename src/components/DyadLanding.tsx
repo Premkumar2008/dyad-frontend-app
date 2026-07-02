@@ -460,16 +460,21 @@ const DyadLanding: React.FC = () => {
   ];
 
    const icons = [
-    { name: 'img1',       src: '/assets/images/logo_section.svg'},
-    { name: 'img2',        src: '/assets/images/logo_section1.svg' },
+    { name: 'img1', src: '/assets/images/logo_section.svg', comingSoon: true },
+    { name: 'img2', src: '/assets/images/logo_section1.svg' },
     { name: 'img3', src: '/assets/images/logo_section2.svg' },
     { name: 'img4', src: '/assets/images/logo_section3.svg' },
-    { name: 'img5',      src: '/assets/images/logo_section4.svg' },
+    { name: 'img5', src: '/assets/images/logo_section4.svg' },
    ];
 
  const ITEMS = [...icons, ...icons, ...icons, ...icons];
 
   const [paused, setPaused] = useState(false);
+  const [activeLogoKey, setActiveLogoKey] = useState<string | null>(null);
+
+  const handleLogoActivate = (key: string) => {
+    setActiveLogoKey((current) => (current === key ? null : key));
+  };
 
   const divRef = useRef<HTMLDivElement>(null);
 
@@ -501,7 +506,6 @@ const DyadLanding: React.FC = () => {
 
       {/* Main Content - Video Banner */}
       <main className="dyad-main">
-        {/* experimental mobile stack: remove video-banner--mobile-stack to revert */}
         <div className="video-banner video-banner--mobile-stack">
           <video
             className="video-background"
@@ -554,97 +558,42 @@ const DyadLanding: React.FC = () => {
       </main>
 
 
-   
-<style>{`
-        .scroller {
-          width: 100%;
-          overflow: hidden;
-         background: #f9f9f9;
-         border-bottom: 1px solid #ebe8e8;
-         position: sticky;
-         top :117px;
-         z-index:999;
-         transition: height 0.6s ease;
-        }
-
-        .scroller.reached-top .icon-item img{
-        height:50px;
-        }
-         .scroller.reached-top .track{
-         padding: 10px 0;
-         }
-        .track {
-          display: flex;
-          gap: 7rem;
-          padding: 20px 0;
-          width: max-content;
-          animation: scroll-left 120s linear infinite;
-        }
-
-        .track.paused {
-          animation-play-state: paused;
-        }
-
-        @keyframes scroll-left {
-          from { transform: translateX(0); }
-          to   { transform: translateX(-50%); }
-        }
-
-        .icon-item {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 8px;
-          flex-shrink: 0;
-        }
-
-        .icon-item img {
-          height: 100px;
-          width: auto;
-          max-width: 160px;
-          object-fit: contain;
-          filter: grayscale(1);
-          transition: height 0.6s ease;
-        }
-
-        .icon-item:hover img {
-          filter: grayscale(0);
-        }
-
-        .icon-item span {
-          color: #aaa;
-          font-size: 12px;
-          font-family: sans-serif;
-        }
-
-        @media (max-width: 768px) {
-          .track { gap: 5rem; padding: 16px 0; }
-          .icon-item img { height: 80px; }
-          .icon-item span { font-size: 10px; }
-        }
-
-        @media (max-width: 480px) {
-          .track { gap: 4rem; }
-          .icon-item img { height: 75px; }
-           .scroller {top: 76px;}
-            .scroller.reached-top .icon-item img{
-        height:50px;
-        }
-        }
-      `}</style>
-
       <div
         className="scroller" id="scroller"
         ref={divRef}
         onMouseEnter={() => setPaused(true)}
         onMouseLeave={() => setPaused(false)}
-      > 
-        <div className={`track ${paused ? "paused" : ""}`}>
-          {ITEMS.map((icon, i) => (
-            <div className="icon-item" key={i}>
-              <img src={icon.src} alt={icon.name} />
+      >
+        <div className="scroller-inner">
+          <div className="scroller-viewport">
+            <div className={`track ${paused ? "paused" : ""}`}>
+              {ITEMS.map((icon, i) => {
+                const logoKey = `${icon.name}-${i}`;
+                return (
+                  <div
+                    className={`icon-item${activeLogoKey === logoKey ? ' icon-item--active' : ''}`}
+                    key={logoKey}
+                    onClick={() => handleLogoActivate(logoKey)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        handleLogoActivate(logoKey);
+                      }
+                    }}
+                    role="button"
+                    tabIndex={0}
+                  >
+                    <div className={`icon-item-image-wrap${icon.comingSoon ? ' icon-item-image-wrap--coming-soon' : ''}`}>
+                      {icon.comingSoon && (
+                        <span className="icon-item-coming-soon">Coming Soon</span>
+                      )}
+                      <img src={icon.src} alt={icon.name} />
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-          ))}
+          </div>
         </div>
       </div>
 
@@ -839,10 +788,8 @@ const DyadLanding: React.FC = () => {
         
       </section>
 
-  
-
       {/* Footer */}
-      <LandingFooter />
+      <LandingFooter onScrollToSection={scrollToLandingSection} />
     
 
 
